@@ -43,19 +43,18 @@ export default function RootLayout() {
 
   // Listen for auth state changes
   useEffect(() => {
-    console.log('🔍 [Auth] Auth state listener TEMPORARILY DISABLED to debug loops');
-    return; // Early return to disable auth listener
-    
     if (!supabase) {
       console.log('🔍 [Auth] Supabase not configured, skipping auth listener');
       return;
     }
 
+    let isProcessing = false; // Prevent multiple simultaneous auth processes
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🔍 [Auth] State change:', event, 'User:', session?.user?.email);
-      // Pathname check removed due to type issues
       
-      if (event === 'SIGNED_IN' && session?.user) {
+      if (event === 'SIGNED_IN' && session?.user && !isProcessing) {
+        isProcessing = true;
         try {
           console.log('✅ [Auth] User signed in, creating profile...');
           
@@ -63,16 +62,14 @@ export default function RootLayout() {
           const profile = await authService.createOrUpdateProfile(session.user);
           console.log('✅ [Auth] Profile created:', profile?.email);
           
-          // Always redirect to main app after successful sign in
-          console.log('� [Auth] Redirecting to main app after successful OAuth');
-          
-          // Add a small delay to ensure the auth state is fully processed
-          setTimeout(() => {
-            router.replace('/(tabs)');
-          }, 100);
+          // Redirect to main app after successful sign in
+          console.log('🔄 [Auth] Redirecting to main app after successful OAuth');
+          router.replace('/(tabs)');
         } catch (error) {
           console.error('❌ [Auth] Error handling auth state change:', error);
           // Don't redirect on error - let user stay where they are or manually retry
+        } finally {
+          isProcessing = false;
         }
       } else if (event === 'SIGNED_OUT') {
         console.log('👋 [Auth] User signed out');
@@ -98,7 +95,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" backgroundColor="#f8f9fa" translucent={false} />
     </GestureHandlerRootView>
   );
 }

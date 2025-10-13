@@ -12,16 +12,14 @@ export default function AuthCallback() {
     const handleAuthCallback = async () => {
       try {
         console.log('🔍 Auth callback: Processing callback');
-        console.log('🔍 Auth callback URL:', window.location.href);
         
-        // Force a session refresh from URL parameters
-        if (window.location.hash) {
-          console.log('🔍 Auth callback: Hash found, attempting to parse session');
-          const hashParams = new URLSearchParams(window.location.hash.substring(1));
-          console.log('🔍 Hash params:', Object.fromEntries(hashParams.entries()));
+        if (!supabase) {
+          console.error('🔍 Auth callback: Supabase not available');
+          router.replace('/auth');
+          return;
         }
         
-        // Check if we have a session
+        // Check if we have a session (mobile-safe approach)
         console.log('🔍 Auth callback: Getting session');
         const { data: { session }, error } = await supabase.auth.getSession();
         

@@ -1,174 +1,183 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Edit, Settings, Heart, MessageSquare, Shield, LogOut, Mail, Phone, MapPin } from 'lucide-react-native';
+import { Edit, LogOut, User, Heart } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect, useState } from 'react';
+import { supabase, authService } from '../../lib/supabase';
+import type { UserProfile } from '../../lib/supabase';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      if (!supabase) {
+        console.log('Supabase not configured - using demo data');
+        setProfile({
+          id: 'demo',
+          email: 'demo@example.com',
+          full_name: 'Demo User',
+          avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          preferences: {}
+        });
+        setLoading(false);
+        return;
+      }
+
+      const user = await authService.getCurrentUser();
+      if (user) {
+        const userProfile = await authService.getUserProfile(user.id);
+        if (userProfile) {
+          setProfile(userProfile);
+        } else {
+          // Fallback to creating a profile from user data
+          setProfile({
+            id: user.id,
+            email: user.email || 'No email',
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || 'User',
+            avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture,
+            created_at: user.created_at,
+            updated_at: user.updated_at || user.created_at,
+            preferences: {}
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      // Fallback to demo data on error
+      setProfile({
+        id: 'demo',
+        email: 'demo@example.com',
+        full_name: 'Demo User',
+        avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        preferences: {}
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEditProfile = () => {
     router.push('/profile/edit');
   };
 
-  const handleAccountSettings = () => {
-    router.push('/profile/account-settings');
-  };
-
-  const handleAppSettings = () => {
-    router.push('/profile/app-settings');
-  };
-
-  const handleAddPet = () => {
-    router.push('/profile/add-pet');
-  };
-
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       'Sign Out',
       'Are you sure you want to sign out?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Out', style: 'destructive', onPress: () => {
-          // Handle logout logic here
-          router.replace('/auth');
+        { text: 'Sign Out', style: 'destructive', onPress: async () => {
+          try {
+            if (supabase) {
+              await authService.signOut();
+            }
+            router.replace('/');
+          } catch (error) {
+            console.error('Logout error:', error);
+            router.replace('/');
+          }
         }}
       ]
     );
   };
 
-  const profileStats = [
-    { label: 'Saved Pets', value: '12', icon: Heart },
-    { label: 'Applications', value: '3', icon: MessageSquare },
-    { label: 'Reviews', value: '8', icon: Shield },
+  const stats = [
+    { label: 'Saved Pets', value: '12', color: '#FF6B6B' },
+    { label: 'Matches', value: '8', color: '#4A90E2' },
+    { label: 'Favorites', value: '24', color: '#50C878' }
   ];
 
-  const menuItems = [
-    {
-      title: 'Edit Profile',
-      subtitle: 'Update your personal information',
-      icon: Edit,
-      onPress: handleEditProfile,
-      color: '#4A90E2'
-    },
-    {
-      title: 'Add My Pet',
-      subtitle: 'List your pet for adoption',
-      icon: Heart,
-      onPress: handleAddPet,
-      color: '#FF6B6B'
-    },
-    {
-      title: 'Account Settings',
-      subtitle: 'Privacy, security, and preferences',
-      icon: Settings,
-      onPress: handleAccountSettings,
-      color: '#50C878'
-    },
-    {
-      title: 'App Settings',
-      subtitle: 'Notifications and app preferences',
-      icon: Shield,
-      onPress: handleAppSettings,
-      color: '#9B59B6'
-    }
-  ];
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.center}>
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <ArrowLeft size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile</Text>
-        <View style={styles.headerSpacer} />
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <LinearGradient
-            colors={['#FF6B6B', '#FF8E8E']}
-            style={styles.profileGradient}
-          >
-            <View style={styles.profileImageContainer}>
-              <Image
-                source={{ uri: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150' }}
-                style={styles.profileImage}
-              />
-              <TouchableOpacity style={styles.editImageButton}>
-                <Edit size={16} color="white" />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>John Doe</Text>
-              <View style={styles.profileDetails}>
-                <View style={styles.profileDetailItem}>
-                  <Mail size={14} color="rgba(255,255,255,0.8)" />
-                  <Text style={styles.profileDetailText}>john.doe@email.com</Text>
-                </View>
-                <View style={styles.profileDetailItem}>
-                  <Phone size={14} color="rgba(255,255,255,0.8)" />
-                  <Text style={styles.profileDetailText}>+880 1234-567890</Text>
-                </View>
-                <View style={styles.profileDetailItem}>
-                  <MapPin size={14} color="rgba(255,255,255,0.8)" />
-                  <Text style={styles.profileDetailText}>Dhaka, Bangladesh</Text>
-                </View>
-              </View>
-            </View>
-          </LinearGradient>
+      <LinearGradient
+        colors={['#FF6B6B', '#FF8E8E']}
+        style={styles.header}
+      >
+        <View style={styles.profileSection}>
+          <View style={styles.avatarContainer}>
+            <Image
+              source={{ uri: profile?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150' }}
+              style={styles.avatar}
+            />
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={handleEditProfile}
+            >
+              <Edit size={16} color="#FF6B6B" />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.profileInfo}>
+            <Text style={styles.name}>
+              {profile?.full_name || 'User'}
+            </Text>
+            <Text style={styles.email}>
+              {profile?.email || 'user@example.com'}
+            </Text>
+          </View>
         </View>
 
-        {/* Stats */}
         <View style={styles.statsContainer}>
-          {profileStats.map((stat, index) => (
+          {stats.map((stat, index) => (
             <View key={index} style={styles.statItem}>
-              <View style={[styles.statIconContainer, { backgroundColor: `${stat.icon === Heart ? '#FF6B6B' : stat.icon === MessageSquare ? '#4A90E2' : '#50C878'}20` }]}>
-                <stat.icon size={20} color={stat.icon === Heart ? '#FF6B6B' : stat.icon === MessageSquare ? '#4A90E2' : '#50C878'} />
+              <View style={[styles.statIcon, { backgroundColor: `${stat.color}20` }]}>
+                <Heart size={16} color={stat.color} />
               </View>
               <Text style={styles.statValue}>{stat.value}</Text>
               <Text style={styles.statLabel}>{stat.label}</Text>
             </View>
           ))}
         </View>
+      </LinearGradient>
 
-        {/* Menu Items */}
-        <View style={styles.menuContainer}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.menuItem}
-              onPress={item.onPress}
-            >
-              <View style={[styles.menuIcon, { backgroundColor: `${item.color}20` }]}>
-                <item.icon size={20} color={item.color} />
+      <View style={styles.content}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          
+          <TouchableOpacity
+            style={[styles.menuItem, { borderBottomWidth: 0 }]}
+            onPress={handleLogout}
+          >
+            <View style={styles.menuItemLeft}>
+              <View style={[styles.menuIcon, { backgroundColor: '#FF6B6B20' }]}>
+                <LogOut size={20} color="#FF6B6B" />
               </View>
-              <View style={styles.menuContent}>
-                <Text style={styles.menuTitle}>{item.title}</Text>
-                <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
-              </View>
-              <View style={styles.menuArrow}>
-                <Text style={styles.arrowText}>›</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+              <Text style={styles.menuText}>Sign Out</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
-        {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <LogOut size={20} color="#FF6B6B" />
-          <Text style={styles.logoutText}>Sign Out</Text>
-        </TouchableOpacity>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>PawMatch v1.0.0</Text>
-          <Text style={styles.footerSubtext}>Made with ❤️ for pet lovers</Text>
+        <View style={styles.aboutSection}>
+          <Text style={styles.sectionTitle}>About PawMatch</Text>
+          <Text style={styles.aboutText}>
+            PawMatch helps you find your perfect furry companion. Swipe through adorable pets, 
+            learn about pet care, and connect with local shelters and pet services.
+          </Text>
+          <Text style={styles.version}>Version 1.0.0</Text>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -176,109 +185,88 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: '#f8f9fa',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+  center: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: {
-    flex: 1,
-    fontSize: 20,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#333',
-    textAlign: 'center',
+  loadingText: {
+    fontSize: 16,
+    color: '#666',
+    fontFamily: 'Nunito-Regular',
   },
-  headerSpacer: {
-    width: 40,
-  },
-  profileHeader: {
-    marginBottom: 20,
-  },
-  profileGradient: {
-    paddingVertical: 40,
+  header: {
     paddingHorizontal: 20,
+    paddingVertical: 30,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  profileSection: {
     alignItems: 'center',
+    marginBottom: 30,
   },
-  profileImageContainer: {
+  avatarContainer: {
     position: 'relative',
-    marginBottom: 16,
+    marginBottom: 15,
   },
-  profileImage: {
+  avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    borderWidth: 4,
+    borderWidth: 3,
     borderColor: 'white',
   },
-  editImageButton: {
+  editButton: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    right: -5,
+    bottom: 5,
+    backgroundColor: 'white',
+    borderRadius: 15,
+    width: 30,
+    height: 30,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   profileInfo: {
     alignItems: 'center',
   },
-  profileName: {
+  name: {
     fontSize: 24,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-SemiBold',
     color: 'white',
-    marginBottom: 12,
+    marginBottom: 5,
   },
-  profileDetails: {
-    alignItems: 'center',
-    gap: 6,
-  },
-  profileDetailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  profileDetailText: {
-    fontSize: 14,
+  email: {
+    fontSize: 16,
     fontFamily: 'Nunito-Regular',
     color: 'rgba(255,255,255,0.9)',
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: 'white',
-    marginHorizontal: 20,
-    marginBottom: 20,
-    paddingVertical: 20,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 15,
+    paddingVertical: 15,
+    paddingHorizontal: 10,
   },
   statItem: {
     alignItems: 'center',
+    flex: 1,
   },
-  statIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  statIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -286,30 +274,53 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontFamily: 'Poppins-Bold',
-    color: '#333',
-    marginBottom: 4,
+    color: 'white',
+    marginBottom: 2,
   },
   statLabel: {
     fontSize: 12,
-    fontFamily: 'Nunito-Regular',
-    color: '#666',
+    fontFamily: 'Nunito-Medium',
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
   },
-  menuContainer: {
-    paddingHorizontal: 20,
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  section: {
+    backgroundColor: 'white',
+    borderRadius: 15,
     marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#333',
+    marginBottom: 15,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   menuIcon: {
     width: 40,
@@ -317,63 +328,37 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 15,
   },
-  menuContent: {
-    flex: 1,
-  },
-  menuTitle: {
+  menuText: {
     fontSize: 16,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Nunito-Medium',
     color: '#333',
-    marginBottom: 2,
   },
-  menuSubtitle: {
+  aboutSection: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  aboutText: {
     fontSize: 14,
     fontFamily: 'Nunito-Regular',
     color: '#666',
+    lineHeight: 20,
+    marginBottom: 15,
   },
-  menuArrow: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  arrowText: {
-    fontSize: 20,
-    color: '#CCC',
-    fontWeight: '300',
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFF5F5',
-    marginHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#FFE5E5',
-  },
-  logoutText: {
-    fontSize: 16,
-    fontFamily: 'Nunito-SemiBold',
-    color: '#FF6B6B',
-    marginLeft: 8,
-  },
-  footer: {
-    alignItems: 'center',
-    paddingVertical: 20,
-    paddingBottom: 40,
-  },
-  footerText: {
-    fontSize: 14,
-    fontFamily: 'Nunito-SemiBold',
-    color: '#666',
-    marginBottom: 4,
-  },
-  footerSubtext: {
+  version: {
     fontSize: 12,
-    fontFamily: 'Nunito-Regular',
+    fontFamily: 'Nunito-Medium',
     color: '#999',
+    textAlign: 'center',
   },
 });

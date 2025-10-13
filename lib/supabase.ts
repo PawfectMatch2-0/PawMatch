@@ -1,30 +1,31 @@
 import { createClient } from '@supabase/supabase-js'
 import * as AuthSession from 'expo-auth-session'
+import * as WebBrowser from 'expo-web-browser'
+import { Platform } from 'react-native'
+
+// Initialize WebBrowser for mobile auth
+WebBrowser.maybeCompleteAuthSession()
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
 
 // Helper function to get the appropriate redirect URI
 const getRedirectUri = () => {
-  if (__DEV__) {
-    // Development environment - use Expo development URL
-    return AuthSession.makeRedirectUri({})
-  } else {
-    // Production environment - use app scheme
-    return AuthSession.makeRedirectUri({ 
-      scheme: 'pawmatch',
-      path: 'auth/callback'
-    })
-  }
+  // Always use AuthSession.makeRedirectUri() for mobile - it handles Expo Go vs standalone correctly
+  return AuthSession.makeRedirectUri({
+    scheme: __DEV__ ? undefined : 'pawmatch',
+    path: 'oauth/callback'
+  })
 }
 
 // Debug logging for redirect URIs (only in development)
 if (__DEV__ && process.env.EXPO_PUBLIC_DEBUG_AUTH === 'true') {
   console.log('\n📋 [Google Console] Add these Redirect URIs:');
-  console.log('- Development (Expo Go):', AuthSession.makeRedirectUri({}));
+  console.log('- Current redirect URI:', getRedirectUri());
+  console.log('- Expo Go:', AuthSession.makeRedirectUri({ path: 'oauth/callback' }));
   console.log('- Alternative Dev:', 'https://auth.expo.io/@yousuf_fahim/pawmatch');
-  console.log('- Production (EAS Build):', AuthSession.makeRedirectUri({ scheme: 'pawmatch', path: 'auth/callback' }));
-  console.log('- Alternative Production:', 'pawmatch://auth/callback');
+  console.log('- Production (EAS Build):', AuthSession.makeRedirectUri({ scheme: 'pawmatch', path: 'oauth/callback' }));
+  console.log('- Alternative Production:', 'pawmatch://oauth/callback');
 }
 
 // Check if environment variables are configured and create client
@@ -135,20 +136,82 @@ export const authService = {
     
     if (__DEV__ && process.env.EXPO_PUBLIC_DEBUG_AUTH === 'true') {
       console.log('🚀 [Auth] Starting Google sign-in with redirect:', redirectUri)
+      console.log('🚀 [Auth] Platform:', Platform.OS)
+      console.log('🚀 [Auth] Dev mode:', __DEV__)
+    }
+
+    // ARCHITECTURAL FIX: For Expo Go development, use a registered redirect URI
+    let actualRedirectUri = redirectUri;
+    if (__DEV__ && redirectUri.startsWith('exp://')) {
+      // Use the auth.expo.io proxy which is pre-registered with Google
+      actualRedirectUri = `https://auth.expo.io/@yousuf_fahim/pawmatch`;
+      console.log('🔧 [Auth] Using Expo proxy for development:', actualRedirectUri);
     }
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectUri,
+        redirectTo: actualRedirectUri,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
         },
+        skipBrowserRedirect: Platform.OS !== 'web'
       },
     })
     
     if (error) throw error
+    
+    // For web platforms, let Supabase handle the redirect
+    if (Platform.OS === 'web') {
+      return data
+    }
+    
+    // For mobile platforms, open the auth URL in WebBrowser
+    if (Platform.OS === 'ios' || Platform.OS === 'android') {
+      if (!data?.url) {
+        throw new Error('No authentication URL provided')
+      }
+      
+      console.log('🚀 [Auth] Opening mobile browser for authentication')
+      console.log('🚀 [Auth] OAuth URL:', data.url)
+      
+      const result = await WebBrowser.openAuthSessionAsync(
+        data.url,
+        redirectUri  // Use original redirectUri for deep link back to app
+      )
+      
+      console.log('🚀 [Auth] Browser result:', result.type)
+      if (result.type === 'success' && result.url) {
+        console.log('🚀 [Auth] Success URL:', result.url)
+      }
+      
+      if (result.type === 'success') {
+        // Wait a moment for session to be established
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Try multiple times to get session
+        for (let i = 0; i < 3; i++) {
+          const { data: session } = await supabase.auth.getSession()
+          if (session?.session) {
+            console.log('✅ [Auth] Session established successfully')
+            return {
+              success: true,
+              session: session.session,
+              user: session.session.user
+            }
+          }
+          console.log(`🔄 [Auth] Waiting for session... attempt ${i + 1}`)
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
+        throw new Error('Authentication completed but no session found after multiple attempts')
+      } else if (result.type === 'cancel') {
+        throw new Error('Authentication was cancelled')
+      } else {
+        throw new Error(`Authentication failed: ${result.type}`)
+      }
+    }
+    
     return data
   },
 

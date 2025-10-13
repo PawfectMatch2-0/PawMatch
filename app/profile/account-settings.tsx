@@ -12,7 +12,7 @@ import {
   ChevronRight
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { signOut } from '../../lib/mobile-auth-simple';
+import { authService } from '../../lib/supabase';
 
 export default function AccountSettingsScreen() {
   const router = useRouter();

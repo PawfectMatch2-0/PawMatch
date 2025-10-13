@@ -18,6 +18,12 @@ export default function OAuthAuthScreen() {
       try {
         console.log('🔐 [Auth Callback] Processing auth scheme callback with params:', params);
         
+        if (!supabase) {
+          console.error('🔐 [Auth Callback] Supabase not available');
+          router.push('/auth');
+          return;
+        }
+        
         // This handles the pawmatch://auth deep link
         // The params should contain OAuth response data
         

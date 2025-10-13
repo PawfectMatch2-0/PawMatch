@@ -6,9 +6,6 @@ import { ArrowLeft, User, Heart } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { supabase, authService } from '../lib/supabase';
-// Import both direct auth for web and mobile auth for mobile
-import { DirectAuth } from '../lib/direct-auth';
-import { authenticateWithGoogle } from '../lib/mobile-auth-simple';
 import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS } from '@/constants/theme';
 import Button from '@/components/ui/Button';
 import LoadingState from '@/components/ui/LoadingState';
@@ -33,13 +30,8 @@ export default function AuthScreen() {
       
       let result: any;
       
-      if (Platform.OS === 'web') {
-        console.log('🔐 [Auth] Using DirectAuth for web platform');
-        result = await DirectAuth.signInWithGoogle();
-      } else {
-        console.log('🔐 [Auth] Using Mobile Auth for mobile platform');
-        result = await authenticateWithGoogle();
-      }
+      console.log('🔐 [Auth] Using authService for', Platform.OS, 'platform');
+      result = await authService.signInWithGoogle();
       
       if (result && 'success' in result && result.success && result.user) {
         console.log('🔐 [Auth] Authentication successful!', result.user.email);

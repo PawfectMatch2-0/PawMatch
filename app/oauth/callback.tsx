@@ -18,6 +18,12 @@ export default function OAuthCallbackScreen() {
       try {
         console.log('🔗 [OAuth Callback] Processing OAuth callback with params:', params);
         
+        if (!supabase) {
+          console.error('🔗 [OAuth Callback] Supabase not available');
+          router.push('/auth');
+          return;
+        }
+        
         // Check for error first
         if (params.error) {
           console.error('🔗 [OAuth Callback] Auth error:', params.error);
