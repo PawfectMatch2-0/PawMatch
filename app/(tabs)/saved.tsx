@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { Heart, MapPin, MessageCircle, Share2, Clock, CheckCircle, XCircle, Search } from 'lucide-react-native';
+import { Heart, MapPin, MessageCircle, Share2, Clock, CheckCircle, XCircle, Search, User } from 'lucide-react-native';
 import { mockPets } from '@/data/pets';
 import { supabase, databaseService, authService, Pet } from '@/lib/supabase';
 
@@ -297,24 +297,32 @@ export default function SavedScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.tabContainer}>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'saved' && styles.activeTab]}
-            onPress={() => setActiveTab('saved')}
-          >
-            <Text style={[styles.tabText, activeTab === 'saved' && styles.activeTabText]}>
-              Saved Pets
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'requests' && styles.activeTab]}
-            onPress={() => setActiveTab('requests')}
-          >
-            <Text style={[styles.tabText, activeTab === 'requests' && styles.activeTabText]}>
-              Adoption Requests
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <View style={styles.tabContainer}>
+            <TouchableOpacity 
+              style={[styles.tab, activeTab === 'saved' && styles.activeTab]}
+              onPress={() => setActiveTab('saved')}
+            >
+              <Text style={[styles.tabText, activeTab === 'saved' && styles.activeTabText]}>
+                Saved Pets
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.tab, activeTab === 'requests' && styles.activeTab]}
+              onPress={() => setActiveTab('requests')}
+            >
+              <Text style={[styles.tabText, activeTab === 'requests' && styles.activeTabText]}>
+                Adoption Requests
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
+        <TouchableOpacity 
+          style={styles.profileButton}
+          onPress={() => router.push('/profile')}
+        >
+          <User size={24} color="#FF6B6B" />
+        </TouchableOpacity>
       </View>
 
       {activeTab === 'saved' ? (
@@ -360,9 +368,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  headerContent: {
+    flex: 1,
+  },
+  profileButton: {
+    padding: 10,
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    borderRadius: 12,
+    marginLeft: 12,
   },
   tabContainer: {
     flexDirection: 'row',

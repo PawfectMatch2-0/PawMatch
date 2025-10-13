@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Heart, MapPin, Bookmark, User, BookOpen, FileText } from 'lucide-react-native';
+import { Heart, MapPin, Bookmark, User, BookOpen, FileText, Store, Bot } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -53,11 +53,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="shops"
         options={{
-          title: 'Profile',
+          title: 'Shops',
           tabBarIcon: ({ size, color }) => (
-            <User size={size} color={color} />
+            <Store size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="ai"
+        options={{
+          title: 'AI Vet',
+          tabBarIcon: ({ size, color }) => (
+            <Bot size={size} color={color} />
           ),
         }}
       />

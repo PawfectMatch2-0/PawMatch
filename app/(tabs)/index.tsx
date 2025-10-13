@@ -2,10 +2,9 @@ import { View, Text, StyleSheet, Dimensions, Image, TouchableOpacity } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { Filter, Bell, Heart, X, MapPin, Star } from 'lucide-react-native';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { Filter, Bell, Heart, X, MapPin, Star, User } from 'lucide-react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -291,18 +290,17 @@ export default function HomeScreen() {
     });
   };
 
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, context: any) => {
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      'worklet';
       if (isAnimating) return;
-      // Always start from current position (should be 0 after reset)
-      context.startX = translateX.value;
-      context.startY = translateY.value;
-    },
-    onActive: (event, context: any) => {
+    })
+    .onUpdate((event) => {
+      'worklet';
       if (isAnimating) return;
       
-      translateX.value = context.startX + event.translationX;
-      translateY.value = context.startY + event.translationY;
+      translateX.value = event.translationX;
+      translateY.value = event.translationY;
       
       // Rotation based on horizontal movement
       rotate.value = interpolate(
@@ -319,8 +317,9 @@ export default function HomeScreen() {
         [1, 0.95],
         Extrapolate.CLAMP
       );
-    },
-    onEnd: (event) => {
+    })
+    .onEnd(() => {
+      'worklet';
       if (isAnimating) return;
       
       const shouldSwipeLeft = translateX.value < -SWIPE_THRESHOLD;
@@ -347,8 +346,7 @@ export default function HomeScreen() {
         rotate.value = withSpring(0, { damping: 20, stiffness: 200 });
         scale.value = withSpring(1, { damping: 20, stiffness: 200 });
       }
-    },
-  });
+    });
 
   const cardAnimatedStyle = useAnimatedStyle(() => {
     const currentOpacity = activeCard === 'A' ? cardAOpacity.value : cardBOpacity.value;
@@ -493,6 +491,9 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/notifications')}>
             <Bell size={24} color="#FF6B6B" />
           </TouchableOpacity>
+          <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/profile')}>
+            <User size={24} color="#FF6B6B" />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -511,7 +512,7 @@ export default function HomeScreen() {
           <>
             {/* Card A - Double Buffer System */}
             {activeCard === 'A' ? (
-              <PanGestureHandler onGestureEvent={gestureHandler}>
+              <GestureDetector gesture={panGesture}>
                 <Animated.View 
                   key="card-a"
                   style={[styles.cardWrapper, cardAAnimatedStyle]}
@@ -528,7 +529,7 @@ export default function HomeScreen() {
                     <Text style={styles.indicatorText}>PASS</Text>
                   </Animated.View>
                 </Animated.View>
-              </PanGestureHandler>
+              </GestureDetector>
             ) : (
               <Animated.View 
                 key="card-a"
@@ -541,7 +542,7 @@ export default function HomeScreen() {
             
             {/* Card B - Double Buffer System */}
             {activeCard === 'B' ? (
-              <PanGestureHandler onGestureEvent={gestureHandler}>
+              <GestureDetector gesture={panGesture}>
                 <Animated.View 
                   key="card-b"
                   style={[styles.cardWrapper, cardBAnimatedStyle]}
@@ -558,7 +559,7 @@ export default function HomeScreen() {
                     <Text style={styles.indicatorText}>PASS</Text>
                   </Animated.View>
                 </Animated.View>
-              </PanGestureHandler>
+              </GestureDetector>
             ) : (
               <Animated.View 
                 key="card-b"

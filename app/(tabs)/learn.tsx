@@ -13,8 +13,7 @@ import {
   GraduationCap,
   Stethoscope,
   AlertTriangle,
-  MapPin,
-  Bot,
+  User,
   LucideIcon
 } from 'lucide-react-native';
 import { learningCategories, mockLearningArticles, getFeaturedArticles } from '@/data/learningContent';
@@ -29,7 +28,6 @@ const iconMap: Record<string, LucideIcon> = {
   Stethoscope: Stethoscope,
   BookOpen: BookOpen,
   AlertTriangle: AlertTriangle,
-  MapPin: MapPin,
 };
 
 export default function LearnScreen() {
@@ -40,9 +38,8 @@ export default function LearnScreen() {
   const router = useRouter();
   const featuredArticles = getFeaturedArticles();
   
-  // Filter out pet-services from main categories - it will have its own section
-  const mainCategories = learningCategories.filter(category => category.id !== 'pet-services');
-  const petServicesCategory = learningCategories.find(category => category.id === 'pet-services');
+  // Use all categories for the main categories section
+  const mainCategories = learningCategories;
 
   useEffect(() => {
     // Initialize database articles
@@ -101,13 +98,6 @@ export default function LearnScreen() {
     });
   };
 
-  const handleExploreServices = () => {
-    router.push('/learn/services' as any);
-  };
-
-  const handleAIVetChat = () => {
-    router.push('/learn/ai-vet' as any);
-  };
 
   const renderCategoryCard = (category: typeof learningCategories[0]) => {
     const IconComponent = iconMap[category.icon];
@@ -197,8 +187,16 @@ export default function LearnScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Learning Center</Text>
-          <Text style={styles.subtitle}>Become the best pet parent</Text>
+          <View style={styles.headerContent}>
+            <Text style={styles.title}>Learning Center</Text>
+            <Text style={styles.subtitle}>Become the best pet parent</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.profileButton}
+            onPress={() => router.push('/profile')}
+          >
+            <User size={24} color="#FF6B6B" />
+          </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
@@ -317,70 +315,6 @@ export default function LearnScreen() {
               ))}
             </View>
 
-            {/* Pet Services Section */}
-            <View style={styles.section}>
-              <View style={styles.petServicesCard}>
-                <LinearGradient
-                  colors={['#9013FE', '#6C1CE7']}
-                  style={styles.petServicesGradient}
-                >
-                  <View style={styles.petServicesContent}>
-                    <View style={styles.petServicesIconContainer}>
-                      <MapPin size={32} color="white" strokeWidth={2} />
-                    </View>
-                    <View style={styles.petServicesInfo}>
-                      <Text style={styles.petServicesTitle}>Pet Services</Text>
-                      <Text style={styles.petServicesDescription}>
-                        Find trusted veterinarians, groomers, and pet shops near you
-                      </Text>
-                      <Text style={styles.petServicesCount}>
-                        {petServicesCategory?.articleCount} helpful guides available
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.petServicesButtonContainer}>
-                    <AnimatedButton 
-                      title="Explore Services" 
-                      onPress={handleExploreServices}
-                      variant="secondary"
-                      size="medium"
-                      icon="map-pin"
-                    />
-                  </View>
-                </LinearGradient>
-              </View>
-            </View>
-
-            {/* AI Assistant Teaser */}
-            <View style={styles.section}>
-              <View style={styles.aiAssistantCard}>
-                <LinearGradient
-                  colors={['#667eea', '#764ba2']}
-                  style={styles.aiAssistantGradient}
-                >
-                  <View style={styles.aiAssistantContent}>
-                    <View style={styles.aiAssistantIconContainer}>
-                      <Bot size={32} color="white" strokeWidth={2} />
-                    </View>
-                    <View style={styles.aiAssistantInfo}>
-                      <Text style={styles.aiAssistantTitle}>AI Pet Counselor</Text>
-                      <Text style={styles.aiAssistantDescription}>
-                        Get expert veterinary advice 24/7. Ask about health, behavior, training, and emergency care.
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.aiButtonContainer}>
-                    <AnimatedButton 
-                      title="Chat with AI Vet" 
-                      onPress={handleAIVetChat}
-                      variant="secondary"
-                      size="medium"
-                      icon="bot"
-                    />
-                  </View>
-                </LinearGradient>
-              </View>
-            </View>
           </>
         )}
       </ScrollView>
@@ -394,8 +328,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAFAFA',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 20,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  headerContent: {
+    flex: 1,
+  },
+  profileButton: {
+    padding: 10,
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    borderRadius: 12,
   },
   title: {
     fontSize: 28,
@@ -623,106 +571,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Nunito-Regular',
     color: '#666',
-  },
-  aiAssistantCard: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
-    marginBottom: 8,
-  },
-  aiAssistantGradient: {
-    padding: 24,
-  },
-  aiAssistantContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  aiAssistantIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 20,
-  },
-  aiAssistantInfo: {
-    flex: 1,
-  },
-  aiAssistantTitle: {
-    fontSize: 24,
-    fontFamily: 'Poppins-Bold',
-    color: 'white',
-    marginBottom: 6,
-  },
-  aiAssistantDescription: {
-    fontSize: 16,
-    fontFamily: 'Nunito-Regular',
-    color: 'rgba(255, 255, 255, 0.95)',
-    lineHeight: 22,
-  },
-  aiAssistantCta: {
-    fontSize: 14,
-    fontFamily: 'Nunito-SemiBold',
-    color: 'white',
-  },
-  aiButtonContainer: {
-    alignItems: 'flex-start',
-  },
-  petServicesCard: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  petServicesGradient: {
-    padding: 24,
-  },
-  petServicesContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  petServicesIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 20,
-  },
-  petServicesInfo: {
-    flex: 1,
-  },
-  petServicesTitle: {
-    fontSize: 24,
-    fontFamily: 'Poppins-Bold',
-    color: 'white',
-    marginBottom: 6,
-  },
-  petServicesDescription: {
-    fontSize: 16,
-    fontFamily: 'Nunito-Regular',
-    color: 'rgba(255, 255, 255, 0.95)',
-    lineHeight: 22,
-    marginBottom: 4,
-  },
-  petServicesCount: {
-    fontSize: 14,
-    fontFamily: 'Nunito-SemiBold',
-    color: 'rgba(255, 255, 255, 0.9)',
-  },
-  petServicesButtonContainer: {
-    alignItems: 'flex-start',
   },
   clearButton: {
     padding: 4,
