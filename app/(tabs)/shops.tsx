@@ -1,8 +1,17 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { MapPin, Star, Phone, Clock, User } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { MapPin, Star, Phone, User, Stethoscope, Scissors, GraduationCap, Store } from 'lucide-react-native';
+
+// Shop categories
+const shopCategories = [
+  { id: 'all', name: 'All', icon: Store, color: '#FF6B6B' },
+  { id: 'Pet Store', name: 'Pet Store', icon: Store, color: '#4A90E2' },
+  { id: 'Veterinary', name: 'Veterinary', icon: Stethoscope, color: '#50C878' },
+  { id: 'Grooming', name: 'Grooming', icon: Scissors, color: '#9B59B6' },
+  { id: 'Training', name: 'Training', icon: GraduationCap, color: '#FF8C00' },
+];
 
 // Mock pet shops data
 const mockPetShops = [
@@ -62,6 +71,17 @@ const mockPetShops = [
 
 export default function ShopsScreen() {
   const router = useRouter();
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [filteredShops, setFilteredShops] = useState(mockPetShops);
+
+  const filterShopsByCategory = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    if (categoryId === 'all') {
+      setFilteredShops(mockPetShops);
+    } else {
+      setFilteredShops(mockPetShops.filter(shop => shop.category === categoryId));
+    }
+  };
 
   const handleShopPress = (shopId: string) => {
     // Navigate to shop details (placeholder for now)
@@ -75,55 +95,45 @@ export default function ShopsScreen() {
   const renderShopItem = ({ item }: { item: typeof mockPetShops[0] }) => (
     <TouchableOpacity style={styles.shopCard} onPress={() => handleShopPress(item.id)}>
       <Image source={{ uri: item.image }} style={styles.shopImage} />
+      
       <View style={styles.shopInfo}>
         <View style={styles.shopHeader}>
-          <Text style={styles.shopName}>{item.name}</Text>
-          <View style={styles.categoryBadge}>
+          <Text style={styles.shopName} numberOfLines={1}>{item.name}</Text>
+          <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(item.category) }]}>
             <Text style={styles.categoryText}>{item.category}</Text>
           </View>
         </View>
         
         <View style={styles.ratingContainer}>
-          <Star size={16} color="#FFB800" fill="#FFB800" />
+          <Star size={14} color="#FFB800" fill="#FFB800" />
           <Text style={styles.rating}>{item.rating}</Text>
-          <Text style={styles.reviews}>({item.reviews} reviews)</Text>
+          <Text style={styles.reviews}>({item.reviews})</Text>
         </View>
         
         <View style={styles.locationContainer}>
-          <MapPin size={16} color="#666" />
-          <Text style={styles.address}>{item.address}</Text>
-          <Text style={styles.distance}>• {item.distance}</Text>
+          <MapPin size={12} color="#666" />
+          <Text style={styles.address} numberOfLines={1}>{item.address}</Text>
         </View>
         
-        <Text style={styles.hours}>{item.hours}</Text>
-        
-        <View style={styles.specialtiesContainer}>
-          {item.specialties.slice(0, 2).map((specialty, index) => (
-            <View key={index} style={styles.specialtyTag}>
-              <Text style={styles.specialtyText}>{specialty}</Text>
-            </View>
-          ))}
-          {item.specialties.length > 2 && (
-            <Text style={styles.moreSpecialties}>+{item.specialties.length - 2} more</Text>
-          )}
-        </View>
+        <Text style={styles.hours} numberOfLines={1}>{item.hours}</Text>
         
         <View style={styles.actionsContainer}>
           <TouchableOpacity 
             style={styles.callButton}
             onPress={() => handleCall(item.phone)}
           >
-            <Phone size={16} color="white" />
+            <Phone size={14} color="white" />
             <Text style={styles.callButtonText}>Call</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.visitButton}>
-            <Text style={styles.visitButtonText}>Visit Store</Text>
           </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
   );
+
+  const getCategoryColor = (category: string) => {
+    const cat = shopCategories.find(c => c.id === category);
+    return cat ? cat.color : '#FF6B6B';
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -139,17 +149,64 @@ export default function ShopsScreen() {
       </View>
 
       {/* Content */}
-      <View style={styles.content}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.subtitle}>Discover nearby pet stores, clinics, and services</Text>
         
-        <FlatList
-          data={mockPetShops}
-          renderItem={renderShopItem}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
-        />
-      </View>
+        {/* Categories */}
+        <View style={styles.categoriesSection}>
+          <Text style={styles.sectionTitle}>Categories</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesContainer}
+          >
+            {shopCategories.map((category) => (
+              <TouchableOpacity
+                key={category.id}
+                style={[
+                  styles.categoryItem, 
+                  selectedCategory === category.id && styles.categoryItemActive
+                ]}
+                onPress={() => filterShopsByCategory(category.id)}
+              >
+                <View style={[
+                  styles.categoryIcon, 
+                  { backgroundColor: selectedCategory === category.id ? category.color : `${category.color}20` }
+                ]}>
+                  <category.icon 
+                    size={20} 
+                    color={selectedCategory === category.id ? 'white' : category.color} 
+                  />
+                </View>
+                <Text style={[
+                  styles.categoryName,
+                  selectedCategory === category.id && styles.categoryNameActive
+                ]}>
+                  {category.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Shop List */}
+        <View style={styles.shopsSection}>
+          <Text style={styles.sectionTitle}>
+            {selectedCategory === 'all' ? 'All Shops' : `${selectedCategory} (${filteredShops.length})`}
+          </Text>
+          
+          <FlatList
+            data={filteredShops}
+            renderItem={renderShopItem}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.row}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContainer}
+            scrollEnabled={false}
+          />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -182,7 +239,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
   },
   subtitle: {
     fontSize: 16,
@@ -190,28 +246,76 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginVertical: 20,
+    paddingHorizontal: 20,
+  },
+  categoriesSection: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#333',
+    marginBottom: 16,
+    paddingHorizontal: 20,
+  },
+  categoriesContainer: {
+    paddingHorizontal: 20,
+    gap: 16,
+  },
+  categoryItem: {
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  categoryItemActive: {
+    // Active state handled by conditional styling
+  },
+  categoryIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  categoryName: {
+    fontSize: 12,
+    fontFamily: 'Nunito-SemiBold',
+    color: '#666',
+    textAlign: 'center',
+  },
+  categoryNameActive: {
+    color: '#333',
+  },
+  shopsSection: {
+    flex: 1,
+    marginBottom: 20,
+  },
+  row: {
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
   },
   listContainer: {
     paddingBottom: 20,
   },
   shopCard: {
     backgroundColor: 'white',
-    borderRadius: 16,
+    borderRadius: 12,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
     overflow: 'hidden',
+    width: '47%',
   },
   shopImage: {
     width: '100%',
-    height: 160,
+    height: 120,
     resizeMode: 'cover',
   },
   shopInfo: {
-    padding: 16,
+    padding: 12,
   },
   shopHeader: {
     flexDirection: 'row',
@@ -220,7 +324,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   shopName: {
-    fontSize: 18,
+    fontSize: 14,
     fontFamily: 'Poppins-SemiBold',
     color: '#333',
     flex: 1,
@@ -233,7 +337,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   categoryText: {
-    fontSize: 12,
+    fontSize: 9,
     fontFamily: 'Nunito-SemiBold',
     color: 'white',
   },
@@ -243,13 +347,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   rating: {
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: 'Nunito-SemiBold',
     color: '#333',
     marginLeft: 4,
   },
   reviews: {
-    fontSize: 14,
+    fontSize: 10,
     fontFamily: 'Nunito-Regular',
     color: '#666',
     marginLeft: 4,
@@ -260,7 +364,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   address: {
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: 'Nunito-Regular',
     color: '#666',
     marginLeft: 4,
@@ -271,10 +375,10 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   hours: {
-    fontSize: 14,
+    fontSize: 10,
     fontFamily: 'Nunito-Regular',
     color: '#10B981',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   specialtiesContainer: {
     flexDirection: 'row',
@@ -307,15 +411,14 @@ const styles = StyleSheet.create({
   callButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10B981',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    flex: 1,
+    backgroundColor: '#FF6B6B',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
     justifyContent: 'center',
   },
   callButtonText: {
-    fontSize: 14,
+    fontSize: 11,
     fontFamily: 'Nunito-SemiBold',
     color: 'white',
     marginLeft: 4,

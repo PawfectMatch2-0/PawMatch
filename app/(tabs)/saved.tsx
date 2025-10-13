@@ -1,8 +1,11 @@
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView, Linking, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { Heart, MapPin, MessageCircle, Share2, Clock, CheckCircle, XCircle, Search, User } from 'lucide-react-native';
+import { Heart, MapPin, MessageCircle, Share2, Clock, CheckCircle, XCircle, User } from 'lucide-react-native';
+import { SPACING, BORDER_RADIUS } from '@/constants/theme';
+import LoadingState from '@/components/ui/LoadingState';
+import EmptyState, { NoSavedPetsEmptyState } from '@/components/ui/EmptyState';
 import { mockPets } from '@/data/pets';
 import { supabase, databaseService, authService, Pet } from '@/lib/supabase';
 
@@ -325,13 +328,17 @@ export default function SavedScreen() {
         </TouchableOpacity>
       </View>
 
-      {activeTab === 'saved' ? (
+{isLoading ? (
+        <LoadingState 
+          variant="inline"
+          message="Loading your saved pets..."
+          size="large"
+        />
+      ) : activeTab === 'saved' ? (
         savedPets.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Heart size={60} color="#E0E0E0" />
-            <Text style={styles.emptyText}>No saved pets yet</Text>
-            <Text style={styles.emptySubtext}>Start swiping to find your perfect match!</Text>
-          </View>
+          <NoSavedPetsEmptyState 
+            onDiscoverPets={() => router.push('/(tabs)')}
+          />
         ) : (
           <FlatList
             data={savedPets}
@@ -343,11 +350,10 @@ export default function SavedScreen() {
         )
       ) : (
         mockAdoptionRequests.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Search size={60} color="#E0E0E0" />
-            <Text style={styles.emptyText}>No adoption requests yet</Text>
-            <Text style={styles.emptySubtext}>Apply to adopt a pet to see your request status here</Text>
-          </View>
+          <EmptyState
+            variant="noApplications"
+            onAction={() => router.push('/(tabs)')}
+          />
         ) : (
           <FlatList
             data={mockAdoptionRequests}
@@ -380,10 +386,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileButton: {
-    padding: 10,
+    minWidth: SPACING.minTouchTarget,
+    minHeight: SPACING.minTouchTarget,
+    padding: SPACING.sm,
     backgroundColor: 'rgba(255, 107, 107, 0.1)',
-    borderRadius: 12,
-    marginLeft: 12,
+    borderRadius: BORDER_RADIUS.lg,
+    marginLeft: SPACING.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabContainer: {
     flexDirection: 'row',

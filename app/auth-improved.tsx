@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Alert, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native-gesture-handler';
@@ -9,7 +9,7 @@ import { supabase, authService } from '../lib/supabase';
 // Import both direct auth for web and mobile auth for mobile
 import { DirectAuth } from '../lib/direct-auth';
 import { authenticateWithGoogle } from '../lib/mobile-auth-simple';
-import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS } from '@/constants/theme';
+import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
 import Button from '@/components/ui/Button';
 import LoadingState from '@/components/ui/LoadingState';
 

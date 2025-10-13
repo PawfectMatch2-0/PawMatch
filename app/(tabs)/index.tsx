@@ -3,6 +3,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { Filter, Bell, Heart, X, MapPin, Star, User } from 'lucide-react-native';
+import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
+import LoadingState, { CardLoadingState } from '@/components/ui/LoadingState';
+import EmptyState, { NoPetsEmptyState } from '@/components/ui/EmptyState';
+import OnboardingModal from '@/components/ui/OnboardingModal';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -29,6 +33,7 @@ export default function HomeScreen() {
   const [likedPets, setLikedPets] = useState<string[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     breed: 'All Breeds',
     age: 'All Ages',
@@ -67,7 +72,23 @@ export default function HomeScreen() {
   // Initialize data loading
   useEffect(() => {
     initializeData();
+    checkOnboardingStatus();
   }, []);
+
+  // Check if user needs onboarding
+  const checkOnboardingStatus = async () => {
+    try {
+      // Check if onboarding has been completed (could use AsyncStorage in real app)
+      // For now, show onboarding for new/guest users
+      if (!user) {
+        setTimeout(() => {
+          setShowOnboarding(true);
+        }, 1000); // Show after initial loading
+      }
+    } catch (error) {
+      console.log('Error checking onboarding status:', error);
+    }
+  };
 
   // Load user and pets data
   const initializeData = async () => {
@@ -498,17 +519,17 @@ export default function HomeScreen() {
       </View>
 
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Finding perfect pets for you...</Text>
-        </View>
+        <LoadingState 
+          variant="inline" 
+          message="Finding perfect pets for you..."
+          size="large"
+        />
+      ) : totalPets === 0 ? (
+        <NoPetsEmptyState 
+          onAdjustFilters={() => setShowFilterModal(true)}
+        />
       ) : (
         <View style={styles.cardContainer}>
-        {totalPets === 0 ? (
-          <View style={styles.noMoreCards}>
-            <Text style={styles.noMoreText}>No pets available</Text>
-            <Text style={styles.noMoreSubtext}>Check back later for more adorable pets!</Text>
-          </View>
-        ) : (
           <>
             {/* Card A - Double Buffer System */}
             {activeCard === 'A' ? (
@@ -570,8 +591,7 @@ export default function HomeScreen() {
               </Animated.View>
             )}
           </>
-        )}
-      </View>
+        </View>
       )}
 
       {currentPet && totalPets > 0 && (
@@ -591,6 +611,12 @@ export default function HomeScreen() {
         onClose={() => setShowFilterModal(false)}
         onApplyFilters={setFilters}
         currentFilters={filters}
+      />
+
+      {/* Onboarding Modal */}
+      <OnboardingModal
+        visible={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
       />
     </SafeAreaView>
   );
@@ -622,9 +648,13 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   headerButton: {
-    padding: 10,
+    minWidth: SPACING.minTouchTarget,
+    minHeight: SPACING.minTouchTarget,
+    padding: SPACING.sm,
     backgroundColor: 'rgba(255, 107, 107, 0.1)',
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardContainer: {
     flex: 1,
@@ -828,31 +858,27 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.gray400,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#FF6B6B',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
-    elevation: 12,
+    minWidth: SPACING.minTouchTarget,
+    minHeight: SPACING.minTouchTarget,
+    ...SHADOWS.lg,
     borderWidth: 2,
-    borderColor: 'white',
+    borderColor: COLORS.white,
   },
   likeButton: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#4ECDC4',
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#4ECDC4',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
-    elevation: 12,
+    minWidth: SPACING.minTouchTarget,
+    minHeight: SPACING.minTouchTarget,
+    ...SHADOWS.lg,
     borderWidth: 2,
-    borderColor: 'white',
+    borderColor: COLORS.white,
   },
   tapIndicator: {
     position: 'absolute',
