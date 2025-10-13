@@ -1,14 +1,22 @@
 import { View, Text, StyleSheet, Dimensions, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { Filter, Bell, Heart, X, MapPin, Star, User } from 'lucide-react-native';
-import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
-import LoadingState from '@/components/ui/LoadingState';
-import { NoPetsEmptyState } from '@/components/ui/EmptyState';
+import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
+import LoadingState, { CardLoadingState } from '@/components/ui/LoadingState';
+import EmptyState, { NoPetsEmptyState } from '@/components/ui/EmptyState';
 import OnboardingModal from '@/components/ui/OnboardingModal';
-import ImprovedSwiper from '@/components/ui/ImprovedSwiper';
-import { AdoptionFlowStatus } from '@/types/adoption';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+  runOnJS,
+  interpolate,
+  Extrapolate,
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { mockPets } from '@/data/pets';
 import FilterModal, { Filters } from '@/components/FilterModal';
@@ -17,11 +25,13 @@ import { supabase, databaseService, authService, Pet } from '@/lib/supabase';
 const { width, height } = Dimensions.get('window');
 const CARD_WIDTH = width - 30;
 const CARD_HEIGHT = height * 0.7;
+const SWIPE_THRESHOLD = width * 0.25;
 
 export default function HomeScreen() {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [likedPets, setLikedPets] = useState<string[]>([]);
+  const [isAnimating, setIsAnimating] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [filters, setFilters] = useState<Filters>({
@@ -37,12 +47,36 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   
-  // Simple current pet tracking
+  // Double buffer: maintain two separate card states
+  const [cardAData, setCardAData] = useState(0); // Index for card A
+  const [cardBData, setCardBData] = useState(1); // Index for card B
+  const [activeCard, setActiveCard] = useState<'A' | 'B'>('A'); // Which card is currently visible
+
+  // Animation values for both cards
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const scale = useSharedValue(1);
+  const rotate = useSharedValue(0);
+  
+  // Opacity values for each card (only one visible at a time)
+  const cardAOpacity = useSharedValue(1);
+  const cardBOpacity = useSharedValue(0);
+
+  // Safe access to pets with error handling - using double buffer
   const totalPets = filteredPets?.length || 0;
-  const currentPet = totalPets > 0 && currentIndex < totalPets ? filteredPets[currentIndex] : null;
+  
+  // Get the current active pet based on which card is active
+  const currentPetIndex = activeCard === 'A' ? cardAData : cardBData;
+  const currentPet = totalPets > 0 ? filteredPets[currentPetIndex % totalPets] : null;
+
+  // Initialize data loading
+  useEffect(() => {
+    initializeData();
+    checkOnboardingStatus();
+  }, []);
 
   // Check if user needs onboarding
-  const checkOnboardingStatus = useCallback(async () => {
+  const checkOnboardingStatus = async () => {
     try {
       // Check if onboarding has been completed (could use AsyncStorage in real app)
       // For now, show onboarding for new/guest users
@@ -54,10 +88,10 @@ export default function HomeScreen() {
     } catch (error) {
       console.log('Error checking onboarding status:', error);
     }
-  }, [user]);
+  };
 
   // Load user and pets data
-  const initializeData = useCallback(async () => {
+  const initializeData = async () => {
     try {
       setIsLoading(true);
       
@@ -87,7 +121,7 @@ export default function HomeScreen() {
         setFilteredPets(mockPetsConverted);
       }
     } catch (error) {
-      console.error('Error loading pets:', error);
+      console.error('Error loading data:', error);
       // Fallback to mock data on error
       const mockPetsConverted = convertMockPetsToDBFormat(mockPets);
       setPets(mockPetsConverted);
@@ -95,37 +129,41 @@ export default function HomeScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
 
-  // Convert mock pets to database format for consistency
-  const convertMockPetsToDBFormat = (mockData: typeof mockPets): Pet[] => {
-    return mockData.map(pet => ({
+  // Convert mock pets to database format
+  const convertMockPetsToDBFormat = (mockPets: any[]): Pet[] => {
+    return mockPets.map(pet => ({
       id: pet.id,
       name: pet.name,
       breed: pet.breed,
-      age: parseInt(pet.age.split(' ')[0]) || 1, // Convert "2 years" to 2
+      age: parseInt(pet.age.replace(/[^\d]/g, '')) || 1, // Extract number from age string
       gender: pet.gender.toLowerCase() as 'male' | 'female',
       size: pet.size.toLowerCase() as 'small' | 'medium' | 'large',
-      color: 'Unknown', // Default since not in mock data
-      personality: pet.personality,
-      description: pet.description,
-      images: [pet.image] as string[],
-      location: pet.location,
-      contact_info: { phone: 'Contact via app', email: 'info@pawmatch.com' },
+      color: 'Mixed', // Default color since mock data doesn't have this
+      personality: pet.personality || [],
+      description: pet.description || 'A wonderful pet looking for a loving home.',
+      images: pet.image ? [pet.image] : [],
+      location: pet.location || 'Unknown',
+      contact_info: { shelter: 'Local Shelter', phone: '(555) 123-4567' },
       adoption_status: 'available' as const,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     }));
   };
 
-  const applyFilters = useCallback((newFilters: Filters) => {
+  // Apply filters when they change
+  useEffect(() => {
+    applyFilters(filters);
+  }, [filters, pets]);
+
+  // Filter pets based on selected criteria
+  const applyFilters = (newFilters: Filters) => {
     let filtered = [...pets];
     
     // Apply breed filter
     if (newFilters.breed !== 'All Breeds') {
-      filtered = filtered.filter(pet => 
-        pet.breed.toLowerCase().includes(newFilters.breed.toLowerCase())
-      );
+      filtered = filtered.filter(pet => pet.breed === newFilters.breed);
     }
     
     // Apply age filter
@@ -159,71 +197,236 @@ export default function HomeScreen() {
     
     setFilteredPets(filtered);
     
-    // Reset to first pet when filters change
-    setCurrentIndex(0);
-  }, [pets]);
+    // Reset card positions when filters change
+    setCardAData(0);
+    setCardBData(1);
+    setActiveCard('A');
+    cardAOpacity.value = 1;
+    cardBOpacity.value = 0;
+  };
 
-  const handleLike = async (pet: Pet, index: number) => {
-    console.log('🤍 User liked pet:', pet.name);
-    
-    // Add to liked pets locally
-    setLikedPets(prev => [...prev, pet.id]);
+  const handleLike = async () => {
+    if (currentPet) {
+      setLikedPets(prev => [...prev, currentPet.id]);
       
       // Record interaction in database if user is logged in
       if (user && supabase) {
         try {
-        await databaseService.recordPetInteraction(user.id, pet.id, 'like');
-        await databaseService.addToFavorites(user.id, pet.id);
-        
-        // TODO: Check if shelter also likes (mutual match)
-        // This would trigger AdoptionFlowStatus.MATCHED
-        console.log('✅ Pet saved! Status:', AdoptionFlowStatus.LIKED);
+          await databaseService.recordPetInteraction(user.id, currentPet.id, 'like');
+          await databaseService.addToFavorites(user.id, currentPet.id);
         } catch (error) {
           console.error('Error recording like:', error);
         }
       }
-    
-    // Move to next card
-    setCurrentIndex(prev => prev + 1);
+    }
+    nextCard();
   };
-  
-  const handlePass = async (pet: Pet, index: number) => {
-    console.log('👎 User passed on pet:', pet.name);
-    
-    // Record interaction in database if user is logged in
-    if (user && supabase) {
+
+  const handlePass = async () => {
+    if (currentPet && user && supabase) {
       try {
-        await databaseService.recordPetInteraction(user.id, pet.id, 'pass');
+        await databaseService.recordPetInteraction(user.id, currentPet.id, 'pass');
       } catch (error) {
         console.error('Error recording pass:', error);
       }
     }
-    
-    // Move to next card
-    setCurrentIndex(prev => prev + 1);
+    nextCard();
   };
 
-  const handleCardPress = (pet: Pet, index: number) => {
+  const handleCardPress = () => {
+    if (currentPet && !isAnimating) {
       // Navigate to pet details page with liked status
       router.push({
         pathname: '/pet-details/[id]',
         params: { 
-        id: pet.id,
-        isLiked: likedPets.includes(pet.id).toString()
+          id: currentPet.id,
+          isLiked: likedPets.includes(currentPet.id).toString()
+        }
+      });
+    }
+  };
+
+    const nextCard = () => {
+    if (totalPets === 0 || isAnimating) return;
+    
+    setIsAnimating(true);
+    
+    // Get current indices
+    const currentAIndex = cardAData;
+    const currentBIndex = cardBData;
+    
+    if (activeCard === 'A') {
+      // A is currently visible, B will become visible
+      // Update A to show the next pet after B
+      const nextAIndex = (currentBIndex + 1) % totalPets;
+      setCardAData(nextAIndex);
+      
+      // Switch to card B
+      cardAOpacity.value = 0;
+      cardBOpacity.value = 1;
+      setActiveCard('B');
+      setCurrentIndex(currentBIndex);
+    } else {
+      // B is currently visible, A will become visible  
+      // Update B to show the next pet after A
+      const nextBIndex = (currentAIndex + 1) % totalPets;
+      setCardBData(nextBIndex);
+      
+      // Switch to card A
+      cardBOpacity.value = 0;
+      cardAOpacity.value = 1;
+      setActiveCard('A');
+      setCurrentIndex(currentAIndex);
+    }
+    
+    // Reset animation values immediately
+    translateX.value = 0;
+    translateY.value = 0;
+    scale.value = 1;
+    rotate.value = 0;
+    
+    // Small delay to ensure React state updates are processed
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 50);
+  };
+
+  const animatedLike = () => {
+    if (isAnimating) return;
+    
+    translateX.value = withTiming(width, { duration: 150 }, (finished) => {
+      if (finished) {
+        runOnJS(handleLike)();
       }
     });
   };
 
-  // Initialize data loading
-  useEffect(() => {
-    initializeData();
-    checkOnboardingStatus();
-  }, [initializeData, checkOnboardingStatus]);
+  const animatedPass = () => {
+    if (isAnimating) return;
+    
+    translateX.value = withTiming(-width, { duration: 150 }, (finished) => {
+      if (finished) {
+        runOnJS(handlePass)();
+      }
+    });
+  };
 
-  // Apply filters effect  
-  useEffect(() => {
-    applyFilters(filters);
-  }, [filters, pets, applyFilters]);
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      'worklet';
+      if (isAnimating) return;
+    })
+    .onUpdate((event) => {
+      'worklet';
+      if (isAnimating) return;
+      
+      translateX.value = event.translationX;
+      translateY.value = event.translationY;
+      
+      // Rotation based on horizontal movement
+      rotate.value = interpolate(
+        translateX.value,
+        [-width, 0, width],
+        [-15, 0, 15],
+        Extrapolate.CLAMP
+      );
+      
+      // Scale down slightly while dragging
+      scale.value = interpolate(
+        Math.abs(translateX.value),
+        [0, width * 0.5],
+        [1, 0.95],
+        Extrapolate.CLAMP
+      );
+    })
+    .onEnd(() => {
+      'worklet';
+      if (isAnimating) return;
+      
+      const shouldSwipeLeft = translateX.value < -SWIPE_THRESHOLD;
+      const shouldSwipeRight = translateX.value > SWIPE_THRESHOLD;
+      
+      if (shouldSwipeLeft) {
+        // Animate card off screen, then handle the swipe
+        translateX.value = withTiming(-width, { duration: 150 }, (finished) => {
+          if (finished) {
+            runOnJS(handlePass)();
+          }
+        });
+      } else if (shouldSwipeRight) {
+        // Animate card off screen, then handle the swipe
+        translateX.value = withTiming(width, { duration: 150 }, (finished) => {
+          if (finished) {
+            runOnJS(handleLike)();
+          }
+        });
+      } else {
+        // Snap back to center with less bounce
+        translateX.value = withSpring(0, { damping: 20, stiffness: 200 });
+        translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
+        rotate.value = withSpring(0, { damping: 20, stiffness: 200 });
+        scale.value = withSpring(1, { damping: 20, stiffness: 200 });
+      }
+    });
+
+  const cardAnimatedStyle = useAnimatedStyle(() => {
+    const currentOpacity = activeCard === 'A' ? cardAOpacity.value : cardBOpacity.value;
+    return {
+      opacity: currentOpacity,
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { rotate: `${rotate.value}deg` },
+        { scale: scale.value },
+      ],
+    };
+  });
+
+  const cardAAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: cardAOpacity.value,
+      transform: [
+        { translateX: activeCard === 'A' ? translateX.value : 0 },
+        { translateY: activeCard === 'A' ? translateY.value : 0 },
+        { rotate: activeCard === 'A' ? `${rotate.value}deg` : '0deg' },
+        { scale: activeCard === 'A' ? scale.value : 1 },
+      ],
+    };
+  });
+
+  const cardBAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: cardBOpacity.value,
+      transform: [
+        { translateX: activeCard === 'B' ? translateX.value : 0 },
+        { translateY: activeCard === 'B' ? translateY.value : 0 },
+        { rotate: activeCard === 'B' ? `${rotate.value}deg` : '0deg' },
+        { scale: activeCard === 'B' ? scale.value : 1 },
+      ],
+    };
+  });
+
+  const likeIndicatorStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      translateX.value,
+      [0, width * 0.3],
+      [0, 1],
+      Extrapolate.CLAMP
+    );
+    
+    return { opacity };
+  });
+
+  const passIndicatorStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      translateX.value,
+      [-width * 0.3, 0],
+      [1, 0],
+      Extrapolate.CLAMP
+    );
+    
+    return { opacity };
+  });
 
   const renderCard = (pet: Pet | null, isNext = false) => {
     if (!pet) return null;
@@ -236,7 +439,7 @@ export default function HomeScreen() {
     return (
       <TouchableOpacity 
         style={[styles.petCard, isNext && styles.nextCard]}
-        onPress={isNext ? undefined : () => handleCardPress(pet, currentIndex)}
+        onPress={isNext ? undefined : handleCardPress}
         activeOpacity={isNext ? 1 : 0.95}
       >
         <Image 
@@ -326,28 +529,77 @@ export default function HomeScreen() {
           onAdjustFilters={() => setShowFilterModal(true)}
         />
       ) : (
-        <ImprovedSwiper
-          data={filteredPets}
-          currentIndex={currentIndex}
-          renderCard={(pet: Pet, index: number) => renderCard(pet, false)}
-          onSwipeLeft={handlePass}
-          onSwipeRight={handleLike}
-          onCardPress={handleCardPress}
-        />
+        <View style={styles.cardContainer}>
+          <>
+            {/* Card A - Double Buffer System */}
+            {activeCard === 'A' ? (
+              <GestureDetector gesture={panGesture}>
+                <Animated.View 
+                  key="card-a"
+                  style={[styles.cardWrapper, cardAAnimatedStyle]}
+                >
+                  {filteredPets[cardAData % totalPets] && renderCard(filteredPets[cardAData % totalPets], false)}
+                  
+                  {/* Like indicator - only show on active card */}
+                  <Animated.View style={[styles.likeIndicator, likeIndicatorStyle]}>
+                    <Text style={styles.indicatorText}>LIKE</Text>
+                  </Animated.View>
+                  
+                  {/* Pass indicator - only show on active card */}
+                  <Animated.View style={[styles.passIndicator, passIndicatorStyle]}>
+                    <Text style={styles.indicatorText}>PASS</Text>
+                  </Animated.View>
+                </Animated.View>
+              </GestureDetector>
+            ) : (
+              <Animated.View 
+                key="card-a"
+                style={[styles.cardWrapper, cardAAnimatedStyle]}
+                pointerEvents="none"
+              >
+                {filteredPets[cardAData % totalPets] && renderCard(filteredPets[cardAData % totalPets], true)}
+              </Animated.View>
+            )}
+            
+            {/* Card B - Double Buffer System */}
+            {activeCard === 'B' ? (
+              <GestureDetector gesture={panGesture}>
+                <Animated.View 
+                  key="card-b"
+                  style={[styles.cardWrapper, cardBAnimatedStyle]}
+                >
+                  {filteredPets[cardBData % totalPets] && renderCard(filteredPets[cardBData % totalPets], false)}
+                  
+                  {/* Like indicator - only show on active card */}
+                  <Animated.View style={[styles.likeIndicator, likeIndicatorStyle]}>
+                    <Text style={styles.indicatorText}>LIKE</Text>
+                  </Animated.View>
+                  
+                  {/* Pass indicator - only show on active card */}
+                  <Animated.View style={[styles.passIndicator, passIndicatorStyle]}>
+                    <Text style={styles.indicatorText}>PASS</Text>
+                  </Animated.View>
+                </Animated.View>
+              </GestureDetector>
+            ) : (
+              <Animated.View 
+                key="card-b"
+                style={[styles.cardWrapper, cardBAnimatedStyle]}
+                pointerEvents="none"
+              >
+                {filteredPets[cardBData % totalPets] && renderCard(filteredPets[cardBData % totalPets], true)}
+              </Animated.View>
+            )}
+          </>
+        </View>
       )}
 
-      {currentPet && totalPets > 0 && currentIndex < totalPets && (
+      {currentPet && totalPets > 0 && (
         <View style={styles.actionButtons}>
-          <TouchableOpacity 
-            style={styles.passButton} 
-            onPress={() => handlePass(currentPet, currentIndex)}
-          >
+          <TouchableOpacity style={styles.passButton} onPress={animatedPass}>
             <X size={30} color="#FFF" />
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.likeButton} 
-            onPress={() => handleLike(currentPet, currentIndex)}
-          >
+          <TouchableOpacity style={styles.likeButton} onPress={animatedLike}>
             <Heart size={30} color="#FFF" />
           </TouchableOpacity>
         </View>
@@ -374,22 +626,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
-    paddingBottom: 85, // Account for absolute positioned tab bar
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 15,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontFamily: 'Poppins-Bold',
-    color: '#333',
+    color: '#FF6B6B',
+    letterSpacing: -0.5,
   },
   headerButtons: {
     flexDirection: 'row',
@@ -409,6 +661,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginTop: 25, // Add margin to prevent overlap with header
   },
   cardWrapper: {
     position: 'absolute',
@@ -418,13 +672,18 @@ const styles = StyleSheet.create({
   petCard: {
     width: '100%',
     height: '100%',
-    borderRadius: 25,
-    overflow: 'hidden',
     backgroundColor: 'white',
-    ...SHADOWS.lg,
+    borderRadius: 25,
+    shadowColor: '#FF6B6B',
+    shadowOffset: { width: 0, height: 15 },
+    shadowOpacity: 0.2,
+    shadowRadius: 25,
+    elevation: 20,
+    overflow: 'hidden',
   },
   nextCard: {
-    opacity: 0.7,
+    opacity: 0.8,
+    transform: [{ scale: 0.95 }],
   },
   petImage: {
     width: '100%',
@@ -433,42 +692,47 @@ const styles = StyleSheet.create({
   },
   gradientOverlay: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
-    height: '50%',
+    bottom: 0,
+    height: '60%',
   },
   petInfoOverlay: {
     position: 'absolute',
-    bottom: 30,
-    left: 20,
-    right: 20,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 25,
+    paddingBottom: 30,
   },
   petHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     marginBottom: 8,
   },
   petName: {
-    fontSize: 28,
+    fontSize: 32,
     fontFamily: 'Poppins-Bold',
     color: 'white',
-    flex: 1,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   ageContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
+    backdropFilter: 'blur(10px)',
   },
   petAge: {
     fontSize: 14,
-    fontFamily: 'Nunito-SemiBold',
+    fontFamily: 'Nunito-Bold',
     color: 'white',
   },
   petBreed: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Nunito-SemiBold',
     color: 'rgba(255,255,255,0.9)',
     marginBottom: 8,
@@ -480,22 +744,22 @@ const styles = StyleSheet.create({
   },
   petLocation: {
     fontSize: 14,
-    fontFamily: 'Nunito-Regular',
+    fontFamily: 'Nunito-Medium',
     color: 'rgba(255,255,255,0.8)',
-    marginLeft: 8,
+    marginLeft: 6,
   },
   personalityContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginBottom: 12,
+    gap: 8,
   },
   personalityTag: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255,255,255,0.25)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 15,
-    marginRight: 8,
-    marginBottom: 6,
+    backdropFilter: 'blur(10px)',
   },
   personalityText: {
     fontSize: 12,
@@ -505,7 +769,7 @@ const styles = StyleSheet.create({
   petDescription: {
     fontSize: 14,
     fontFamily: 'Nunito-Regular',
-    color: 'rgba(255,255,255,0.9)',
+    color: 'rgba(255,255,255,0.85)',
     lineHeight: 20,
   },
   ratingBadge: {
@@ -513,11 +777,12 @@ const styles = StyleSheet.create({
     top: 20,
     right: 20,
     backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backdropFilter: 'blur(10px)',
   },
   ratingText: {
     fontSize: 12,
@@ -525,19 +790,61 @@ const styles = StyleSheet.create({
     color: 'white',
     marginLeft: 4,
   },
-  tapIndicator: {
+  likeIndicator: {
     position: 'absolute',
-    top: 20,
-    left: 20,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    top: 100,
+    left: 30,
+    backgroundColor: '#4ECDC4',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
+    transform: [{ rotate: '-15deg' }],
+    borderWidth: 4,
+    borderColor: 'white',
   },
-  tapText: {
-    fontSize: 12,
-    fontFamily: 'Nunito-SemiBold',
+  passIndicator: {
+    position: 'absolute',
+    top: 100,
+    right: 30,
+    backgroundColor: '#FF6B6B',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
+    transform: [{ rotate: '15deg' }],
+    borderWidth: 4,
+    borderColor: 'white',
+  },
+  indicatorText: {
+    fontSize: 18,
+    fontFamily: 'Poppins-Bold',
     color: 'white',
+    letterSpacing: 2,
+  },
+  noMoreCards: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+    backgroundColor: 'white',
+    borderRadius: 25,
+    margin: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  noMoreText: {
+    fontSize: 24,
+    fontFamily: 'Poppins-Bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  noMoreSubtext: {
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
+    color: '#666',
+    textAlign: 'center',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -572,5 +879,42 @@ const styles = StyleSheet.create({
     ...SHADOWS.lg,
     borderWidth: 2,
     borderColor: COLORS.white,
+  },
+  tapIndicator: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backdropFilter: 'blur(10px)',
+  },
+  tapText: {
+    fontSize: 11,
+    fontFamily: 'Nunito-SemiBold',
+    color: 'white',
+    textAlign: 'center',
+    opacity: 0.9,
+  },
+  tapDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'white',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  loadingText: {
+    fontSize: 18,
+    fontFamily: 'Poppins-Medium',
+    color: '#FF6B6B',
+    textAlign: 'center',
   },
 });
