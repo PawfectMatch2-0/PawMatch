@@ -14,7 +14,22 @@ import Constants from 'expo-constants';
 WebBrowser.maybeCompleteAuthSession();
 
 // Environment configuration
-const IS_PRODUCTION = process.env.APP_ENV === 'production' || !__DEV__;
+const IS_PRODUCTION = process.env.APP_ENV === 'production' || !__DEV__ || 
+  (typeof window !== 'undefined' && (
+    window.location.hostname.includes('expo.app') || 
+    window.location.hostname.includes('expo.dev') ||
+    !window.location.hostname.includes('localhost')
+  ));
+
+// Debug logging for environment detection
+if (typeof window !== 'undefined') {
+  console.log('🔹 [Direct Auth] Environment Detection:');
+  console.log('🔹 APP_ENV:', process.env.APP_ENV);
+  console.log('🔹 __DEV__:', __DEV__);
+  console.log('🔹 hostname:', window.location.hostname);
+  console.log('🔹 IS_PRODUCTION:', IS_PRODUCTION);
+}
+
 // Get the environment variables or use fallbacks
 const DEV_IP_ADDRESS = Constants.expoConfig?.extra?.EXPO_PUBLIC_DEV_IP_ADDRESS || process.env.EXPO_PUBLIC_DEV_IP_ADDRESS || '192.168.68.106';
 
@@ -105,14 +120,19 @@ export const directSignInWithGoogle = async () => {
     let redirectUrl = '';
     
     if (Platform.OS === 'web') {
-      if (IS_PRODUCTION) {
+      if (IS_PRODUCTION || (typeof window !== 'undefined' && window.location.hostname.includes('expo.app'))) {
         redirectUrl = getAuthRedirectUrl('web');
+        console.log('🔹 [Direct Auth] Using PRODUCTION web redirect URL:', redirectUrl);
       } else {
-        // Web platform: Use current port dynamically for development
-        const currentPort = typeof window !== 'undefined' ? (window.location.port || '8081') : '8081';
-        redirectUrl = `http://localhost:${currentPort}/assets/web/auth-callback.html`;
+        // Web platform: Use current origin for development
+        if (typeof window !== 'undefined') {
+          redirectUrl = `${window.location.origin}/assets/web/auth-callback.html`;
+        } else {
+          const currentPort = '8081'; // fallback
+          redirectUrl = `http://localhost:${currentPort}/assets/web/auth-callback.html`;
+        }
+        console.log('🔹 [Direct Auth] Using DEVELOPMENT web redirect URL:', redirectUrl);
       }
-      console.log('🔹 [Direct Auth] Using web redirect URL:', redirectUrl);
     } else if (Platform.OS === 'android') {
       redirectUrl = getAuthRedirectUrl('android');
       console.log('🔹 [Direct Auth] Using Android redirect URL:', redirectUrl);
@@ -152,42 +172,50 @@ export const directSignInWithGoogle = async () => {
     console.log('🔹 [Direct Auth] Got auth URL from Supabase:', data.url);
     
     if (Platform.OS === 'web') {
-      // For web, we need to manually extract the port from the current URL
-      // and add it to the OAuth URL to ensure it redirects back to the same port
-      try {
-        // Extract the current port
-        const currentPort = window.location.port || '8082';
-        console.log('🔹 [Direct Auth] Current port:', currentPort);
-        
-        // Parse the OAuth URL
-        const oauthUrl = new URL(data.url);
-        
-        // Get the redirect_to parameter from the OAuth URL
-        const redirectToParam = oauthUrl.searchParams.get('redirect_to');
-        
-        if (redirectToParam) {
-          // Parse the redirect_to URL
-          const redirectToUrl = new URL(decodeURIComponent(redirectToParam));
+      // Check if we're in production (Expo deployment) or development
+      if (IS_PRODUCTION || (typeof window !== 'undefined' && window.location.hostname.includes('expo.app'))) {
+        // Production: Use the URL as-is from Supabase
+        console.log('🔹 [Direct Auth] Production mode - using OAuth URL as-is:', data.url);
+        window.location.href = data.url;
+      } else {
+        // Development: Modify port to match current development server
+        try {
+          // Extract the current port - use actual current port or default to 8081
+          const currentPort = window.location.port || '8081';
+          console.log('🔹 [Direct Auth] Development mode - Current port:', currentPort);
           
-          // Force the port to match the current port
-          redirectToUrl.port = currentPort;
+          // Parse the OAuth URL
+          const oauthUrl = new URL(data.url);
           
-          // Update the redirect_to parameter in the OAuth URL
-          oauthUrl.searchParams.set('redirect_to', redirectToUrl.toString());
+          // Get the redirect_to parameter from the OAuth URL
+          const redirectToParam = oauthUrl.searchParams.get('redirect_to');
           
-          console.log('🔹 [Direct Auth] Modified redirect_to:', redirectToUrl.toString());
-          console.log('🔹 [Direct Auth] Modified OAuth URL:', oauthUrl.toString());
-          
-          // Redirect to the modified OAuth URL
-          window.location.href = oauthUrl.toString();
-        } else {
-          // Fallback to the original URL if no redirect_to parameter
+          if (redirectToParam) {
+            // Parse the redirect_to URL
+            const redirectToUrl = new URL(decodeURIComponent(redirectToParam));
+            
+            // Force the port to match the current port only in development
+            if (redirectToUrl.hostname === 'localhost' || redirectToUrl.hostname === '127.0.0.1') {
+              redirectToUrl.port = currentPort;
+            }
+            
+            // Update the redirect_to parameter in the OAuth URL
+            oauthUrl.searchParams.set('redirect_to', redirectToUrl.toString());
+            
+            console.log('🔹 [Direct Auth] Modified redirect_to:', redirectToUrl.toString());
+            console.log('🔹 [Direct Auth] Modified OAuth URL:', oauthUrl.toString());
+            
+            // Redirect to the modified OAuth URL
+            window.location.href = oauthUrl.toString();
+          } else {
+            // Fallback to the original URL if no redirect_to parameter
+            window.location.href = data.url;
+          }
+        } catch (e) {
+          console.error('🔹 [Direct Auth] Error modifying URL:', e);
+          // Fallback to the original URL
           window.location.href = data.url;
         }
-      } catch (e) {
-        console.error('🔹 [Direct Auth] Error modifying URL:', e);
-        // Fallback to the original URL
-        window.location.href = data.url;
       }
       
       return { type: 'web' };
