@@ -5,12 +5,14 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Heart, User } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 const { width, height } = Dimensions.get('window');
 
 export default function SplashScreen() {
   const router = useRouter();
   const [showContent, setShowContent] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -19,9 +21,65 @@ export default function SplashScreen() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Check for existing session on mount
+  useEffect(() => {
+    const checkAuthSession = async () => {
+      try {
+        if (!supabase) {
+          console.log('🔍 [Splash] Supabase not configured, showing auth options');
+          setCheckingAuth(false);
+          return;
+        }
+
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('🔍 [Splash] Error checking session:', error);
+          setCheckingAuth(false);
+          return;
+        }
+
+        if (session?.user) {
+          console.log('🔍 [Splash] Found existing session for:', session.user.email);
+          router.replace('/(tabs)');
+          return;
+        }
+
+        console.log('🔍 [Splash] No existing session found');
+        setCheckingAuth(false);
+      } catch (error) {
+        console.error('🔍 [Splash] Auth check failed:', error);
+        setCheckingAuth(false);
+      }
+    };
+
+    checkAuthSession();
+  }, [router]);
+
   const handleGetStarted = () => {
     router.push('/auth');
   };
+
+  if (checkingAuth) {
+    return (
+      <LinearGradient
+        colors={['#FF6B6B', '#FF8E8E', '#FFB3B3']}
+        style={styles.container}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.content}>
+            <View style={styles.logoContainer}>
+              <View style={styles.logoCircle}>
+                <Heart size={60} color="white" fill="white" />
+              </View>
+              <Text style={styles.appName}>PawMatch</Text>
+              <Text style={styles.tagline}>Loading...</Text>
+            </View>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
 
   return (
     <LinearGradient

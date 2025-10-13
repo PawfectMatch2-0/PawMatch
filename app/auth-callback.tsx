@@ -18,13 +18,7 @@ export default function AuthCallbackScreen() {
     // Function to process the authentication callback
     const processAuthCallback = async () => {
       try {
-        console.log('🔄 Processing auth callback, params:', params);
-        
-        // Check if we have an auth code in the params
-        if (params.code) {
-          console.log('🔄 Found auth code in params');
-          // The code would be automatically processed by Supabase
-        }
+        console.log('🔄 [AuthCallback] Processing auth callback, params:', params);
         
         // Check if we have an auth error
         if (params.error) {
@@ -45,7 +39,14 @@ export default function AuthCallbackScreen() {
         }
         
         // Check for a session
-        console.log('🔄 Checking for session');
+        console.log('🔄 [AuthCallback] Checking for session');
+        
+        if (!supabase) {
+          console.error('❌ [AuthCallback] Supabase not configured');
+          router.push('/auth');
+          return;
+        }
+
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {

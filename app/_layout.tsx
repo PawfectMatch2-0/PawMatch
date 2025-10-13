@@ -43,20 +43,42 @@ export default function RootLayout() {
 
   // Listen for auth state changes
   useEffect(() => {
+    console.log('🔍 [Auth] Auth state listener TEMPORARILY DISABLED to debug loops');
+    return; // Early return to disable auth listener
+    
+    if (!supabase) {
+      console.log('🔍 [Auth] Supabase not configured, skipping auth listener');
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔍 Auth state change:', event, session?.user?.email);
+      console.log('🔍 [Auth] State change:', event, 'User:', session?.user?.email);
+      // Pathname check removed due to type issues
       
       if (event === 'SIGNED_IN' && session?.user) {
         try {
-          // Create or update user profile
-          await authService.createOrUpdateProfile(session.user);
+          console.log('✅ [Auth] User signed in, creating profile...');
           
-          // Navigate to main app
-          console.log('🔍 Redirecting to main app after successful OAuth');
-          router.replace('/(tabs)');
+          // Create or update user profile
+          const profile = await authService.createOrUpdateProfile(session.user);
+          console.log('✅ [Auth] Profile created:', profile?.email);
+          
+          // Always redirect to main app after successful sign in
+          console.log('� [Auth] Redirecting to main app after successful OAuth');
+          
+          // Add a small delay to ensure the auth state is fully processed
+          setTimeout(() => {
+            router.replace('/(tabs)');
+          }, 100);
         } catch (error) {
-          console.error('❌ Error handling auth state change:', error);
+          console.error('❌ [Auth] Error handling auth state change:', error);
+          // Don't redirect on error - let user stay where they are or manually retry
         }
+      } else if (event === 'SIGNED_OUT') {
+        console.log('👋 [Auth] User signed out');
+        router.replace('/');
+      } else {
+        console.log('ℹ️ [Auth] Other auth event:', event);
       }
     });
 

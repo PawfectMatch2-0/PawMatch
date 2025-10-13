@@ -14,17 +14,35 @@ import Constants from 'expo-constants';
 WebBrowser.maybeCompleteAuthSession();
 
 // Environment configuration
-const IS_PRODUCTION = false;
+const IS_PRODUCTION = process.env.APP_ENV === 'production' || !__DEV__;
 // Get the environment variables or use fallbacks
-const DEV_IP_ADDRESS = Constants.expoConfig?.extra?.EXPO_PUBLIC_DEV_IP_ADDRESS || '192.168.68.102';
-const AUTH_REDIRECT_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_REDIRECT_URL || 'http://localhost:8081/assets/web/auth-callback.html';
-const AUTH_MOBILE_REDIRECT_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_MOBILE_REDIRECT_URL || 'pawmatch://auth-callback';
+const DEV_IP_ADDRESS = Constants.expoConfig?.extra?.EXPO_PUBLIC_DEV_IP_ADDRESS || process.env.EXPO_PUBLIC_DEV_IP_ADDRESS || '192.168.68.106';
+
+// Production URLs - Expo deployment domain
+const PRODUCTION_WEB_URL = 'https://pawfectmatch.expo.app';
+const PRODUCTION_DEEP_LINK = 'pawmatch://oauth/callback';
+
+const getAuthRedirectUrl = (platform: string) => {
+  if (IS_PRODUCTION) {
+    return platform === 'web' ? `${PRODUCTION_WEB_URL}/auth/callback` : PRODUCTION_DEEP_LINK;
+  } else {
+    // Development URLs
+    return platform === 'web' 
+      ? process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL || 'http://localhost:8081/assets/web/auth-callback.html'
+      : process.env.EXPO_PUBLIC_AUTH_MOBILE_REDIRECT_URL || 'pawmatch://auth-callback';
+  }
+};
+
+// Get environment variables
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
 
 // Create a direct Supabase client with Site URL override
-const supabaseClient = createClient(
-  'https://afxkliyukojjymvfwiyp.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmeGtsaXl1a29qanltdmZ3aXlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxNjc1NTcsImV4cCI6MjA2OTc0MzU1N30.tAn3GDt39F4xVMubXBpgYKEXh9eleIQzGg6SmEucAdc',
-  {
+const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
     auth: { 
       persistSession: true,
       autoRefreshToken: true,
@@ -87,29 +105,27 @@ export const directSignInWithGoogle = async () => {
     let redirectUrl = '';
     
     if (Platform.OS === 'web') {
-      // Web platform: Use a hard-coded URL to force the port to 8081
-      redirectUrl = 'http://localhost:8081/assets/web/auth-callback.html';
-      console.log('🔹 [Direct Auth] Using hard-coded web redirect URL');
-    } else if (Platform.OS === 'android') {
       if (IS_PRODUCTION) {
-        // Production: Use app deep linking
-        redirectUrl = 'https://pawmatch.app/auth-callback';
+        redirectUrl = getAuthRedirectUrl('web');
       } else {
-        // Development: Use the network IP instead of localhost
-        redirectUrl = `http://${DEV_IP_ADDRESS}:8081/assets/web/android-auth-callback.html`;
+        // Web platform: Use current port dynamically for development
+        const currentPort = typeof window !== 'undefined' ? (window.location.port || '8081') : '8081';
+        redirectUrl = `http://localhost:${currentPort}/assets/web/auth-callback.html`;
       }
+      console.log('🔹 [Direct Auth] Using web redirect URL:', redirectUrl);
+    } else if (Platform.OS === 'android') {
+      redirectUrl = getAuthRedirectUrl('android');
+      console.log('🔹 [Direct Auth] Using Android redirect URL:', redirectUrl);
     } else {
       // iOS or other: Use native deep linking
-      redirectUrl = IS_PRODUCTION ? 'https://pawmatch.app/auth-callback' : 'pawmatch://auth-callback';
+      redirectUrl = getAuthRedirectUrl('ios');
+      console.log('🔹 [Direct Auth] Using iOS redirect URL:', redirectUrl);
     }
     
     console.log('🔹 [Direct Auth] Using redirect URL:', redirectUrl);
     
     // Create a new supabase client just for this auth request with fixed site URL
-    const authClient = createClient(
-      'https://afxkliyukojjymvfwiyp.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmeGtsaXl1a29qanltdmZ3aXlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxNjc1NTcsImV4cCI6MjA2OTc0MzU1N30.tAn3GDt39F4xVMubXBpgYKEXh9eleIQzGg6SmEucAdc',
-      {
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
         auth: { 
           flowType: 'pkce',
           detectSessionInUrl: false
@@ -140,7 +156,7 @@ export const directSignInWithGoogle = async () => {
       // and add it to the OAuth URL to ensure it redirects back to the same port
       try {
         // Extract the current port
-        const currentPort = window.location.port || '8081';
+        const currentPort = window.location.port || '8082';
         console.log('🔹 [Direct Auth] Current port:', currentPort);
         
         // Parse the OAuth URL
