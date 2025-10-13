@@ -26,38 +26,6 @@ export default function AuthScreen() {
     }
   }, [params]);
 
-  // Check for existing session when component mounts
-  useEffect(() => {
-    checkExistingSession();
-  }, []);
-
-  const checkExistingSession = async () => {
-    try {
-      console.log('🔍 [Auth] Checking for existing session...');
-      if (!supabase) {
-        console.log('🔍 [Auth] Supabase not configured');
-        return;
-      }
-      
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('🔍 [Auth] Session check error:', error);
-        return;
-      }
-
-      if (session?.user) {
-        console.log('🔍 [Auth] Found existing session:', session.user.email);
-        console.log('🔍 [Auth] Redirecting to main app...');
-        router.replace('/(tabs)');
-      } else {
-        console.log('🔍 [Auth] No existing session found');
-      }
-    } catch (error) {
-      console.error('🔍 [Auth] Error checking session:', error);
-    }
-  };
-
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);

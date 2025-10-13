@@ -43,30 +43,19 @@ export default function RootLayout() {
 
   // Listen for auth state changes
   useEffect(() => {
-    if (!supabase) return;
-    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔍 [Root Layout] Auth state change:', event, session?.user?.email);
-      
-      // Don't redirect if we're currently on the auth callback route
-      // Let the auth-callback.tsx handle the redirect instead
-      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-      if (currentPath.includes('auth-callback')) {
-        console.log('🔍 [Root Layout] On auth-callback route, skipping redirect');
-        return;
-      }
+      console.log('🔍 Auth state change:', event, session?.user?.email);
       
       if (event === 'SIGNED_IN' && session?.user) {
         try {
-          console.log('🔍 [Root Layout] Processing SIGNED_IN event');
           // Create or update user profile
           await authService.createOrUpdateProfile(session.user);
           
           // Navigate to main app
-          console.log('🔍 [Root Layout] Redirecting to main app after successful OAuth');
+          console.log('🔍 Redirecting to main app after successful OAuth');
           router.replace('/(tabs)');
         } catch (error) {
-          console.error('❌ [Root Layout] Error handling auth state change:', error);
+          console.error('❌ Error handling auth state change:', error);
         }
       }
     });
@@ -87,7 +76,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="dark" backgroundColor="#FFFFFF" translucent={false} />
+      <StatusBar style="auto" />
     </GestureHandlerRootView>
   );
 }

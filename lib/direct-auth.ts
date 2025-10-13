@@ -17,7 +17,7 @@ WebBrowser.maybeCompleteAuthSession();
 const IS_PRODUCTION = false;
 // Get the environment variables or use fallbacks
 const DEV_IP_ADDRESS = Constants.expoConfig?.extra?.EXPO_PUBLIC_DEV_IP_ADDRESS || '192.168.68.102';
-const AUTH_REDIRECT_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_REDIRECT_URL || 'http://localhost:8082/auth-callback';
+const AUTH_REDIRECT_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_REDIRECT_URL || 'http://localhost:8081/assets/web/auth-callback.html';
 const AUTH_MOBILE_REDIRECT_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_MOBILE_REDIRECT_URL || 'pawmatch://auth-callback';
 
 // Create a direct Supabase client with Site URL override
@@ -87,8 +87,8 @@ export const directSignInWithGoogle = async () => {
     let redirectUrl = '';
     
     if (Platform.OS === 'web') {
-      // Web platform: Use a hard-coded URL to match current port
-      redirectUrl = 'http://localhost:8082/auth-callback';
+      // Web platform: Use a hard-coded URL to force the port to 8081
+      redirectUrl = 'http://localhost:8081/assets/web/auth-callback.html';
       console.log('🔹 [Direct Auth] Using hard-coded web redirect URL');
     } else if (Platform.OS === 'android') {
       if (IS_PRODUCTION) {
@@ -96,7 +96,7 @@ export const directSignInWithGoogle = async () => {
         redirectUrl = 'https://pawmatch.app/auth-callback';
       } else {
         // Development: Use the network IP instead of localhost
-        redirectUrl = `http://${DEV_IP_ADDRESS}:8082/auth-callback`;
+        redirectUrl = `http://${DEV_IP_ADDRESS}:8081/assets/web/android-auth-callback.html`;
       }
     } else {
       // iOS or other: Use native deep linking

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Pawfect Match",
-    "slug": "pawfectmatch",
+    "name": "PawMatch",
+    "slug": "pawmatch",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "pawfectmatch",
+    "scheme": "pawmatch",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -17,7 +17,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.pawmatch.app",
       "associatedDomains": [
-        "applinks:pawfectmatch.app"
+        "applinks:pawmatch.app"
       ]
     },
     "android": {
@@ -39,19 +39,19 @@
           "autoVerify": true,
           "data": [
             {
-              "scheme": "pawfectmatch"
+              "scheme": "pawmatch"
             },
             {
-              "scheme": "pawfectmatch",
+              "scheme": "pawmatch",
               "host": "oauth"
             },
             {
-              "scheme": "pawfectmatch",
+              "scheme": "pawmatch",
               "host": "auth"
             },
             {
               "scheme": "https",
-              "host": "*.pawfectmatch.app",
+              "host": "*.pawmatch.app",
               "pathPrefix": "/"
             }
           ],
@@ -66,7 +66,7 @@
       "bundler": "metro",
       "output": "single",
       "favicon": "./assets/images/favicon.png",
-      "staticDirectory": "public",
+      "staticDirectory": "assets",
       "build": {
         "babel": {
           "include": [
@@ -95,15 +95,8 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "31119c5e-3522-4ddf-a340-2121d942192b"
+        "projectId": "80e3026e-6bcf-423a-b1eb-fb5a6095dc4e"
       }
-    },
-    "owner": "yousuf_fahim",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/31119c5e-3522-4ddf-a340-2121d942192b"
     }
   }
 }

@@ -54,23 +54,10 @@ export const authenticateWithGoogle = async () => {
     console.log('🚀 [Mobile Auth] Starting mobile Google authentication with WebBrowser');
     console.log('🚀 [Mobile Auth] Platform:', Platform.OS);
     
-    // Use environment variable for redirect URI, with platform-specific fallbacks
-    let redirectUri = '';
-    
-    if (Platform.OS === 'web') {
-      // Web: use localhost with current port
-      redirectUri = process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL || 'http://localhost:8082/auth-simple-callback';
-    } else if (Platform.OS === 'android' || Platform.OS === 'ios') {
-      // Mobile: use deep link or localhost callback
-      redirectUri = process.env.EXPO_PUBLIC_AUTH_MOBILE_REDIRECT_URL || 
-                   Linking.createURL('mobile-auth-callback') ||
-                   'http://localhost:8082/mobile-auth-callback';
-    } else {
-      // Fallback
-      redirectUri = Linking.createURL('oauth/callback');
-    }
-    
-    console.log('🚀 [Mobile Auth] Platform:', Platform.OS);
+    // Use environment variable for redirect URI, with fallback
+    const redirectUri = process.env.EXPO_PUBLIC_OAUTH_REDIRECT_URL || 
+                       process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL || 
+                       Linking.createURL('oauth/callback');
     console.log('🚀 [Mobile Auth] Using redirect URI:', redirectUri);
     
     // Get the authorization URL from Supabase
