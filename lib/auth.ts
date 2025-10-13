@@ -129,9 +129,10 @@ export const Auth = {
       const scheme = process.env.EXPO_PUBLIC_MOBILE_SCHEME || 'pawmatch';
       redirectUrl = `${scheme}://`;
       
-      // If running in Expo Go, use the Expo URL
+      // If running in Expo Go, use the Expo URL with current IP and port
       if (process.env.EXPO_GO) {
-        redirectUrl = 'exp://192.168.68.102:8082';
+        const devIP = process.env.EXPO_PUBLIC_DEV_IP_ADDRESS || '192.168.68.106';
+        redirectUrl = `exp://${devIP}:8081`;
       }
     } else {
       // Fallback to Supabase default
