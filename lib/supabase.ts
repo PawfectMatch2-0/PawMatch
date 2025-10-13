@@ -188,6 +188,81 @@ export const authService = {
     
     if (error) throw error
     return data as unknown as UserProfile
+  },
+
+  async createOrUpdateProfile(user: any): Promise<UserProfile> {
+    if (!supabase) {
+      throw new Error('Supabase not configured. Please set up your environment variables.')
+    }
+
+    try {
+      console.log('📋 Creating/updating profile for user:', user.email);
+      console.log('📋 Raw user data:', JSON.stringify(user, null, 2));
+
+      // Extract Google profile data
+      const profileData: any = {
+        email: user.email,
+        full_name: user.user_metadata?.full_name || 
+                  user.user_metadata?.name || 
+                  user.identities?.[0]?.identity_data?.full_name ||
+                  user.identities?.[0]?.identity_data?.name ||
+                  user.email?.split('@')[0], // fallback to email prefix
+        
+        avatar_url: user.user_metadata?.avatar_url || 
+                   user.user_metadata?.picture ||
+                   user.identities?.[0]?.identity_data?.avatar_url ||
+                   user.identities?.[0]?.identity_data?.picture,
+        
+        // Additional Google data that might be available
+        phone: user.user_metadata?.phone_number || 
+               user.identities?.[0]?.identity_data?.phone_number,
+        
+        // Update timestamp
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('📋 Extracted profile data:', JSON.stringify(profileData, null, 2));
+
+      // Try to update existing profile first
+      const { data: existingProfile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (existingProfile) {
+        // Update existing profile
+        console.log('📋 Updating existing profile');
+        const { data, error } = await (supabase as any)
+          .from('user_profiles')
+          .update(profileData)
+          .eq('id', user.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        console.log('✅ Profile updated successfully');
+        return data as unknown as UserProfile;
+      } else {
+        // Create new profile
+        console.log('📋 Creating new profile');
+        const { data, error } = await (supabase as any)
+          .from('user_profiles')
+          .insert({
+            id: user.id,
+            ...profileData
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        console.log('✅ Profile created successfully');
+        return data as unknown as UserProfile;
+      }
+    } catch (error) {
+      console.error('❌ Error creating/updating profile:', error);
+      throw error;
+    }
   }
 }
 

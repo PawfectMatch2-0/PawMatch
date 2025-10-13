@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>🔧 Supabase Auth Debug Helper</title>
+  <style>
+    body { 
+      font-family: system-ui; 
+      max-width: 800px; 
+      margin: 0 auto; 
+      padding: 20px; 
+      line-height: 1.6;
+    }
+    .config-box { 
+      background: #f5f5f5; 
+      border-radius: 8px; 
+      padding: 20px; 
+      margin: 20px 0;
+      border-left: 4px solid #FF6B6B;
+    }
+    .url { 
+      font-family: monospace; 
+      background: #fff; 
+      padding: 4px 8px; 
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    .priority { 
+      color: #FF6B6B; 
+      font-weight: bold;
+    }
+    .step { 
+      margin: 20px 0; 
+      padding: 15px; 
+      background: white; 
+      border-radius: 8px;
+      border: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 Fix Your Supabase Auth Configuration</h1>
+  
+  <div class="config-box">
+    <h2>❌ Current Problem</h2>
+    <p>Authentication is redirecting to <code class="url">pawfectmatch.expo.app</code> instead of <code class="url">localhost:8082</code></p>
+    <p><strong>Result:</strong> "No worker deployment was found" error</p>
+  </div>
+
+  <div class="step">
+    <h2>📋 Step 1: Open Supabase Dashboard</h2>
+    <p><strong>Click this link:</strong> <a href="https://supabase.com/dashboard/project/afxkliyukojjymvfwiyp/auth/url-configuration" target="_blank">Supabase Auth Configuration</a></p>
+  </div>
+
+  <div class="step">
+    <h2>🎯 Step 2: Set Primary Site URL</h2>
+    <p><span class="priority">MOST IMPORTANT:</span> Set the <strong>Site URL</strong> field to:</p>
+    <div class="config-box">
+      <code class="url">http://localhost:8082</code>
+    </div>
+    <p><em>This MUST be the first/primary URL for development</em></p>
+  </div>
+
+  <div class="step">
+    <h2>🔗 Step 3: Add Redirect URLs</h2>
+    <p>In the <strong>Redirect URLs</strong> section, add these (one per line):</p>
+    <div class="config-box">
+      <code class="url">http://localhost:8082/auth-callback</code><br>
+      <code class="url">http://localhost:8081/auth-callback</code><br>
+      <code class="url">http://localhost:8083/auth-callback</code><br>
+      <code class="url">pawmatch://auth-callback</code><br>
+      <code class="url">https://auth.expo.io/@yousuf_fahim/pawmatch</code>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>⚠️ Step 4: Move Production URL</h2>
+    <p>If you have <code class="url">pawfectmatch.expo.app</code> configured:</p>
+    <ul>
+      <li><strong>Remove it</strong> from Site URL (for now)</li>
+      <li><strong>OR</strong> move it to the bottom of redirect URLs</li>
+      <li><strong>Make sure</strong> <code class="url">localhost:8082</code> is the primary</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <h2>✅ Step 5: Test the Fix</h2>
+    <ol>
+      <li><strong>Save</strong> your Supabase configuration</li>
+      <li><strong>Go back to:</strong> <a href="http://localhost:8082" target="_blank">http://localhost:8082</a></li>
+      <li><strong>Try Google sign-in again</strong></li>
+      <li><strong>It should now redirect to localhost instead of expo.app</strong></li>
+    </ol>
+  </div>
+
+  <div class="config-box">
+    <h2>🧪 Current Environment</h2>
+    <p><strong>Your app is running on:</strong> <code class="url" id="current-url"></code></p>
+    <p><strong>Expected redirect:</strong> <code class="url" id="expected-redirect"></code></p>
+    <p><strong>Time:</strong> <span id="current-time"></span></p>
+  </div>
+
+  <script>
+    // Show current environment info
+    document.getElementById('current-url').textContent = window.location.origin;
+    document.getElementById('expected-redirect').textContent = window.location.origin + '/auth-callback';
+    document.getElementById('current-time').textContent = new Date().toLocaleString();
+
+    // Check if we're on the right domain
+    if (window.location.hostname === 'localhost') {
+      document.body.style.borderTop = '5px solid #10B981';
+      console.log('✅ Running on localhost - configuration is correct for development');
+    } else {
+      document.body.style.borderTop = '5px solid #EF4444';
+      console.log('❌ Not running on localhost - make sure to configure for the correct domain');
+    }
+  </script>
+</body>
+</html>

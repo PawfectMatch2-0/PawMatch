@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>🔍 Supabase Error Diagnosis</title>
+  <style>
+    body { 
+      font-family: system-ui; 
+      max-width: 800px; 
+      margin: 0 auto; 
+      padding: 20px; 
+      line-height: 1.6;
+      background: #f5f5f5;
+    }
+    .error-box { 
+      background: #fee; 
+      border: 2px solid #f88; 
+      border-radius: 8px; 
+      padding: 20px; 
+      margin: 20px 0;
+    }
+    .info-box { 
+      background: #eff; 
+      border: 2px solid #88f; 
+      border-radius: 8px; 
+      padding: 20px; 
+      margin: 20px 0;
+    }
+    .success-box { 
+      background: #efe; 
+      border: 2px solid #8f8; 
+      border-radius: 8px; 
+      padding: 20px; 
+      margin: 20px 0;
+    }
+    .code { 
+      font-family: monospace; 
+      background: #333; 
+      color: #fff;
+      padding: 10px; 
+      border-radius: 4px;
+      margin: 10px 0;
+      overflow-x: auto;
+    }
+    button { 
+      background: #FF6B6B; 
+      color: white; 
+      border: none; 
+      padding: 10px 20px; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      margin: 5px;
+    }
+    button:hover { background: #e55555; }
+    .log { 
+      background: #f8f8f8; 
+      border: 1px solid #ddd; 
+      padding: 10px; 
+      border-radius: 4px; 
+      margin: 10px 0; 
+      max-height: 200px; 
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Supabase 500 Error Diagnosis</h1>
+  
+  <div class="error-box">
+    <h2>❌ Current Error</h2>
+    <p><strong>Error:</strong> 500 - "unexpected_failure"</p>
+    <p><strong>Location:</strong> Supabase OAuth callback</p>
+    <p><strong>Meaning:</strong> Google auth succeeded, but Supabase internal error occurred</p>
+  </div>
+
+  <div class="info-box">
+    <h2>🧪 Diagnostic Tests</h2>
+    <button onclick="testSupabaseConnection()">Test Supabase Connection</button>
+    <button onclick="testAuth()">Test Auth Configuration</button>
+    <button onclick="checkRedirectURLs()">Check Redirect URLs</button>
+    <button onclick="viewCurrentURL()">Analyze Current URL</button>
+    
+    <div id="results" class="log">Click buttons above to run diagnostics...</div>
+  </div>
+
+  <div class="info-box">
+    <h2>🔧 Common Solutions</h2>
+    <ol>
+      <li><strong>Check Supabase Project Health:</strong>
+        <br><a href="https://supabase.com/dashboard/project/afxkliyukojjymvfwiyp" target="_blank">Open Project Dashboard</a>
+        <br>Look for any warnings or errors in the dashboard
+      </li>
+      
+      <li><strong>Check Auth Provider Configuration:</strong>
+        <br><a href="https://supabase.com/dashboard/project/afxkliyukojjymvfwiyp/auth/providers" target="_blank">Check Google OAuth Provider</a>
+        <br>Ensure Google OAuth is properly configured with Client ID and Secret
+      </li>
+      
+      <li><strong>Check Redirect URL Configuration:</strong>
+        <br><a href="https://supabase.com/dashboard/project/afxkliyukojjymvfwiyp/auth/url-configuration" target="_blank">Check URL Configuration</a>
+        <br>Ensure redirect URLs match exactly
+      </li>
+      
+      <li><strong>Check Supabase Logs:</strong>
+        <br><a href="https://supabase.com/dashboard/project/afxkliyukojjymvfwiyp/logs/auth-logs" target="_blank">View Auth Logs</a>
+        <br>Look for specific error messages
+      </li>
+    </ol>
+  </div>
+
+  <div class="success-box">
+    <h2>✅ Quick Fix Attempt</h2>
+    <p>Try this simplified redirect URL configuration:</p>
+    <div class="code">
+Site URL: http://localhost:8082
+Redirect URLs:
+http://localhost:8082/auth-callback
+pawmatch://auth-callback
+    </div>
+    <p>Remove all other URLs temporarily and test with just these two.</p>
+  </div>
+
+  <script>
+    function log(message) {
+      const results = document.getElementById('results');
+      const timestamp = new Date().toLocaleTimeString();
+      results.innerHTML += `[${timestamp}] ${message}\n`;
+      results.scrollTop = results.scrollHeight;
+    }
+
+    function testSupabaseConnection() {
+      log('🔍 Testing Supabase connection...');
+      
+      const supabaseUrl = 'https://afxkliyukojjymvfwiyp.supabase.co';
+      
+      fetch(supabaseUrl + '/rest/v1/', {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmeGtsaXl1a29qanltdmZ3aXlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxNjc1NTcsImV4cCI6MjA2OTc0MzU1N30.tAn3GDt39F4xVMubXBpgYKEXh9eleIQzGg6SmEucAdc'
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          log('✅ Supabase connection successful');
+        } else {
+          log(`❌ Supabase connection failed: ${response.status}`);
+        }
+      })
+      .catch(error => {
+        log(`❌ Supabase connection error: ${error.message}`);
+      });
+    }
+
+    function testAuth() {
+      log('🔍 Testing auth configuration...');
+      log(`📍 Current origin: ${window.location.origin}`);
+      log(`📍 Expected callback: ${window.location.origin}/auth-callback`);
+      
+      // Test if auth callback route exists
+      fetch('/auth-callback')
+        .then(response => {
+          log(`✅ Auth callback route accessible: ${response.status}`);
+        })
+        .catch(error => {
+          log(`❌ Auth callback route error: ${error.message}`);
+        });
+    }
+
+    function checkRedirectURLs() {
+      log('🔍 Checking redirect URL configuration...');
+      
+      const expectedUrls = [
+        'http://localhost:8082',
+        'http://localhost:8082/auth-callback',
+        'pawmatch://auth-callback'
+      ];
+      
+      log('📋 Expected URLs in Supabase:');
+      expectedUrls.forEach(url => log(`  - ${url}`));
+      
+      log('⚠️ Go to Supabase dashboard to verify these URLs are configured');
+    }
+
+    function viewCurrentURL() {
+      log('🔍 Analyzing current URL and parameters...');
+      
+      const url = new URL(window.location.href);
+      log(`📍 Full URL: ${url.href}`);
+      log(`📍 Origin: ${url.origin}`);
+      log(`📍 Pathname: ${url.pathname}`);
+      
+      if (url.search) {
+        log('📋 URL Parameters:');
+        const params = new URLSearchParams(url.search);
+        for (let [key, value] of params.entries()) {
+          log(`  ${key}: ${value.substring(0, 50)}...`);
+        }
+      }
+      
+      if (url.hash) {
+        log(`📍 Hash: ${url.hash.substring(0, 100)}...`);
+      }
+    }
+
+    // Auto-run basic diagnostics
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        testSupabaseConnection();
+        testAuth();
+        viewCurrentURL();
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

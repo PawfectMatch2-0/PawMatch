@@ -79,7 +79,7 @@ const mobileSignIn = async () => {
   
   if (Platform.OS === 'android') {
     // Use our special Android callback handler
-    redirectUrl = 'http://localhost:8081/assets/web/android-auth-callback.html';
+    redirectUrl = 'http://localhost:8082/auth-callback';
     console.log('🔧 Using Android-specific auth callback page');
   }
   

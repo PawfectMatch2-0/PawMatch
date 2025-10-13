@@ -1,6 +1,7 @@
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 import { supabase } from './supabase';
+import { AuthConfig } from './auth-config';
 
 // Initialize WebBrowser for expo-auth-session
 WebBrowser.maybeCompleteAuthSession();
@@ -50,39 +51,18 @@ export const Auth = {
 
   /**
    * Web platform authentication flow
-   * Detects current port to determine correct redirect URL
+   * Uses AuthConfig helper to get correct redirect URL
    */
   async webSignIn() {
+    if (!supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+
     // Generate state parameter for CSRF protection
     this._authState = this._generateState();
     
-    // Get the environment redirect URL (should be set in .env)
-    const envRedirectUrl = process.env.EXPO_PUBLIC_OAUTH_REDIRECT_URL;
-    let redirectTo;
-    
-    if (envRedirectUrl) {
-      // Use the configured redirect URL from environment
-      console.log(`🔐 Using configured redirect URL from env: ${envRedirectUrl}`);
-      redirectTo = envRedirectUrl;
-    } else {
-      // Fallback to auto-detection (not recommended)
-      console.warn('⚠️ EXPO_PUBLIC_OAUTH_REDIRECT_URL not set in environment!');
-      console.warn('⚠️ Using auto-detected redirect URL, which may cause issues.');
-      
-      // Get the current port to determine the correct redirect
-      const currentPort = window.location.port;
-      
-      if (['8081', '8082', '8083'].includes(currentPort)) {
-        // Development mode - use auth-processor.html directly
-        redirectTo = `${window.location.origin}/auth-processor.html`;
-      } else if (window.location.hostname === 'localhost') {
-        // Other localhost ports (admin panel)
-        redirectTo = 'https://afxkliyukojjymvfwiyp.supabase.co/auth/v1/callback';
-      } else {
-        // Production mode
-        redirectTo = `${window.location.origin}/auth-processor.html`;
-      }
-    }
+    // Get the correct redirect URL using our helper
+    const redirectTo = AuthConfig.getRedirectURI();
     
     console.log('🔐 Using redirect URL:', redirectTo);
     console.log('🔐 Using state:', this._authState);
@@ -103,112 +83,38 @@ export const Auth = {
 
   /**
    * Mobile platform authentication flow
-   * Uses WebBrowser to handle the OAuth flow with improved state management
+   * Uses WebBrowser for OAuth with app-specific redirect
    */
   async mobileSignIn() {
-    console.log('🔐 Starting mobile OAuth flow');
+    if (!supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+
+    console.log('� Starting mobile OAuth flow');
     
-    // Generate a secure state parameter
+    // Generate state for CSRF protection
     this._authState = this._generateState();
     
-    // Try to use environment variable first if available for testing in Expo Go
-    const envRedirectUrl = process.env.EXPO_PUBLIC_OAUTH_REDIRECT_URL;
-    let redirectUrl;
+    // Use AuthConfig to get the correct mobile redirect URL
+    const redirectUrl = AuthConfig.getRedirectURI();
     
-    if (envRedirectUrl && process.env.EXPO_PUBLIC_USE_WEB_FLOW === 'true') {
-      // Use web-style redirect in some cases (for testing)
-      console.log(`🔐 Using web redirect URL from env: ${envRedirectUrl}`);
-      redirectUrl = envRedirectUrl;
-    }
-    // Otherwise use native platform redirects
-    else if (Platform.OS === 'ios') {
-      // iOS uses URL scheme directly
-      redirectUrl = 'pawmatch://';
-    } else if (Platform.OS === 'android') {
-      // For Android, use the Expo scheme
-      const scheme = process.env.EXPO_PUBLIC_MOBILE_SCHEME || 'pawmatch';
-      redirectUrl = `${scheme}://`;
-      
-      // If running in Expo Go, use the Expo URL
-      if (process.env.EXPO_GO) {
-        redirectUrl = 'exp://192.168.68.102:8082';
-      }
-    } else {
-      // Fallback to Supabase default
-      redirectUrl = 'https://afxkliyukojjymvfwiyp.supabase.co/auth/v1/callback';
-    }
+    console.log('� Using mobile redirect URL:', redirectUrl);
+    console.log('� Using state:', this._authState);
     
-    console.log('🔐 Using redirect URL:', redirectUrl);
-    console.log('🔐 Using state:', this._authState);
-    
-    // Get the authorization URL from Supabase
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: redirectUrl,
-        scopes: 'email profile',
         queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-          state: this._authState // Add state parameter for security
-        },
+          state: this._authState
+        }
       },
     });
-
-    if (error) {
-      console.error('🔐 OAuth initialization error:', error);
-      throw error;
-    }
     
-    if (!data?.url) {
-      console.error('🔐 No authentication URL provided');
-      throw new Error('No authentication URL provided');
-    }
-
-    console.log('🔐 Opening browser for authentication with URL:', data.url);
+    if (error) throw error;
     
-    try {
-      // Use openAuthSessionAsync which better handles redirects
-      const result = await WebBrowser.openAuthSessionAsync(
-        data.url, 
-        redirectUrl
-      );
-      
-      console.log('🔐 Auth session result type:', result.type);
-      
-      if (result.type === 'success' && result.url) {
-        console.log('🔐 Success URL received:', result.url);
-        
-        // Verify state if present to prevent CSRF attacks
-        const url = new URL(result.url);
-        const receivedState = url.searchParams.get('state');
-        
-        if (receivedState && this._authState && receivedState !== this._authState) {
-          console.error('🔐 State mismatch! Possible CSRF attack');
-          throw new Error('Authentication failed: State mismatch');
-        }
-        
-        // Check for error parameters
-        if (url.searchParams.has('error')) {
-          const error = url.searchParams.get('error');
-          const errorDesc = url.searchParams.get('error_description');
-          console.error('🔐 Auth error from redirect:', error, errorDesc);
-          throw new Error(`Authentication failed: ${errorDesc || error}`);
-        }
-        
-        // Handle success - check for session
-        return this.verifySession();
-      } else if (result.type === 'cancel') {
-        console.log('🔐 Auth was cancelled by user');
-        throw new Error('Authentication was cancelled');
-      } else {
-        console.error('🔐 Auth failed with result type:', result.type);
-        throw new Error(`Authentication failed: ${result.type}`);
-      }
-    } catch (err) {
-      console.error('❌ Error in WebBrowser session:', err);
-      throw new Error('Authentication failed. Please try again.');
-    }
+    console.log('📱 OAuth flow initiated successfully');
+    return data;
   },
 
   /**

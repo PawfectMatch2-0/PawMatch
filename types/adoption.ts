@@ -297,3 +297,4 @@ export const getStatusProgress = (status: AdoptionFlowStatus): number => {
   
   return progressMap[status] || 0;
 };
+
