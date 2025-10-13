@@ -17,6 +17,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.pawmatch.app",
       "associatedDomains": [
+        "applinks:pawmatch.app",
         "applinks:pawmatch.app"
       ]
     },
@@ -31,9 +32,39 @@
         "android.permission.INTERNET",
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
       "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "pawmatch"
+            },
+            {
+              "scheme": "pawmatch",
+              "host": "oauth"
+            },
+            {
+              "scheme": "pawmatch",
+              "host": "auth"
+            },
+            {
+              "scheme": "https",
+              "host": "*.pawmatch.app",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
         {
           "action": "VIEW",
           "autoVerify": true,
@@ -97,6 +128,12 @@
       "eas": {
         "projectId": "80e3026e-6bcf-423a-b1eb-fb5a6095dc4e"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/80e3026e-6bcf-423a-b1eb-fb5a6095dc4e"
     }
   }
 }
