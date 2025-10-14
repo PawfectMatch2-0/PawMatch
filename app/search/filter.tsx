@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState, useEffect } from 'react';
+import { COLORS } from '@/constants/theme';
 
 export default function FilterScreen() {
   const router = useRouter();
@@ -221,8 +222,8 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
   selectedOption: {
-    backgroundColor: '#FF6B6B',
-    borderColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   optionText: {
     fontSize: 14,
@@ -243,11 +244,11 @@ const styles = StyleSheet.create({
     borderTopColor: '#F5F5F5',
   },
   applyButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#FF6B6B',
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

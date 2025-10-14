@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Plus, Calendar, MessageCircle } from 'lucide-react-native';
+import { COLORS } from '@/constants/theme';
 import { 
   AdoptionApplication, 
   AdoptionFlowManager, 
@@ -124,7 +125,7 @@ export default function AdoptionTrackerScreen() {
             style={styles.actionButton}
             onPress={nextAction.action}
           >
-            <nextAction.icon size={16} color="#FF6B6B" />
+            <nextAction.icon size={16} color={COLORS.primary} />
             <Text style={styles.actionButtonText}>{nextAction.label}</Text>
           </TouchableOpacity>
         )}
@@ -271,7 +272,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#FF6B6B',
+    borderColor: COLORS.primary,
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 15,
@@ -279,7 +280,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionButtonText: {
-    color: '#FF6B6B',
+    color: COLORS.primary,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -328,7 +329,7 @@ const styles = StyleSheet.create({
   browseButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 20,

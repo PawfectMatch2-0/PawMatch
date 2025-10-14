@@ -1,12 +1,13 @@
 import { Tabs } from 'expo-router';
-import { Heart, Bookmark, BookOpen, Store, Bot } from 'lucide-react-native';
+import { Bookmark, BookOpen, Store, Bot, Home, Sparkles } from 'lucide-react-native';
+import { COLORS } from '@/constants/theme';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#FF6B6B',
+        tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: '#999',
         tabBarStyle: {
           backgroundColor: 'white',
@@ -30,7 +31,7 @@ export default function TabLayout() {
         options={{
           title: 'Discover',
           tabBarIcon: ({ size, color }) => (
-            <Heart size={size * 0.9} color={color} />
+            <Sparkles size={size * 0.9} color={color} />
           ),
         }}
       />

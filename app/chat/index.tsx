@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Send, Bot, User } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '@/constants/theme';
 
 interface Message {
   id: string;
@@ -175,7 +176,7 @@ export default function ChatScreen() {
                   {message.isUser ? (
                     <User size={16} color="#666" />
                   ) : (
-                    <Bot size={16} color="#FF6B6B" />
+                    <Bot size={16} color={COLORS.primary} />
                   )}
                   <Text style={styles.messageSender}>
                     {message.isUser ? 'You' : 'AI Counselor'}
@@ -195,7 +196,7 @@ export default function ChatScreen() {
             <View style={[styles.messageContainer, styles.aiMessage]}>
               <View style={[styles.messageBubble, styles.aiBubble]}>
                 <View style={styles.messageHeader}>
-                  <Bot size={16} color="#FF6B6B" />
+                  <Bot size={16} color={COLORS.primary} />
                   <Text style={styles.messageSender}>AI Counselor</Text>
                 </View>
                 <View style={styles.typingContainer}>
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   userBubble: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     borderBottomRightRadius: 4,
   },
   aiBubble: {
@@ -370,7 +371,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     marginHorizontal: 2,
   },
   dot1: {
@@ -436,7 +437,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,

@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Search, ArrowLeft, MapPin, Heart, Filter, X, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '@/lib/supabase';
+import { COLORS } from '@/constants/theme';
 
 interface Pet {
   id: string;
@@ -250,7 +251,7 @@ export default function SearchScreen() {
         </View>
       </View>
       <TouchableOpacity style={styles.heartButton}>
-        <Heart size={20} color="#FF6B6B" />
+        <Heart size={20} color={COLORS.primary} />
       </TouchableOpacity>
     </TouchableOpacity>
   );

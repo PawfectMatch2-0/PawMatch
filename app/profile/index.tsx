@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { supabase, authService } from '../../lib/supabase';
 import type { UserProfile } from '../../lib/supabase';
+import { COLORS } from '@/constants/theme';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -94,8 +95,8 @@ export default function ProfileScreen() {
   };
 
   const stats = [
-    { label: 'Saved Pets', value: '12', color: '#FF6B6B' },
-    { label: 'Matches', value: '8', color: '#4A90E2' },
+    { label: 'Saved Pets', value: '12', color: COLORS.primary },
+    { label: 'Matches', value: '8', color: COLORS.secondary },
     { label: 'Favorites', value: '24', color: '#50C878' }
   ];
 

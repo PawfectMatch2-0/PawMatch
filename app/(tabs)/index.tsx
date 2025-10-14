@@ -740,7 +740,7 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: 'white',
     borderRadius: 25,
-    shadowColor: '#FF6B6B',
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 15 },
     shadowOpacity: 0.2,
     shadowRadius: 25,
@@ -872,7 +872,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 100,
     right: 30,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 25,
@@ -980,7 +980,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     fontFamily: 'Poppins-Medium',
-    color: '#FF6B6B',
+    color: COLORS.primary,
     textAlign: 'center',
   },
 });

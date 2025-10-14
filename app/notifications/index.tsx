@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, Heart, Bell, CheckCheck, X, MessageCircle, Clock } from 'lucide-react-native';
 import { databaseService, supabase } from '../../lib/supabase';
 import AnimatedLoader from '../../components/AnimatedLoader';
+import { COLORS } from '@/constants/theme';
 
 interface Notification {
   id: string;
@@ -20,7 +21,7 @@ interface Notification {
 
 // Icon components for different notification types
 const NotificationIcon = ({ type, read }: { type: string; read: boolean }) => {
-  const color = read ? '#9CA3AF' : '#FF6B6B';
+  const color = read ? '#9CA3AF' : COLORS.primary;
   
   switch (type) {
     case 'adoption_approved':
@@ -208,7 +209,7 @@ export default function NotificationsScreen() {
         <Text style={styles.headerTitle}>Notifications</Text>
         {unreadCount > 0 && (
           <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
-            <CheckCheck size={20} color="#FF6B6B" />
+            <CheckCheck size={20} color={COLORS.primary} />
           </TouchableOpacity>
         )}
       </View>
@@ -277,7 +278,7 @@ const styles = StyleSheet.create({
   unreadText: {
     fontSize: 14,
     fontFamily: 'Nunito-SemiBold',
-    color: '#FF6B6B',
+    color: COLORS.primary,
     textAlign: 'center',
   },
   listContainer: {
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
   },
   unreadCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#FF6B6B',
+    borderLeftColor: COLORS.primary,
   },
   notificationContent: {
     flexDirection: 'row',
@@ -342,7 +343,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     marginLeft: 8,
     marginTop: 4,
   },
