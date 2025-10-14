@@ -67,17 +67,21 @@ export default function SplashScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           <View style={styles.logoContainer}>
-            <View style={styles.logoCircle}>
-              <Heart size={60} color="white" fill="white" />
+            <View style={styles.logoImageWrapper}>
+              <Image 
+                source={require('../assets/images/icon.png')} 
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
-            <Text style={styles.appName}>PawMatch</Text>
+            <Text style={styles.appName}>Pawfect Match</Text>
             <Text style={styles.tagline}>Find your perfect furry friend</Text>
           </View>
 
           {showContent && (
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.primaryButton} onPress={handleGetStarted}>
-                <User size={20} color="white" />
+                <User size={20} color="#E67E9C" />
                 <Text style={styles.primaryButtonText}>Start Browsing Pets</Text>
               </TouchableOpacity>
               
@@ -109,6 +113,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 80,
   },
+  logoImageWrapper: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  logoImage: {
+    width: 120,
+    height: 120,
+  },
   logoCircle: {
     width: 120,
     height: 120,
@@ -138,31 +160,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 25,
+    backgroundColor: 'white',
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    borderRadius: 30,
     marginBottom: 15,
-    gap: 8,
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
   },
   primaryButtonText: {
-    color: 'white',
-    fontSize: 16,
+    color: '#E67E9C',
+    fontSize: 17,
     fontFamily: 'Poppins-SemiBold',
   },
   secondaryButton: {
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: 'white',
   },
   secondaryButtonText: {
     color: 'white',
-    fontSize: 14,
-    fontFamily: 'Nunito-Regular',
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
   },
 });
