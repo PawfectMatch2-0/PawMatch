@@ -61,7 +61,7 @@ export default function SplashScreen() {
 
   return (
     <LinearGradient
-      colors={['#FF6B6B', '#FF8E8E', '#FFB3B3']}
+      colors={['#E67E9C', '#EFA3B8', '#F7C9D4']}
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea}>

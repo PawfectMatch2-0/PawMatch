@@ -2,16 +2,16 @@
 // Consistent theme tokens for the entire app
 
 export const COLORS = {
-  // Primary Brand Colors
-  primary: '#FF6B6B',
-  primaryLight: '#FF8E8E',
-  primaryLighter: '#FFB3B3',
-  primaryDark: '#E55A5A',
+  // Primary Brand Colors - Pawfect Match Theme (Pink)
+  primary: '#E67E9C',
+  primaryLight: '#EFA3B8',
+  primaryLighter: '#F7C9D4',
+  primaryDark: '#D6588A',
   
-  // Secondary Colors
-  secondary: '#4A90E2',
-  secondaryLight: '#6BA3E8',
-  secondaryDark: '#3A7BC0',
+  // Secondary Colors - Pawfect Match Theme (Blue)
+  secondary: '#2FA5C7',
+  secondaryLight: '#5FBFD9',
+  secondaryDark: '#1E8BA8',
   
   // Semantic Colors
   success: '#10B981',
