@@ -503,20 +503,38 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Discover</Text>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity style={styles.headerButton} onPress={() => setShowFilterModal(true)}>
-            <Filter size={24} color="#FF6B6B" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/notifications')}>
-            <Bell size={24} color="#FF6B6B" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/profile')}>
-            <User size={24} color="#FF6B6B" />
-          </TouchableOpacity>
+      {/* Enhanced Header with Logo */}
+      <LinearGradient
+        colors={['#FFFFFF', '#FEFEFE', '#FAFAFA']}
+        style={styles.headerGradient}
+      >
+        <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            <View style={styles.logoIconWrapper}>
+              <Image 
+                source={require('@/assets/images/icon.png')} 
+                style={styles.logoIcon}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.titleContainer}>
+              <Text style={styles.appName}>Pawfect Match</Text>
+              <Text style={styles.subtitle}>Find Your Perfect Pet</Text>
+            </View>
+          </View>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity style={styles.headerButton} onPress={() => setShowFilterModal(true)}>
+              <Filter size={22} color={COLORS.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/notifications')}>
+              <Bell size={22} color={COLORS.secondary} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerButtonProfile} onPress={() => router.push('/profile')}>
+              <User size={20} color="white" />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </LinearGradient>
 
       {isLoading ? (
         <LoadingState 
@@ -627,34 +645,82 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
+  headerGradient: {
+    paddingBottom: 10,
+    ...SHADOWS.sm,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'transparent',
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  logoIconWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...SHADOWS.md,
+  },
+  logoIcon: {
+    width: 40,
+    height: 40,
+  },
+  titleContainer: {
+    flex: 1,
+  },
+  appName: {
+    fontSize: 20,
+    fontFamily: 'Poppins-Bold',
+    color: COLORS.primary,
+    letterSpacing: -0.5,
+    lineHeight: 24,
+  },
+  subtitle: {
+    fontSize: 11,
+    fontFamily: 'Nunito-Regular',
+    color: COLORS.textSecondary,
+    marginTop: -2,
   },
   title: {
     fontSize: 32,
     fontFamily: 'Poppins-Bold',
-    color: '#FF6B6B',
+    color: COLORS.primary,
     letterSpacing: -0.5,
   },
   headerButtons: {
     flexDirection: 'row',
-    gap: 15,
+    gap: 10,
+    alignItems: 'center',
   },
   headerButton: {
-    minWidth: SPACING.minTouchTarget,
-    minHeight: SPACING.minTouchTarget,
-    padding: SPACING.sm,
-    backgroundColor: 'rgba(255, 107, 107, 0.1)',
-    borderRadius: BORDER_RADIUS.lg,
+    minWidth: 40,
+    minHeight: 40,
+    padding: 8,
+    backgroundColor: 'rgba(230, 126, 156, 0.1)',
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  headerButtonProfile: {
+    minWidth: 40,
+    minHeight: 40,
+    padding: 10,
+    backgroundColor: COLORS.secondary,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...SHADOWS.sm,
   },
   cardContainer: {
     flex: 1,
