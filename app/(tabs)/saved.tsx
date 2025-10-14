@@ -2,12 +2,14 @@ import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Linking, Ale
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { Heart, MapPin, MessageCircle, Share2, Clock, CheckCircle, XCircle, User } from 'lucide-react-native';
+import { Heart, MapPin, MessageCircle, Share2, Clock, CheckCircle, XCircle, User, FileText, Calendar } from 'lucide-react-native';
 import { SPACING, BORDER_RADIUS } from '@/constants/theme';
 import LoadingState from '@/components/ui/LoadingState';
 import EmptyState, { NoSavedPetsEmptyState } from '@/components/ui/EmptyState';
 import { mockPets } from '@/data/pets';
 import { supabase, databaseService, authService, Pet } from '@/lib/supabase';
+import AdoptionStatusTracker from '@/components/AdoptionStatusTracker';
+import { AdoptionStatus } from '@/lib/adoption-flow';
 
 // Mock adoption requests data
 const mockAdoptionRequests = [
@@ -272,6 +274,35 @@ export default function SavedScreen() {
             </View>
           ))}
         </View>
+        
+        {/* ADOPTION FLOW INTEGRATION */}
+        <View style={styles.adoptionSection}>
+          <TouchableOpacity 
+            style={styles.adoptButton}
+            onPress={(e) => {
+              e.stopPropagation();
+              router.push({
+                pathname: '/adoption/apply',
+                params: { petId: item.id, petName: item.name }
+              });
+            }}
+          >
+            <FileText size={16} color="white" />
+            <Text style={styles.adoptButtonText}>Apply to Adopt</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.trackerButton}
+            onPress={(e) => {
+              e.stopPropagation();
+              router.push('/adoption/tracker');
+            }}
+          >
+            <Calendar size={16} color="#FF6B6B" />
+            <Text style={styles.trackerButtonText}>Track Applications</Text>
+          </TouchableOpacity>
+        </View>
+        
         <View style={styles.actionButtons}>
           <TouchableOpacity 
             style={styles.messageButton}
@@ -612,5 +643,45 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  // ADOPTION FLOW STYLES
+  adoptionSection: {
+    flexDirection: 'row',
+    gap: 8,
+    marginVertical: 8,
+  },
+  adoptButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF6B6B',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    gap: 4,
+  },
+  adoptButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontFamily: 'Nunito-SemiBold',
+  },
+  trackerButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF5F5',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FF6B6B',
+    gap: 4,
+  },
+  trackerButtonText: {
+    color: '#FF6B6B',
+    fontSize: 12,
+    fontFamily: 'Nunito-SemiBold',
   },
 });

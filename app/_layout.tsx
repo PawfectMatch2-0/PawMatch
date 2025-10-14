@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useFonts } from 'expo-font';
-import { supabase, authService } from '@/lib/supabase';
+import { AuthProvider } from '@/hooks/useAuth';
 import {
   Poppins_400Regular,
   Poppins_500Medium,
@@ -41,45 +41,9 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
-  // Listen for auth state changes
+  // Enhanced auth system handles all authentication
   useEffect(() => {
-    if (!supabase) {
-      console.log('🔍 [Auth] Supabase not configured, skipping auth listener');
-      return;
-    }
-
-    let isProcessing = false; // Prevent multiple simultaneous auth processes
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔍 [Auth] State change:', event, 'User:', session?.user?.email);
-      
-      if (event === 'SIGNED_IN' && session?.user && !isProcessing) {
-        isProcessing = true;
-        try {
-          console.log('✅ [Auth] User signed in, creating profile...');
-          
-          // Create or update user profile
-          const profile = await authService.createOrUpdateProfile(session.user);
-          console.log('✅ [Auth] Profile created:', profile?.email);
-          
-          // Redirect to main app after successful sign in
-          console.log('🔄 [Auth] Redirecting to main app after successful OAuth');
-          router.replace('/(tabs)');
-        } catch (error) {
-          console.error('❌ [Auth] Error handling auth state change:', error);
-          // Don't redirect on error - let user stay where they are or manually retry
-        } finally {
-          isProcessing = false;
-        }
-      } else if (event === 'SIGNED_OUT') {
-        console.log('👋 [Auth] User signed out');
-        router.replace('/');
-      } else {
-        console.log('ℹ️ [Auth] Other auth event:', event);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    console.log('🔐 [App] Enhanced JWT auth system initialized (NO OAUTH)');
   }, [router]);
 
   if (!fontsLoaded && !fontError) {
@@ -87,15 +51,19 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="auth" />
-        <Stack.Screen name="auth/callback" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="dark" backgroundColor="#f8f9fa" translucent={false} />
-    </GestureHandlerRootView>
+    <AuthProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="auth-enhanced" />
+          <Stack.Screen name="auth/callback" />
+          <Stack.Screen name="auth/confirm" />
+          <Stack.Screen name="auth/reset-password" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="dark" backgroundColor="#f8f9fa" translucent={false} />
+      </GestureHandlerRootView>
+    </AuthProvider>
   );
 }

@@ -10,22 +10,38 @@ const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
 
 // Helper function to get the appropriate redirect URI
+// Get appropriate redirect URI based on environment - OAuth Engineer Fix
 const getRedirectUri = () => {
-  // Always use AuthSession.makeRedirectUri() for mobile - it handles Expo Go vs standalone correctly
-  return AuthSession.makeRedirectUri({
-    scheme: __DEV__ ? undefined : 'pawmatch',
-    path: 'oauth/callback'
-  })
+  if (Platform.OS === 'web') {
+    // For web deployment, use your actual domain
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      if (origin.includes('pawfectmatch.expo.app')) {
+        return 'https://pawfectmatch.expo.app/oauth/callback';
+      }
+      return `${origin}/oauth/callback`;
+    }
+    return 'http://localhost:8082/oauth/callback';
+  }
+  
+  // For mobile: ALWAYS use auth.expo.io proxy in development
+  // This is the ONLY way to make OAuth work reliably with Expo Go
+  if (__DEV__) {
+    return 'https://auth.expo.io/@yousuf_fahim/pawmatch';
+  }
+  
+  // For production builds, use custom scheme
+  return 'pawmatch://oauth/callback';
 }
 
-// Debug logging for redirect URIs (only in development)
-if (__DEV__ && process.env.EXPO_PUBLIC_DEBUG_AUTH === 'true') {
-  console.log('\n📋 [Google Console] Add these Redirect URIs:');
-  console.log('- Current redirect URI:', getRedirectUri());
-  console.log('- Expo Go:', AuthSession.makeRedirectUri({ path: 'oauth/callback' }));
-  console.log('- Alternative Dev:', 'https://auth.expo.io/@yousuf_fahim/pawmatch');
-  console.log('- Production (EAS Build):', AuthSession.makeRedirectUri({ scheme: 'pawmatch', path: 'oauth/callback' }));
-  console.log('- Alternative Production:', 'pawmatch://oauth/callback');
+// OAuth Engineer Debug - DISABLED FOR ENHANCED AUTH SYSTEM
+if (false && __DEV__ && process.env.EXPO_PUBLIC_DEBUG_AUTH === 'true') {
+  console.log('\n📋 [OAuth Engineer] EXACT URIs for Google Console:');
+  console.log('✅ https://auth.expo.io/@yousuf_fahim/pawmatch');
+  console.log('✅ https://pawfectmatch.expo.app/oauth/callback');
+  console.log('✅ http://localhost:8082/oauth/callback');
+  console.log('\n🚨 REMOVE ALL OTHER URIs FROM GOOGLE CONSOLE');
+  console.log('💡 Current environment URI:', getRedirectUri());
 }
 
 // Check if environment variables are configured and create client
@@ -140,13 +156,9 @@ export const authService = {
       console.log('🚀 [Auth] Dev mode:', __DEV__)
     }
 
-    // ARCHITECTURAL FIX: For Expo Go development, use a registered redirect URI
-    let actualRedirectUri = redirectUri;
-    if (__DEV__ && redirectUri.startsWith('exp://')) {
-      // Use the auth.expo.io proxy which is pre-registered with Google
-      actualRedirectUri = `https://auth.expo.io/@yousuf_fahim/pawmatch`;
-      console.log('🔧 [Auth] Using Expo proxy for development:', actualRedirectUri);
-    }
+    // OAuth Engineer Fix: Use the redirect URI directly (no double conversion)
+    const actualRedirectUri = redirectUri;
+    console.log('🔧 [Auth] Final redirect URI:', actualRedirectUri);
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -176,9 +188,16 @@ export const authService = {
       console.log('🚀 [Auth] Opening mobile browser for authentication')
       console.log('🚀 [Auth] OAuth URL:', data.url)
       
+      // OAuth Engineer Fix: For Expo Go, we need to use the proxy for both directions
+      const callbackUri = __DEV__ ? actualRedirectUri : AuthSession.makeRedirectUri({ 
+        path: 'oauth/callback'
+      });
+      
+      console.log('🔧 [Auth] WebBrowser callback URI:', callbackUri);
+      
       const result = await WebBrowser.openAuthSessionAsync(
         data.url,
-        redirectUri  // Use original redirectUri for deep link back to app
+        callbackUri
       )
       
       console.log('🚀 [Auth] Browser result:', result.type)
@@ -187,24 +206,65 @@ export const authService = {
       }
       
       if (result.type === 'success') {
-        // Wait a moment for session to be established
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        console.log('✅ [Auth] Browser returned success, processing callback...')
         
-        // Try multiple times to get session
-        for (let i = 0; i < 3; i++) {
-          const { data: session } = await supabase.auth.getSession()
-          if (session?.session) {
-            console.log('✅ [Auth] Session established successfully')
-            return {
-              success: true,
-              session: session.session,
-              user: session.session.user
+        // Parse the callback URL to extract session data
+        if (result.url) {
+          const url = new URL(result.url)
+          const fragment = url.hash.substring(1) // Remove the # character
+          const params = new URLSearchParams(fragment)
+          
+          const accessToken = params.get('access_token')
+          const refreshToken = params.get('refresh_token')
+          
+          console.log('🔑 [Auth] Extracted tokens from URL:', {
+            hasAccessToken: !!accessToken,
+            hasRefreshToken: !!refreshToken
+          })
+          
+          if (accessToken) {
+            // Set the session directly with the tokens
+            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || ''
+            })
+            
+            if (sessionError) {
+              console.error('❌ [Auth] Error setting session:', sessionError)
+              throw new Error(`Failed to establish session: ${sessionError.message}`)
+            }
+            
+            if (sessionData.session) {
+              console.log('✅ [Auth] Session established successfully with user:', sessionData.session.user.email)
+              
+              // Create or update profile
+              await this.createOrUpdateProfile(sessionData.session.user)
+              
+              return {
+                success: true,
+                session: sessionData.session,
+                user: sessionData.session.user
+              }
             }
           }
-          console.log(`🔄 [Auth] Waiting for session... attempt ${i + 1}`)
-          await new Promise(resolve => setTimeout(resolve, 1000))
         }
-        throw new Error('Authentication completed but no session found after multiple attempts')
+        
+        // Fallback: Try to get existing session
+        console.log('🔄 [Auth] Fallback: Checking for existing session...')
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        const { data: session } = await supabase.auth.getSession()
+        if (session?.session) {
+          console.log('✅ [Auth] Found existing session')
+          await this.createOrUpdateProfile(session.session.user)
+          return {
+            success: true,
+            session: session.session,
+            user: session.session.user
+          }
+        }
+        
+        throw new Error('Authentication completed but no session could be established. Please try again.')
       } else if (result.type === 'cancel') {
         throw new Error('Authentication was cancelled')
       } else {

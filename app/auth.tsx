@@ -45,7 +45,23 @@ export default function AuthScreen() {
       }
     } catch (error: any) {
       console.error('🔐 [Auth] Sign in error:', error);
-      setError(error.message || 'Failed to sign in with Google. Please try again.');
+      
+      // More specific error messages based on error type
+      let errorMessage = 'Failed to sign in with Google. Please try again.';
+      
+      if (error.message) {
+        if (error.message.includes('cancelled')) {
+          errorMessage = 'Sign in was cancelled. Please try again.';
+        } else if (error.message.includes('no session')) {
+          errorMessage = 'Authentication completed but session setup failed. Please try again.';
+        } else if (error.message.includes('network')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

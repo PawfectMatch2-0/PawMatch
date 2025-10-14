@@ -44,21 +44,55 @@ export default function OAuthCallbackScreen() {
         if (params.access_token) {
           console.log('🔗 [OAuth Callback] Found access token in params');
           
-          const { data, error } = await supabase.auth.setSession({
-            access_token: params.access_token as string,
-            refresh_token: params.refresh_token as string || ''
-          });
-          
-          if (error) {
-            console.error('🔗 [OAuth Callback] Error setting session:', error);
-            router.push('/auth');
-            return;
-          }
-          
-          if (data.session) {
-            console.log('🔗 [OAuth Callback] Session established successfully');
-            await authService.createOrUpdateProfile(data.session.user);
-            router.push('/(tabs)');
+          try {
+            const { data, error } = await supabase.auth.setSession({
+              access_token: params.access_token as string,
+              refresh_token: params.refresh_token as string || ''
+            });
+            
+            if (error) {
+              console.error('🔗 [OAuth Callback] Error setting session:', error);
+              setTimeout(() => {
+                router.push({
+                  pathname: '/auth',
+                  params: { 
+                    error: 'session_error',
+                    errorDescription: `Failed to establish session: ${error.message}`
+                  }
+                });
+              }, 1000);
+              return;
+            }
+            
+            if (data.session) {
+              console.log('🔗 [OAuth Callback] Session established successfully');
+              await authService.createOrUpdateProfile(data.session.user);
+              router.push('/(tabs)');
+              return;
+            } else {
+              console.error('🔗 [OAuth Callback] No session returned despite success');
+              setTimeout(() => {
+                router.push({
+                  pathname: '/auth',
+                  params: { 
+                    error: 'no_session',
+                    errorDescription: 'Authentication completed but no session was created'
+                  }
+                });
+              }, 1000);
+              return;
+            }
+          } catch (sessionError: any) {
+            console.error('🔗 [OAuth Callback] Exception during session setup:', sessionError);
+            setTimeout(() => {
+              router.push({
+                pathname: '/auth',
+                params: { 
+                  error: 'session_exception',
+                  errorDescription: sessionError.message || 'Failed to process authentication'
+                }
+              });
+            }, 1000);
             return;
           }
         }

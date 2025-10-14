@@ -5,14 +5,14 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Heart, User } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { useAuthStatus } from '../hooks/useAuth';
 
 const { width, height } = Dimensions.get('window');
 
 export default function SplashScreen() {
   const router = useRouter();
   const [showContent, setShowContent] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const { isSignedIn, isLoading, isReady, user } = useAuthStatus();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -21,46 +21,24 @@ export default function SplashScreen() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Check for existing session on mount
+  // Handle auth state
   useEffect(() => {
-    const checkAuthSession = async () => {
-      try {
-        if (!supabase) {
-          console.log('🔍 [Splash] Supabase not configured, showing auth options');
-          setCheckingAuth(false);
-          return;
-        }
-
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('🔍 [Splash] Error checking session:', error);
-          setCheckingAuth(false);
-          return;
-        }
-
-        if (session?.user) {
-          console.log('🔍 [Splash] Found existing session for:', session.user.email);
-          router.replace('/(tabs)');
-          return;
-        }
-
-        console.log('🔍 [Splash] No existing session found');
-        setCheckingAuth(false);
-      } catch (error) {
-        console.error('🔍 [Splash] Auth check failed:', error);
-        setCheckingAuth(false);
-      }
-    };
-
-    checkAuthSession();
-  }, [router]);
+    if (isReady && isSignedIn) {
+      console.log('🔍 [Splash] User already signed in:', user?.email);
+      router.replace('/(tabs)');
+    }
+  }, [isReady, isSignedIn, user, router]);
 
   const handleGetStarted = () => {
-    router.push('/auth');
+    // Skip auth - go straight to browsing
+    router.push('/(tabs)');
   };
 
-  if (checkingAuth) {
+  const handleAuthOptions = () => {
+    router.push('/auth-enhanced');
+  };
+
+  if (isLoading) {
     return (
       <LinearGradient
         colors={['#FF6B6B', '#FF8E8E', '#FFB3B3']}
@@ -100,7 +78,11 @@ export default function SplashScreen() {
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.primaryButton} onPress={handleGetStarted}>
                 <User size={20} color="white" />
-                <Text style={styles.primaryButtonText}>Get Started</Text>
+                <Text style={styles.primaryButtonText}>Start Browsing Pets</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.secondaryButton} onPress={handleAuthOptions}>
+                <Text style={styles.secondaryButtonText}>Sign In Options</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -169,18 +151,18 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-SemiBold',
   },
   secondaryButton: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'white',
-    paddingVertical: 16,
+    backgroundColor: 'transparent',
+    paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 25,
-    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
   secondaryButtonText: {
-    color: '#FF6B6B',
-    fontSize: 16,
-    fontFamily: 'Poppins-SemiBold',
+    color: 'white',
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
   },
 });
