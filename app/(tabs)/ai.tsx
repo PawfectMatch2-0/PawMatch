@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Send, Heart, Zap, Stethoscope, User } from 'lucide-react-native';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
 
 // Mock AI responses for different pet topics
 const aiResponses: Record<string, string> = {
@@ -92,7 +93,7 @@ export default function AIVetScreen() {
             style={styles.avatarImage}
           />
           <View style={styles.stethoscopeIcon}>
-            <Stethoscope size={12} color="#FF6B6B" />
+            <Stethoscope size={12} color={COLORS.primary} />
           </View>
         </View>
       )}
@@ -141,7 +142,7 @@ export default function AIVetScreen() {
             style={styles.profileButton}
             onPress={() => router.push('/profile')}
           >
-            <User size={24} color="#FF6B6B" />
+            <User size={24} color={COLORS.secondary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -165,7 +166,7 @@ export default function AIVetScreen() {
                   style={styles.avatarImage}
                 />
                 <View style={styles.stethoscopeIcon}>
-                  <Stethoscope size={12} color="#FF6B6B" />
+                  <Stethoscope size={12} color={COLORS.primary} />
                 </View>
               </View>
               <View style={[styles.messageBubble, styles.aiBubble]}>
@@ -243,7 +244,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontFamily: 'Poppins-Bold',
-    color: '#FF6B6B',
+    color: COLORS.primary,
   },
   headerSubtitle: {
     fontSize: 14,
@@ -262,7 +263,7 @@ const styles = StyleSheet.create({
   },
   profileButton: {
     padding: 10,
-    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    backgroundColor: `${COLORS.secondary}15`,
     borderRadius: 12,
   },
   chatContainer: {
@@ -305,7 +306,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 2,
     borderWidth: 1,
-    borderColor: '#FF6B6B',
+    borderColor: COLORS.primary,
   },
   messageBubble: {
     maxWidth: '75%',
@@ -313,7 +314,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   userBubble: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     marginLeft: 'auto',
   },
   aiBubble: {
@@ -403,18 +404,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sendButtonActive: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
   },
   disclaimer: {
-    backgroundColor: '#FFF5F5',
+    backgroundColor: `${COLORS.primary}08`,
     padding: 12,
     borderTopWidth: 1,
-    borderTopColor: '#FFE5E5',
+    borderTopColor: `${COLORS.primary}20`,
   },
   disclaimerText: {
     fontSize: 12,
     fontFamily: 'Nunito-Regular',
-    color: '#FF6B6B',
+    color: COLORS.primary,
     textAlign: 'center',
     lineHeight: 16,
   },

@@ -7,6 +7,7 @@ import { mockPets } from '@/data/pets';
 import { useState, useEffect } from 'react';
 import { databaseService, supabase, Pet } from '@/lib/supabase';
 import AnimatedLoader from '@/components/AnimatedLoader';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -431,7 +432,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   personalityTag: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,

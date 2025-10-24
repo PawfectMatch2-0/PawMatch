@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { Search, ArrowLeft, MapPin, Heart, Filter, X, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '@/lib/supabase';
-import { COLORS } from '@/constants/theme';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
 
 interface Pet {
   id: string;
@@ -579,8 +579,8 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   filterButtonActive: {
-    backgroundColor: '#FF6B6B',
-    borderColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   filterBadge: {
     position: 'absolute',
@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
   personalityText: {
     fontSize: 12,
     fontFamily: 'Nunito-Regular',
-    color: '#FF6B6B',
+    color: COLORS.primary,
   },
   heartButton: {
     width: 40,
@@ -744,7 +744,7 @@ const styles = StyleSheet.create({
   clearText: {
     fontSize: 16,
     fontFamily: 'Nunito-SemiBold',
-    color: '#FF6B6B',
+    color: COLORS.primary,
   },
   modalContent: {
     flex: 1,
@@ -776,8 +776,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   filterOptionActive: {
-    backgroundColor: '#FF6B6B',
-    borderColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   filterOptionText: {
     fontSize: 14,
@@ -805,7 +805,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E5E5',
   },
   applyButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

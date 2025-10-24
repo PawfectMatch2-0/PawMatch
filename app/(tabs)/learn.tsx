@@ -20,6 +20,7 @@ import { learningCategories, mockLearningArticles, getFeaturedArticles } from '@
 import { LinearGradient } from 'expo-linear-gradient';
 import AnimatedButton from '@/components/AnimatedButton';
 import { databaseService, supabase, LearningArticle } from '@/lib/supabase';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
 
 // Icon mapping for category icons
 const iconMap: Record<string, LucideIcon> = {
@@ -195,7 +196,7 @@ export default function LearnScreen() {
             style={styles.profileButton}
             onPress={() => router.push('/profile')}
           >
-            <User size={24} color="#FF6B6B" />
+            <User size={24} color={COLORS.secondary} />
           </TouchableOpacity>
         </View>
 
@@ -260,7 +261,7 @@ export default function LearnScreen() {
         {/* Loading State */}
         {isLoading && (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FF6B6B" />
+            <ActivityIndicator size="large" color={COLORS.primary} />
             <Text style={styles.loadingText}>Loading articles...</Text>
           </View>
         )}
@@ -271,7 +272,7 @@ export default function LearnScreen() {
             {/* Featured Article */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Star size={20} color="#FF6B6B" />
+                <Star size={20} color={COLORS.primary} />
                 <Text style={styles.sectionTitle}>Featured Article</Text>
               </View>
               {renderArticleCard(featuredArticles[0], true)}
@@ -342,7 +343,7 @@ const styles = StyleSheet.create({
   },
   profileButton: {
     padding: 10,
-    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    backgroundColor: `${COLORS.secondary}15`,
     borderRadius: 12,
   },
   title: {
@@ -439,7 +440,7 @@ const styles = StyleSheet.create({
   articleCount: {
     fontSize: 12,
     fontFamily: 'Nunito-SemiBold',
-    color: '#FF6B6B',
+    color: COLORS.primary,
   },
   articleCard: {
     borderRadius: 16,
@@ -486,7 +487,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   categoryBadge: {
-    backgroundColor: 'rgba(255, 107, 107, 0.9)',
+    backgroundColor: `${COLORS.primary}E6`,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -624,8 +625,8 @@ const styles = StyleSheet.create({
   searchResultCategory: {
     fontSize: 12,
     fontFamily: 'Nunito-SemiBold',
-    color: '#FF6B6B',
-    backgroundColor: '#FFF5F5',
+    color: COLORS.primary,
+    backgroundColor: `${COLORS.primary}10`,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,

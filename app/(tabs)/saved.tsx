@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { Heart, MapPin, MessageCircle, Share2, Clock, CheckCircle, XCircle, User, FileText, Calendar } from 'lucide-react-native';
-import { SPACING, BORDER_RADIUS } from '@/constants/theme';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
 import LoadingState from '@/components/ui/LoadingState';
 import EmptyState, { NoSavedPetsEmptyState } from '@/components/ui/EmptyState';
 import { mockPets } from '@/data/pets';
@@ -237,7 +237,7 @@ export default function SavedScreen() {
                 .catch(err => console.error('Error opening WhatsApp:', err));
             }}
           >
-            <MessageCircle size={16} color="#FF6B6B" />
+            <MessageCircle size={16} color={COLORS.primary} />
             <Text style={styles.contactButtonText}>Contact Shelter</Text>
           </TouchableOpacity>
         )}
@@ -259,7 +259,7 @@ export default function SavedScreen() {
         <View style={styles.petHeader}>
           <Text style={styles.petName}>{item.name}</Text>
           <TouchableOpacity onPress={() => handleRemoveFromFavorites(item.id)}>
-            <Heart size={20} color="#FF6B6B" fill="#FF6B6B" />
+            <Heart size={20} color={COLORS.primary} fill={COLORS.primary} />
           </TouchableOpacity>
         </View>
         <Text style={styles.petBreed}>{item.breed} • {item.age} {item.age === 1 ? 'year' : 'years'} old</Text>
@@ -298,7 +298,7 @@ export default function SavedScreen() {
               router.push('/adoption/tracker');
             }}
           >
-            <Calendar size={16} color="#FF6B6B" />
+            <Calendar size={16} color={COLORS.primary} />
             <Text style={styles.trackerButtonText}>Track Applications</Text>
           </TouchableOpacity>
         </View>
@@ -321,7 +321,7 @@ export default function SavedScreen() {
               handleShare(item.id);
             }}
           >
-            <Share2 size={16} color="#FF6B6B" />
+            <Share2 size={16} color={COLORS.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -355,7 +355,7 @@ export default function SavedScreen() {
           style={styles.profileButton}
           onPress={() => router.push('/profile')}
         >
-          <User size={24} color="#FF6B6B" />
+          <User size={24} color={COLORS.secondary} />
         </TouchableOpacity>
       </View>
 
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     minWidth: SPACING.minTouchTarget,
     minHeight: SPACING.minTouchTarget,
     padding: SPACING.sm,
-    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    backgroundColor: `${COLORS.secondary}15`,
     borderRadius: BORDER_RADIUS.lg,
     marginLeft: SPACING.sm,
     alignItems: 'center',
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   activeTab: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
   },
   tabText: {
     fontSize: 14,
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
   messageButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#FF6B6B',
+    borderColor: COLORS.primary,
   },
   // Adoption Request Styles
   requestCard: {
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
   contactButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF5F5',
+    backgroundColor: `${COLORS.primary}10`,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -621,7 +621,7 @@ const styles = StyleSheet.create({
   contactButtonText: {
     fontSize: 12,
     fontFamily: 'Nunito-SemiBold',
-    color: '#FF6B6B',
+    color: COLORS.primary,
     marginLeft: 4,
   },
   emptyState: {
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 6,
@@ -671,16 +671,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFF5F5',
+    backgroundColor: `${COLORS.primary}10`,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#FF6B6B',
+    borderColor: COLORS.primary,
     gap: 4,
   },
   trackerButtonText: {
-    color: '#FF6B6B',
+    color: COLORS.primary,
     fontSize: 12,
     fontFamily: 'Nunito-SemiBold',
   },

@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { supabase, authService } from '../../lib/supabase';
 import type { UserProfile } from '../../lib/supabase';
-import { COLORS } from '@/constants/theme';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -113,7 +113,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#FF6B6B', '#FF8E8E']}
+        colors={[COLORS.primary, `${COLORS.primary}CC`]}
         style={styles.header}
       >
         <View style={styles.profileSection}>
@@ -126,7 +126,7 @@ export default function ProfileScreen() {
               style={styles.editButton}
               onPress={handleEditProfile}
             >
-              <Edit size={16} color="#FF6B6B" />
+              <Edit size={16} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
           
@@ -162,8 +162,8 @@ export default function ProfileScreen() {
             onPress={handleLogout}
           >
             <View style={styles.menuItemLeft}>
-              <View style={[styles.menuIcon, { backgroundColor: '#FF6B6B20' }]}>
-                <LogOut size={20} color="#FF6B6B" />
+              <View style={[styles.menuIcon, { backgroundColor: `${COLORS.primary}20` }]}>
+                <LogOut size={20} color={COLORS.primary} />
               </View>
               <Text style={styles.menuText}>Sign Out</Text>
             </View>

@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { MapPin, Star, Phone, User, Stethoscope, Scissors, GraduationCap, Store, Hotel } from 'lucide-react-native';
-import { COLORS } from '@/constants/theme';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
 
 // Shop categories
 const shopCategories = [
@@ -291,7 +291,7 @@ export default function ShopsScreen() {
 
   const getCategoryColor = (category: string) => {
     const cat = shopCategories.find(c => c.id === category);
-    return cat ? cat.color : '#FF6B6B';
+    return cat ? cat.color : COLORS.primary;
   };
 
   return (
@@ -303,7 +303,7 @@ export default function ShopsScreen() {
           style={styles.profileButton}
           onPress={() => router.push('/profile')}
         >
-          <User size={24} color={COLORS.primary} />
+          <User size={24} color={COLORS.secondary} />
         </TouchableOpacity>
       </View>
 
@@ -388,12 +388,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: 'Poppins-Bold',
-    color: '#FF6B6B',
+    color: COLORS.primary,
     letterSpacing: -0.5,
   },
   profileButton: {
     padding: 10,
-    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    backgroundColor: `${COLORS.secondary}15`,
     borderRadius: 12,
   },
   content: {
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
   callButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 6,

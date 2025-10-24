@@ -49,6 +49,9 @@ export default function SplashScreen() {
               <Text style={styles.appName}>PawfectMatch</Text>
               <Text style={styles.tagline}>Loading...</Text>
             </View>
+            <View style={styles.developerCredit}>
+              <Text style={styles.developerText}>Developed by CoreWe-5</Text>
+            </View>
           </View>
         </SafeAreaView>
       </View>
@@ -83,6 +86,10 @@ export default function SplashScreen() {
               </TouchableOpacity>
             </View>
           )}
+
+          <View style={styles.developerCredit}>
+            <Text style={styles.developerText}>Developed by CoreWe-5</Text>
+          </View>
         </View>
       </SafeAreaView>
     </View>
@@ -186,5 +193,16 @@ const styles = StyleSheet.create({
     color: '#E67E9C',
     fontSize: 16,
     fontFamily: 'Poppins-SemiBold',
+  },
+  developerCredit: {
+    position: 'absolute',
+    bottom: 30,
+    alignSelf: 'center',
+  },
+  developerText: {
+    fontSize: 12,
+    fontFamily: 'Nunito-Regular',
+    color: '#999',
+    textAlign: 'center',
   },
 });
