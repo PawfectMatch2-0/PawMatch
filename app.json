@@ -114,8 +114,7 @@
         "expo-build-properties",
         {
           "android": {
-            "usesCleartextTraffic": true,
-            "networkSecurityConfig": "./network_security_config.xml"
+            "usesCleartextTraffic": true
           }
         }
       ]
@@ -126,14 +125,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "80e3026e-6bcf-423a-b1eb-fb5a6095dc4e"
+        "projectId": "b0272f6d-a6f0-400c-8403-c6089f732eb3"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/80e3026e-6bcf-423a-b1eb-fb5a6095dc4e"
-    }
+    "owner": "swapnil360"
   }
 }
