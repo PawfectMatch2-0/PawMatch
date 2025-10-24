@@ -1,5 +1,4 @@
 import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Heart, User } from 'lucide-react-native';
@@ -40,30 +39,24 @@ export default function SplashScreen() {
 
   if (isLoading) {
     return (
-      <LinearGradient
-        colors={['#FF6B6B', '#FF8E8E', '#FFB3B3']}
-        style={styles.container}
-      >
+      <View style={[styles.container, { backgroundColor: 'white' }]}>
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.content}>
             <View style={styles.logoContainer}>
               <View style={styles.logoCircle}>
-                <Heart size={60} color="white" fill="white" />
+                <Heart size={60} color="#E67E9C" fill="#E67E9C" />
               </View>
-              <Text style={styles.appName}>PawMatch</Text>
+              <Text style={styles.appName}>PawfectMatch</Text>
               <Text style={styles.tagline}>Loading...</Text>
             </View>
           </View>
         </SafeAreaView>
-      </LinearGradient>
+      </View>
     );
   }
 
   return (
-    <LinearGradient
-      colors={['#E67E9C', '#EFA3B8', '#F7C9D4']}
-      style={styles.container}
-    >
+    <View style={[styles.container, { backgroundColor: 'white' }]}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           <View style={styles.logoContainer}>
@@ -74,14 +67,14 @@ export default function SplashScreen() {
                 resizeMode="contain"
               />
             </View>
-            <Text style={styles.appName}>Pawfect Match</Text>
+            <Text style={styles.appName}>Pawfect{'\n'}Match</Text>
             <Text style={styles.tagline}>Find your perfect furry friend</Text>
           </View>
 
           {showContent && (
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.primaryButton} onPress={handleGetStarted}>
-                <User size={20} color="#E67E9C" />
+                <User size={20} color="white" />
                 <Text style={styles.primaryButtonText}>Start Browsing Pets</Text>
               </TouchableOpacity>
               
@@ -92,7 +85,7 @@ export default function SplashScreen() {
           )}
         </View>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -120,10 +113,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 40,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 16,
     elevation: 12,
   },
@@ -143,13 +136,15 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 48,
     fontFamily: 'Poppins-Bold',
-    color: 'white',
+    color: '#E67E9C',
     marginBottom: 10,
+    textAlign: 'center',
+    lineHeight: 52,
   },
   tagline: {
     fontSize: 16,
     fontFamily: 'Nunito-Regular',
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: '#666',
     textAlign: 'center',
   },
   buttonContainer: {
@@ -160,20 +155,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'white',
+    backgroundColor: '#E67E9C',
     paddingVertical: 18,
     paddingHorizontal: 32,
     borderRadius: 30,
     marginBottom: 15,
     gap: 10,
-    shadowColor: '#000',
+    shadowColor: '#E67E9C',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
   },
   primaryButtonText: {
-    color: '#E67E9C',
+    color: 'white',
     fontSize: 17,
     fontFamily: 'Poppins-SemiBold',
   },
@@ -185,10 +180,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 30,
     borderWidth: 2,
-    borderColor: 'white',
+    borderColor: '#E67E9C',
   },
   secondaryButtonText: {
-    color: 'white',
+    color: '#E67E9C',
     fontSize: 16,
     fontFamily: 'Poppins-SemiBold',
   },

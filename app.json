@@ -1,28 +1,28 @@
 {
   "expo": {
-    "name": "PawMatch",
+    "name": "PawfectMatch",
     "slug": "pawmatch",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "pawmatch",
+    "scheme": "pawfectmatch",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#E67E9C"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.pawmatch.app",
+      "bundleIdentifier": "com.pawfectmatch.app",
       "associatedDomains": [
-        "applinks:pawmatch.app",
-        "applinks:pawmatch.app"
+        "applinks:pawfectmatch.app",
+        "applinks:pawfectmatch.app"
       ]
     },
     "android": {
-      "package": "com.pawmatch.app",
+      "package": "com.pawfectmatch.app",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
@@ -44,19 +44,19 @@
           "autoVerify": true,
           "data": [
             {
-              "scheme": "pawmatch"
+              "scheme": "pawfectmatch"
             },
             {
-              "scheme": "pawmatch",
+              "scheme": "pawfectmatch",
               "host": "oauth"
             },
             {
-              "scheme": "pawmatch",
+              "scheme": "pawfectmatch",
               "host": "auth"
             },
             {
               "scheme": "https",
-              "host": "*.pawmatch.app",
+              "host": "*.pawfectmatch.app",
               "pathPrefix": "/"
             }
           ],
@@ -70,19 +70,19 @@
           "autoVerify": true,
           "data": [
             {
-              "scheme": "pawmatch"
+              "scheme": "pawfectmatch"
             },
             {
-              "scheme": "pawmatch",
+              "scheme": "pawfectmatch",
               "host": "oauth"
             },
             {
-              "scheme": "pawmatch",
+              "scheme": "pawfectmatch",
               "host": "auth"
             },
             {
               "scheme": "https",
-              "host": "*.pawmatch.app",
+              "host": "*.pawfectmatch.app",
               "pathPrefix": "/"
             }
           ],
@@ -126,7 +126,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "80e3026e-6bcf-423a-b1eb-fb5a6095dc4e"
+        "projectId": "e3440742-7963-4ec8-ad47-9436b05b5079"
       }
     },
     "runtimeVersion": {
@@ -134,6 +134,7 @@
     },
     "updates": {
       "url": "https://u.expo.dev/80e3026e-6bcf-423a-b1eb-fb5a6095dc4e"
-    }
+    },
+    "owner": "mr_swapnil"
   }
 }
