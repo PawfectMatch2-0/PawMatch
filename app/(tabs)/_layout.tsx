@@ -1,28 +1,45 @@
 import { Tabs } from 'expo-router';
 import { Bookmark, BookOpen, Store, Bot, Home, Sparkles } from 'lucide-react-native';
 import { COLORS } from '@/constants/theme';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: '#999',
+        tabBarInactiveTintColor: '#666',
         tabBarStyle: {
           backgroundColor: 'white',
           borderTopWidth: 1,
-          borderTopColor: 'rgba(0,0,0,0.05)',
-          elevation: 0,
-          shadowOpacity: 0,
-          height: 65,
-          paddingBottom: 10,
+          borderTopColor: 'rgba(0,0,0,0.08)',
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          // Dynamic height based on device safe area
+          height: Platform.OS === 'ios' ? 80 + insets.bottom : 70,
+          paddingBottom: Platform.OS === 'ios' ? insets.bottom : 12,
           paddingTop: 8,
+          // Ensure it's above device navigation
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontFamily: 'Nunito-SemiBold',
+          fontWeight: '600',
           marginTop: 2,
+          marginBottom: Platform.OS === 'android' ? 4 : 0,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 4,
         },
       }}
     >

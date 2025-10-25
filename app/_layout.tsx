@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useFonts } from 'expo-font';
 import { AuthProvider } from '@/hooks/useAuth';
@@ -51,19 +52,21 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="auth-enhanced" />
-          <Stack.Screen name="auth/callback" />
-          <Stack.Screen name="auth/confirm" />
-          <Stack.Screen name="auth/reset-password" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="dark" backgroundColor="#f8f9fa" translucent={false} />
-      </GestureHandlerRootView>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="auth-enhanced" />
+            <Stack.Screen name="auth/callback" />
+            <Stack.Screen name="auth/confirm" />
+            <Stack.Screen name="auth/reset-password" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar style="dark" backgroundColor="#f8f9fa" translucent={false} />
+        </GestureHandlerRootView>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
