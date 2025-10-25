@@ -1,76 +1,99 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, MapPin, Star, Phone, Clock } from 'lucide-react-native';
+import { ArrowLeft, MapPin, Star, Phone, Clock, Filter } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../constants/theme';
+import { useState } from 'react';
+import { 
+  dhakaVeterinaryServices, 
+  dhakaGroomingServices, 
+  dhakaTrainingServices, 
+  dhakaPetStores, 
+  dhakaBoardingServices,
+  PetServiceProvider 
+} from '../../data/bangladeshContent';
 
-// Mock pet shops data
-const mockPetShops = [
-  {
-    id: '1',
-    name: 'Happy Paws Pet Store',
-    category: 'Pet Store',
-    rating: 4.8,
-    reviews: 124,
-    distance: '0.8 km',
-    image: 'https://images.unsplash.com/photo-1560807707-8cc77767d783?auto=format&fit=crop&w=400&h=300',
-    address: 'Dhanmondi, Dhaka',
-    phone: '+880 1234-567890',
-    hours: 'Open • Closes 10 PM',
-    specialties: ['Pet Food', 'Toys', 'Accessories']
-  },
-  {
-    id: '2',
-    name: 'City Veterinary Clinic',
-    category: 'Veterinary',
-    rating: 4.9,
-    reviews: 89,
-    distance: '1.2 km',
-    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?auto=format&fit=crop&w=400&h=300',
-    address: 'Gulshan, Dhaka',
-    phone: '+880 1234-567891',
-    hours: 'Open • 24 Hours',
-    specialties: ['Emergency Care', 'Surgery', 'Vaccination']
-  },
-  {
-    id: '3',
-    name: 'Pawsome Grooming',
-    category: 'Grooming',
-    rating: 4.7,
-    reviews: 156,
-    distance: '2.1 km',
-    image: 'https://images.unsplash.com/photo-1559190394-90caa8fc893c?auto=format&fit=crop&w=400&h=300',
-    address: 'Uttara, Dhaka',
-    phone: '+880 1234-567892',
-    hours: 'Open • Closes 8 PM',
-    specialties: ['Bath & Brush', 'Nail Trimming', 'Styling']
-  },
-  {
-    id: '4',
-    name: 'Pet Paradise Training',
-    category: 'Training',
-    rating: 4.6,
-    reviews: 67,
-    distance: '3.5 km',
-    image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=400&h=300',
-    address: 'Bashundhara, Dhaka',
-    phone: '+880 1234-567893',
-    hours: 'Open • Closes 6 PM',
-    specialties: ['Obedience Training', 'Puppy Classes', 'Behavior']
-  }
-];
+// Combine all Bangladesh pet services
+const getAllPetServices = (): PetServiceProvider[] => {
+  return [
+    ...dhakaVeterinaryServices,
+    ...dhakaGroomingServices,
+    ...dhakaTrainingServices,
+    ...dhakaPetStores,
+    ...dhakaBoardingServices
+  ];
+};
+
+// Transform service data to match the UI format
+const transformServiceData = (service: PetServiceProvider) => {
+  const getCategoryDisplayName = (category: string) => {
+    switch (category) {
+      case 'veterinary': return 'Veterinary';
+      case 'grooming': return 'Grooming';
+      case 'training': return 'Training';
+      case 'pet-store': return 'Pet Store';
+      case 'boarding': return 'Boarding';
+      default: return 'Service';
+    }
+  };
+
+  const getHoursText = () => {
+    if (service.timings.emergency) {
+      return 'Open • 24 Hours Emergency';
+    }
+    return `Open • ${service.timings.weekdays}`;
+  };
+
+  const getDistance = () => {
+    // Generate realistic distances for Dhaka locations
+    const distances = ['0.8 km', '1.2 km', '1.5 km', '2.1 km', '2.8 km', '3.2 km', '3.8 km', '4.5 km'];
+    return distances[Math.floor(Math.random() * distances.length)];
+  };
+
+  return {
+    id: service.id,
+    name: service.name,
+    category: getCategoryDisplayName(service.category),
+    rating: service.rating,
+    reviews: service.reviews,
+    distance: getDistance(),
+    image: service.featuredImage,
+    address: `${service.location.area}, ${service.location.district}`,
+    phone: service.contact.phone[0],
+    hours: getHoursText(),
+    specialties: service.specialties.slice(0, 3)
+  };
+};
 
 export default function ShopsScreen() {
   const router = useRouter();
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  
+  // Get all services and transform them for UI
+  const allServices = getAllPetServices();
+  const transformedServices = allServices.map(transformServiceData);
+  
+  // Filter services based on selected category
+  const filteredServices = selectedCategory === 'all' 
+    ? transformedServices 
+    : transformedServices.filter(service => service.category.toLowerCase() === selectedCategory.toLowerCase());
+
+  const categories = [
+    { id: 'all', name: 'All', color: COLORS.primary },
+    { id: 'veterinary', name: 'Veterinary', color: COLORS.categories.veterinary },
+    { id: 'grooming', name: 'Grooming', color: COLORS.categories.grooming },
+    { id: 'training', name: 'Training', color: COLORS.categories.training },
+    { id: 'pet store', name: 'Pet Store', color: COLORS.categories.petStore },
+    { id: 'boarding', name: 'Boarding', color: COLORS.categories.boarding },
+  ];
 
   const handleBack = () => {
     router.back();
   };
 
   const handleShopPress = (shopId: string) => {
-    // Navigate to shop details (placeholder for now)
-    console.log('Shop pressed:', shopId);
+    router.push(`/shops/${shopId}`);
   };
 
   const handleCall = (phone: string) => {
@@ -94,7 +117,7 @@ export default function ShopsScreen() {
     }
   };
 
-  const renderShopItem = ({ item }: { item: typeof mockPetShops[0] }) => {
+  const renderShopItem = ({ item }: { item: ReturnType<typeof transformServiceData> }) => {
     const categoryColor = getCategoryColor(item.category);
     
     return (
@@ -128,7 +151,7 @@ export default function ShopsScreen() {
         <Text style={styles.hours}>{item.hours}</Text>
         
         <View style={styles.specialtiesContainer}>
-          {item.specialties.slice(0, 2).map((specialty, index) => (
+          {item.specialties.slice(0, 2).map((specialty: string, index: number) => (
             <View key={index} style={styles.specialtyTag}>
               <Text style={styles.specialtyText}>{specialty}</Text>
             </View>
@@ -147,8 +170,11 @@ export default function ShopsScreen() {
             <Text style={styles.callButtonText}>Call</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={[styles.visitButton, { borderColor: categoryColor }]}>
-            <Text style={[styles.visitButtonText, { color: categoryColor }]}>Visit Store</Text>
+          <TouchableOpacity 
+            style={[styles.visitButton, { borderColor: categoryColor }]}
+            onPress={() => handleShopPress(item.id)}
+          >
+            <Text style={[styles.visitButtonText, { color: categoryColor }]}>View Details</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -174,8 +200,36 @@ export default function ShopsScreen() {
       <View style={styles.content}>
         <Text style={styles.subtitle}>Discover nearby pet stores, clinics, and services</Text>
         
+        {/* Category Filter */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoryContainer}
+          contentContainerStyle={styles.categoryContent}
+        >
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category.id}
+              style={[
+                styles.categoryButton,
+                selectedCategory === category.id && { backgroundColor: category.color }
+              ]}
+              onPress={() => setSelectedCategory(category.id)}
+            >
+              <Text
+                style={[
+                  styles.categoryButtonText,
+                  selectedCategory === category.id && styles.categoryButtonTextActive
+                ]}
+              >
+                {category.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+        
         <FlatList
-          data={mockPetShops}
+          data={filteredServices}
           renderItem={renderShopItem}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
@@ -376,5 +430,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Nunito-SemiBold',
     color: '#374151',
+  },
+  categoryContainer: {
+    marginBottom: 20,
+  },
+  categoryContent: {
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  categoryButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  categoryButtonText: {
+    fontSize: 14,
+    fontFamily: 'Nunito-SemiBold',
+    color: '#374151',
+  },
+  categoryButtonTextActive: {
+    color: 'white',
   },
 });
