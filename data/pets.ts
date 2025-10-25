@@ -1,5 +1,17 @@
 export const mockPets = [
   {
+    id: '1',
+    name: 'Marshmallow',
+    age: '4 months',
+    breed: 'Munchkin',
+    location: 'Dhaka, Bangladesh',
+    image: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=800&h=1200',
+    personality: ['Playful', 'Curious', 'Sweet', 'Adorable'],
+    description: '🤍 Marshmallow is an absolutely adorable Munchkin kitten with stunning black and white markings! With her short legs and big personality, she loves to explore and play. This little sweetie has the most beautiful green eyes and would make the perfect companion for someone looking for a cuddly, loving kitten. She\'s litter trained and loves to be held!',
+    gender: 'Female' as const,
+    size: 'Small' as const,
+  },
+  {
     id: '16',
     name: 'Luna',
     age: '2 years',

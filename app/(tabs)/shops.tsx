@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, Linking, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { MapPin, Star, Phone, User, Stethoscope, Scissors, GraduationCap, Store, Hotel } from 'lucide-react-native';
+import { MapPin, Star, Phone, User, Stethoscope, Scissors, GraduationCap, Store, Hotel, X, MessageCircle, Globe, Clock, Navigation } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
 import { 
   dhakaVeterinaryServices, 
@@ -54,6 +55,24 @@ const transformServiceData = (service: PetServiceProvider) => {
     return `${service.timings.weekdays}`;
   };
 
+  // Get category-specific images for Bangladesh services
+  const getCategoryImage = () => {
+    switch (service.category) {
+      case 'veterinary':
+        return 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?auto=format&fit=crop&w=400&h=300';
+      case 'grooming':
+        return 'https://images.unsplash.com/photo-1559190394-90caa8fc893c?auto=format&fit=crop&w=400&h=300';
+      case 'training':
+        return 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=400&h=300';
+      case 'pet-store':
+        return 'https://images.unsplash.com/photo-1560807707-8cc77767d783?auto=format&fit=crop&w=400&h=300';
+      case 'boarding':
+        return 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=400&h=300';
+      default:
+        return service.featuredImage;
+    }
+  };
+
   return {
     id: service.id,
     name: service.name,
@@ -61,11 +80,25 @@ const transformServiceData = (service: PetServiceProvider) => {
     rating: service.rating,
     reviews: service.reviews,
     address: `${service.location.area}, ${service.location.district}`,
+    fullAddress: service.location.address,
+    landmarks: service.location.landmarks,
     phone: service.contact.phone[0],
-    image: service.featuredImage,
+    allPhones: service.contact.phone,
+    email: service.contact.email,
+    facebook: service.contact.facebook,
+    website: service.contact.website,
+    whatsapp: service.contact.whatsapp,
+    image: getCategoryImage(),
     description: service.description,
     openHours: getHoursText(),
-    services: service.services.slice(0, 4)
+    weekdays: service.timings.weekdays,
+    weekends: service.timings.weekends,
+    emergency: service.timings.emergency,
+    services: service.services.slice(0, 4),
+    allServices: service.services,
+    specialties: service.specialties,
+    priceRange: service.priceRange,
+    established: service.established
   };
 };
 
@@ -74,6 +107,8 @@ const transformServiceData = (service: PetServiceProvider) => {
 export default function ShopsScreen() {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedShop, setSelectedShop] = useState<any>(null);
+  const [showContactModal, setShowContactModal] = useState(false);
   
   // Get all services and transform them for UI
   const allServices = getAllPetServices();
@@ -89,18 +124,53 @@ export default function ShopsScreen() {
     }
   };
 
-  const handleShopPress = (shopId: string) => {
-    // Navigate to shop details (placeholder for now)
-    console.log('Shop pressed:', shopId);
+  const handleShopPress = (shop: any) => {
+    setSelectedShop(shop);
+    setShowContactModal(true);
   };
 
   const handleCall = (phone: string) => {
-    // Open phone dialer with the number
     Linking.openURL(`tel:${phone}`);
   };
 
+  const handleWhatsApp = (phone: string) => {
+    Linking.openURL(`whatsapp://send?phone=${phone.replace(/\D/g, '')}`);
+  };
+
+  const handleFacebook = (facebookUrl: string) => {
+    if (facebookUrl.startsWith('http')) {
+      Linking.openURL(facebookUrl);
+    } else {
+      Linking.openURL(`https://${facebookUrl}`);
+    }
+  };
+
+  const handleWebsite = (websiteUrl: string) => {
+    if (websiteUrl.startsWith('http')) {
+      Linking.openURL(websiteUrl);
+    } else {
+      Linking.openURL(`https://${websiteUrl}`);
+    }
+  };
+
+  const handleDirections = (address: string) => {
+    const encodedAddress = encodeURIComponent(address);
+    Linking.openURL(`https://maps.google.com/?q=${encodedAddress}`);
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'veterinary': return COLORS.categories.veterinary;
+      case 'grooming': return COLORS.categories.grooming;
+      case 'training': return COLORS.categories.training;
+      case 'pet-store': return COLORS.categories.petStore;
+      case 'boarding': return COLORS.categories.boarding;
+      default: return COLORS.primary;
+    }
+  };
+
   const renderShopItem = ({ item }: { item: ReturnType<typeof transformServiceData> }) => (
-    <TouchableOpacity style={styles.shopCard} onPress={() => handleShopPress(item.id)}>
+    <TouchableOpacity style={styles.shopCard} onPress={() => handleShopPress(item)}>
       <Image source={{ uri: item.image }} style={styles.shopImage} />
       
       <View style={styles.shopInfo}>
@@ -137,10 +207,7 @@ export default function ShopsScreen() {
     </TouchableOpacity>
   );
 
-  const getCategoryColor = (category: string) => {
-    const cat = shopCategories.find(c => c.id === category);
-    return cat ? cat.color : COLORS.primary;
-  };
+
 
   const getCategoryDisplayName = (category: string) => {
     switch (category) {
@@ -225,6 +292,169 @@ export default function ShopsScreen() {
           />
         </View>
       </ScrollView>
+
+      {/* Contact Info Modal */}
+      <Modal
+        visible={showContactModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowContactModal(false)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          {selectedShop && (
+            <View style={styles.modalContent}>
+              {/* Modal Header */}
+              <View style={styles.modalHeader}>
+                <View style={styles.modalHeaderContent}>
+                  <Text style={styles.modalTitle}>{selectedShop.name}</Text>
+                  <Text style={styles.modalCategory}>
+                    {getCategoryDisplayName(selectedShop.category)}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setShowContactModal(false)}
+                >
+                  <X size={24} color="#666" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
+                {/* Shop Image */}
+                <Image source={{ uri: selectedShop.image }} style={styles.modalImage} />
+
+                {/* Shop Info */}
+                <View style={styles.modalInfo}>
+                  <View style={styles.modalRatingContainer}>
+                    <Star size={16} color="#FFB800" fill="#FFB800" />
+                    <Text style={styles.modalRating}>{selectedShop.rating}</Text>
+                    <Text style={styles.modalReviews}>({selectedShop.reviews} reviews)</Text>
+                    <View style={[styles.priceRangeBadge, { backgroundColor: `${getCategoryColor(selectedShop.category)}20` }]}>
+                      <Text style={[styles.priceRangeText, { color: getCategoryColor(selectedShop.category) }]}>
+                        {selectedShop.priceRange.toUpperCase()}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <Text style={styles.description}>{selectedShop.description}</Text>
+
+                  {/* Contact Actions */}
+                  <View style={styles.contactActions}>
+                    {selectedShop.allPhones?.map((phone: string, index: number) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={[styles.contactButton, { backgroundColor: getCategoryColor(selectedShop.category) }]}
+                        onPress={() => handleCall(phone)}
+                      >
+                        <Phone size={18} color="white" />
+                        <Text style={styles.contactButtonText}>{phone}</Text>
+                      </TouchableOpacity>
+                    ))}
+
+                    {selectedShop.whatsapp && (
+                      <TouchableOpacity
+                        style={[styles.contactButton, { backgroundColor: '#25D366' }]}
+                        onPress={() => handleWhatsApp(selectedShop.whatsapp)}
+                      >
+                        <MessageCircle size={18} color="white" />
+                        <Text style={styles.contactButtonText}>WhatsApp</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {selectedShop.facebook && (
+                      <TouchableOpacity
+                        style={[styles.contactButton, { backgroundColor: '#1877F2' }]}
+                        onPress={() => handleFacebook(selectedShop.facebook)}
+                      >
+                        <Text style={[styles.contactButtonText, { fontSize: 16, fontWeight: 'bold' }]}>f</Text>
+                        <Text style={styles.contactButtonText}>Facebook</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {selectedShop.website && (
+                      <TouchableOpacity
+                        style={[styles.contactButton, { backgroundColor: '#6B7280' }]}
+                        onPress={() => handleWebsite(selectedShop.website)}
+                      >
+                        <Globe size={18} color="white" />
+                        <Text style={styles.contactButtonText}>Website</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    <TouchableOpacity
+                      style={[styles.contactButton, { backgroundColor: '#EF4444' }]}
+                      onPress={() => handleDirections(selectedShop.fullAddress)}
+                    >
+                      <Navigation size={18} color="white" />
+                      <Text style={styles.contactButtonText}>Directions</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Location Info */}
+                  <View style={styles.infoSection}>
+                    <Text style={styles.infoTitle}>Location</Text>
+                    <View style={styles.modalLocationContainer}>
+                      <MapPin size={16} color="#666" />
+                      <View style={styles.modalLocationText}>
+                        <Text style={styles.modalAddress}>{selectedShop.fullAddress}</Text>
+                        {selectedShop.landmarks && (
+                          <Text style={styles.landmarks}>{selectedShop.landmarks}</Text>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Hours */}
+                  <View style={styles.infoSection}>
+                    <Text style={styles.infoTitle}>Hours</Text>
+                    <View style={styles.hoursContainer}>
+                      <Clock size={16} color="#666" />
+                      <View style={styles.hoursText}>
+                        <Text style={styles.weekdays}>Weekdays: {selectedShop.weekdays}</Text>
+                        <Text style={styles.weekends}>Weekends: {selectedShop.weekends}</Text>
+                        {selectedShop.emergency && (
+                          <Text style={styles.emergency}>24/7 Emergency Available</Text>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Services */}
+                  <View style={styles.infoSection}>
+                    <Text style={styles.infoTitle}>All Services</Text>
+                    <View style={styles.servicesGrid}>
+                      {selectedShop.allServices?.map((service: string, index: number) => (
+                        <View key={index} style={styles.serviceTag}>
+                          <Text style={styles.serviceText}>{service}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Specialties */}
+                  {selectedShop.specialties && selectedShop.specialties.length > 0 && (
+                    <View style={styles.infoSection}>
+                      <Text style={styles.infoTitle}>Specialties</Text>
+                      <View style={styles.specialtiesGrid}>
+                        {selectedShop.specialties.map((specialty: string, index: number) => (
+                          <View key={index} style={[styles.modalSpecialtyTag, { backgroundColor: `${getCategoryColor(selectedShop.category)}15` }]}>
+                            <Text style={[styles.modalSpecialtyText, { color: getCategoryColor(selectedShop.category) }]}>{specialty}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Established */}
+                  <View style={styles.establishedContainer}>
+                    <Text style={styles.establishedText}>Established {selectedShop.established}</Text>
+                  </View>
+                </View>
+              </ScrollView>
+            </View>
+          )}
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -455,5 +685,207 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Nunito-SemiBold',
     color: '#374151',
+  },
+  
+  // Modal Styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+  modalContent: {
+    flex: 1,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  modalHeaderContent: {
+    flex: 1,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontFamily: 'Poppins-Bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  modalCategory: {
+    fontSize: 14,
+    fontFamily: 'Nunito-SemiBold',
+    color: '#666',
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalScroll: {
+    flex: 1,
+  },
+  modalImage: {
+    width: '100%',
+    height: 200,
+    resizeMode: 'cover',
+  },
+  modalInfo: {
+    padding: 20,
+  },
+  modalRatingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  modalRating: {
+    fontSize: 16,
+    fontFamily: 'Nunito-Bold',
+    color: '#333',
+    marginLeft: 6,
+  },
+  modalReviews: {
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
+    color: '#666',
+    marginLeft: 4,
+  },
+  priceRangeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 12,
+  },
+  priceRangeText: {
+    fontSize: 12,
+    fontFamily: 'Nunito-Bold',
+  },
+  description: {
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
+    color: '#666',
+    lineHeight: 24,
+    marginBottom: 20,
+  },
+  contactActions: {
+    gap: 12,
+    marginBottom: 24,
+  },
+  contactButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#10B981',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  contactButtonText: {
+    fontSize: 14,
+    fontFamily: 'Nunito-SemiBold',
+    color: 'white',
+    marginLeft: 8,
+  },
+  infoSection: {
+    marginBottom: 24,
+  },
+  infoTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  modalLocationContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  modalLocationText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  modalAddress: {
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
+    color: '#333',
+    marginBottom: 4,
+  },
+  landmarks: {
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
+    color: '#666',
+  },
+  hoursContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  hoursText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  weekdays: {
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
+    color: '#333',
+    marginBottom: 4,
+  },
+  weekends: {
+    fontSize: 16,
+    fontFamily: 'Nunito-Regular',
+    color: '#333',
+    marginBottom: 4,
+  },
+  emergency: {
+    fontSize: 14,
+    fontFamily: 'Nunito-SemiBold',
+    color: '#10B981',
+  },
+  servicesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  serviceTag: {
+    backgroundColor: 'white',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  serviceText: {
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
+    color: '#374151',
+  },
+  specialtiesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  modalSpecialtyTag: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  modalSpecialtyText: {
+    fontSize: 14,
+    fontFamily: 'Nunito-SemiBold',
+  },
+  establishedContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  establishedText: {
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
+    color: '#666',
   },
 });
