@@ -65,25 +65,25 @@ BEGIN
     (
       gen_random_uuid(),
       pet_id,
-      'https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=800&h=1200',
+      'https://i.imgur.com/VdckEAH.jpg',
       true,
-      'Marshmallow looking adorable on the couch',
+      'Marshmallow - adorable Munchkin kitten with beautiful features',
       NOW()
     ),
     (
       gen_random_uuid(),
       pet_id,
-      'https://images.unsplash.com/photo-1570824104453-508955ab713e?auto=format&fit=crop&w=800&h=1200',
+      'https://i.imgur.com/bWUizup.jpg',
       false,
-      'Marshmallow playing and exploring',
+      'Marshmallow showing her sweet personality',
       NOW()
     ),
     (
       gen_random_uuid(),
       pet_id,
-      'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?auto=format&fit=crop&w=800&h=1200',
+      'https://i.imgur.com/pJrCpP1.jpg',
       false,
-      'Marshmallow showing her beautiful markings',
+      'Marshmallow being adorable and playful',
       NOW()
     );
     
