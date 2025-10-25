@@ -119,8 +119,8 @@ export default function AuthScreen() {
             <View style={styles.logoContainer}>
               <Heart size={48} color={COLORS.white} fill={COLORS.white} />
             </View>
-            <Text style={styles.title}>Welcome to PawMatch!</Text>
-            <Text style={styles.subtitle}>Find your perfect furry companion</Text>
+            <Text style={styles.title}>Welcome to PawfectMatch!</Text>
+            <Text style={styles.subtitle}>Find your perfect furry companion in Bangladesh</Text>
           </View>
 
           {/* Error Display */}

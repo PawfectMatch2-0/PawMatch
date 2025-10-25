@@ -4,240 +4,88 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { MapPin, Star, Phone, User, Stethoscope, Scissors, GraduationCap, Store, Hotel } from 'lucide-react-native';
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
+import { 
+  dhakaVeterinaryServices, 
+  dhakaGroomingServices, 
+  dhakaTrainingServices, 
+  dhakaPetStores, 
+  dhakaBoardingServices,
+  PetServiceProvider 
+} from '../../data/bangladeshContent';
 
 // Shop categories
 const shopCategories = [
   { id: 'all', name: 'All', icon: Store, color: COLORS.primary },
-  { id: 'Pet Store', name: 'Pet Store', icon: Store, color: COLORS.secondary },
-  { id: 'Veterinary', name: 'Veterinary', icon: Stethoscope, color: '#50C878' },
-  { id: 'Grooming', name: 'Grooming', icon: Scissors, color: '#9B59B6' },
-  { id: 'Training', name: 'Training', icon: GraduationCap, color: '#FF8C00' },
-  { id: 'Hotel', name: 'Pet Hotel', icon: Hotel, color: '#E74C3C' },
+  { id: 'pet-store', name: 'Pet Store', icon: Store, color: COLORS.categories.petStore },
+  { id: 'veterinary', name: 'Veterinary', icon: Stethoscope, color: COLORS.categories.veterinary },
+  { id: 'grooming', name: 'Grooming', icon: Scissors, color: COLORS.categories.grooming },
+  { id: 'training', name: 'Training', icon: GraduationCap, color: COLORS.categories.training },
+  { id: 'boarding', name: 'Boarding', icon: Hotel, color: COLORS.categories.boarding },
 ];
 
-// Real pet services in Dhaka, Bangladesh
-const dhakaPetServices = [
-  {
-    id: '1',
-    name: 'Furryghor',
-    category: 'Pet Store',
-    rating: 4.8,
-    reviews: 245,
-    address: 'House 10, Road 12, Block E, Banani, Dhaka 1213',
-    phone: '+880 1711-223344',
-    image: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400',
-    description: 'Premium pet store offering high-quality pet food, accessories, and grooming services.',
-    openHours: 'Sat-Thu: 10 AM - 9 PM, Fri: 2 PM - 9 PM',
-    services: ['Pet Food', 'Accessories', 'Grooming', 'Pet Adoption'],
-  },
-  {
-    id: '2',
-    name: 'Petsworld Bangladesh',
-    category: 'Pet Store',
-    rating: 4.6,
-    reviews: 189,
-    address: 'House 27, Road 2, Dhanmondi, Dhaka 1205',
-    phone: '+880 1777-888999',
-    image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400',
-    description: 'Complete pet care solutions with imported and local pet products.',
-    openHours: 'Daily: 10 AM - 8 PM',
-    services: ['Pet Food', 'Toys', 'Cages', 'Health Products'],
-  },
-  {
-    id: '3',
-    name: 'The Pet Planet BD',
-    category: 'Pet Store',
-    rating: 4.7,
-    reviews: 156,
-    address: 'Ka-93/4/A, Progoti Sarani, Kuril, Dhaka 1229',
-    phone: '+880 1611-334455',
-    image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=400',
-    description: 'One-stop shop for all your pet needs with expert consultation.',
-    openHours: 'Sat-Thu: 11 AM - 9 PM, Fri: Closed',
-    services: ['Dog Food', 'Cat Food', 'Bird Food', 'Aquarium'],
-  },
-  {
-    id: '4',
-    name: 'Pet Zone Bangladesh',
-    category: 'Pet Store',
-    rating: 4.5,
-    reviews: 134,
-    address: 'Shop 15, Level 4, Jamuna Future Park, Dhaka 1229',
-    phone: '+880 1955-667788',
-    image: 'https://images.unsplash.com/photo-1534361960057-19889db9621e?w=400',
-    description: 'Modern pet store in Jamuna Future Park with wide variety of pet supplies.',
-    openHours: 'Daily: 10 AM - 10 PM',
-    services: ['Pet Supplies', 'Grooming', 'Pet Training', 'Vet Consultation'],
-  },
-  {
-    id: '5',
-    name: 'Central Veterinary Hospital',
-    category: 'Veterinary',
-    rating: 4.9,
-    reviews: 312,
-    address: '32 Segunbagicha, Dhaka 1000',
-    phone: '+880 1713-445566',
-    image: 'https://images.unsplash.com/photo-1530041539828-114de669390e?w=400',
-    description: 'Leading veterinary hospital with 24/7 emergency services and experienced vets.',
-    openHours: '24/7 Emergency Services',
-    services: ['Surgery', 'Vaccination', 'X-Ray', 'Laboratory', 'Emergency Care'],
-  },
-  {
-    id: '6',
-    name: 'Advanced Veterinary Centre',
-    category: 'Veterinary',
-    rating: 4.8,
-    reviews: 278,
-    address: 'House 71, Road 7A, Dhanmondi, Dhaka 1209',
-    phone: '+880 1755-223344',
-    image: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400',
-    description: 'State-of-the-art veterinary care with modern diagnostic facilities.',
-    openHours: 'Daily: 9 AM - 10 PM',
-    services: ['Health Checkup', 'Dental Care', 'Surgery', 'Ultrasound', 'Pet Pharmacy'],
-  },
-  {
-    id: '7',
-    name: 'Dhaka Veterinary Clinic',
-    category: 'Veterinary',
-    rating: 4.6,
-    reviews: 198,
-    address: 'House 23, Road 103, Gulshan 2, Dhaka 1212',
-    phone: '+880 1819-556677',
-    image: 'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=400',
-    description: 'Experienced veterinarians providing comprehensive pet healthcare.',
-    openHours: 'Sat-Thu: 9 AM - 9 PM, Fri: 3 PM - 9 PM',
-    services: ['Consultation', 'Vaccination', 'Deworming', 'Skin Treatment'],
-  },
-  {
-    id: '8',
-    name: 'Pet Care Vet',
-    category: 'Veterinary',
-    rating: 4.7,
-    reviews: 225,
-    address: 'Cha-60/1, North Badda, Dhaka 1212',
-    phone: '+880 1672-889900',
-    image: 'https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?w=400',
-    description: 'Compassionate veterinary care for all types of pets.',
-    openHours: 'Daily: 10 AM - 8 PM',
-    services: ['General Checkup', 'Pet Surgery', 'Lab Tests', 'Pet Grooming'],
-  },
-  {
-    id: '9',
-    name: 'Paws & Claws Grooming',
-    category: 'Grooming',
-    rating: 4.8,
-    reviews: 167,
-    address: 'House 45, Road 11, Banani, Dhaka 1213',
-    phone: '+880 1533-778899',
-    image: 'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=400',
-    description: 'Professional pet grooming services with trained groomers.',
-    openHours: 'Daily: 9 AM - 7 PM',
-    services: ['Bath & Brush', 'Hair Cut', 'Nail Trim', 'Ear Cleaning', 'De-matting'],
-  },
-  {
-    id: '10',
-    name: 'Furry Friends Salon',
-    category: 'Grooming',
-    rating: 4.7,
-    reviews: 143,
-    address: 'Plot 12, Road 113, Gulshan 2, Dhaka 1212',
-    phone: '+880 1922-334455',
-    image: 'https://images.unsplash.com/photo-1585664811087-47f65abbad64?w=400',
-    description: 'Luxury grooming services for your beloved pets.',
-    openHours: 'Sat-Thu: 10 AM - 8 PM, Fri: 2 PM - 8 PM',
-    services: ['Spa Treatment', 'Styling', 'Teeth Cleaning', 'Flea Treatment'],
-  },
-  {
-    id: '11',
-    name: 'Pet Elegance',
-    category: 'Grooming',
-    rating: 4.6,
-    reviews: 128,
-    address: 'House 18, Road 27, Uttara Sector 7, Dhaka 1230',
-    phone: '+880 1711-998877',
-    image: 'https://images.unsplash.com/photo-1558788353-f76d92427f16?w=400',
-    description: 'Premium grooming services with natural and organic products.',
-    openHours: 'Daily: 10 AM - 7 PM',
-    services: ['Full Grooming', 'Show Cuts', 'De-shedding', 'Paw Care'],
-  },
-  {
-    id: '12',
-    name: 'K9 Training Academy',
-    category: 'Training',
-    rating: 4.9,
-    reviews: 201,
-    address: 'House 112, Road 12, Baridhara DOHS, Dhaka 1206',
-    phone: '+880 1866-223344',
-    image: 'https://images.unsplash.com/photo-1558788353-f76d92427f16?w=400',
-    description: 'Professional dog training with certified trainers and behavioral experts.',
-    openHours: 'Sat-Thu: 7 AM - 7 PM, Fri: Closed',
-    services: ['Puppy Training', 'Obedience', 'Agility', 'Behavioral Modification'],
-  },
-  {
-    id: '13',
-    name: 'Smart Pet Training Center',
-    category: 'Training',
-    rating: 4.7,
-    reviews: 156,
-    address: 'House 34, Road 8, Block D, Mirpur DOHS, Dhaka 1216',
-    phone: '+880 1755-667788',
-    image: 'https://images.unsplash.com/photo-1587559070757-f72a388edbba?w=400',
-    description: 'Expert training programs for dogs of all ages and breeds.',
-    openHours: 'Daily: 6 AM - 6 PM',
-    services: ['Basic Training', 'Advanced Training', 'Guard Dog Training', 'Therapy Dog'],
-  },
-  {
-    id: '14',
-    name: 'Pawsitive Training',
-    category: 'Training',
-    rating: 4.8,
-    reviews: 189,
-    address: 'House 56, Road 15, Gulshan 1, Dhaka 1212',
-    phone: '+880 1611-445566',
-    image: 'https://images.unsplash.com/photo-1534361960057-19889db9621e?w=400',
-    description: 'Positive reinforcement based training for happy and well-behaved pets.',
-    openHours: 'Sat-Thu: 8 AM - 6 PM, Fri: Closed',
-    services: ['Puppy Socialization', 'Leash Training', 'Trick Training', 'Problem Solving'],
-  },
-  {
-    id: '15',
-    name: 'Pet Paradise Hotel',
-    category: 'Pet Hotel',
-    rating: 4.8,
-    reviews: 234,
-    address: 'House 89, Road 21, Banani, Dhaka 1213',
-    phone: '+880 1944-556677',
-    image: 'https://images.unsplash.com/photo-1623387641168-d9803ddd3f35?w=400',
-    description: 'Luxury pet boarding facility with spacious rooms and play areas.',
-    openHours: '24/7 Boarding Services',
-    services: ['Day Care', 'Overnight Boarding', 'Play Time', 'Meal Service', 'Grooming'],
-  },
-  {
-    id: '16',
-    name: 'Happy Tails Pet Hotel',
-    category: 'Pet Hotel',
-    rating: 4.7,
-    reviews: 178,
-    address: 'Plot 45, Road 4, Bashundhara R/A, Dhaka 1229',
-    phone: '+880 1799-887766',
-    image: 'https://images.unsplash.com/photo-1600804340584-c7db2eacf0bf?w=400',
-    description: 'Safe and comfortable pet hotel with 24/7 care and monitoring.',
-    openHours: 'Daily: 24/7 Check-in Available',
-    services: ['Pet Boarding', 'Day Care', 'Exercise Sessions', 'Vet on Call'],
-  },
-];
+// Combine all Bangladesh pet services
+const getAllPetServices = (): PetServiceProvider[] => {
+  return [
+    ...dhakaVeterinaryServices,
+    ...dhakaGroomingServices,
+    ...dhakaTrainingServices,
+    ...dhakaPetStores,
+    ...dhakaBoardingServices
+  ];
+};
+
+// Transform service data to match the UI format
+const transformServiceData = (service: PetServiceProvider) => {
+  const getCategoryDisplayName = (category: string) => {
+    switch (category) {
+      case 'veterinary': return 'Veterinary';
+      case 'grooming': return 'Grooming';
+      case 'training': return 'Training';
+      case 'pet-store': return 'Pet Store';
+      case 'boarding': return 'Boarding';
+      default: return 'Service';
+    }
+  };
+
+  const getHoursText = () => {
+    if (service.timings.emergency) {
+      return 'Open • 24 Hours Emergency';
+    }
+    return `${service.timings.weekdays}`;
+  };
+
+  return {
+    id: service.id,
+    name: service.name,
+    category: service.category,
+    rating: service.rating,
+    reviews: service.reviews,
+    address: `${service.location.area}, ${service.location.district}`,
+    phone: service.contact.phone[0],
+    image: service.featuredImage,
+    description: service.description,
+    openHours: getHoursText(),
+    services: service.services.slice(0, 4)
+  };
+};
+
+
 
 export default function ShopsScreen() {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [filteredShops, setFilteredShops] = useState(dhakaPetServices);
+  
+  // Get all services and transform them for UI
+  const allServices = getAllPetServices();
+  const transformedServices = allServices.map(transformServiceData);
+  const [filteredShops, setFilteredShops] = useState(transformedServices);
 
   const filterShopsByCategory = (categoryId: string) => {
     setSelectedCategory(categoryId);
     if (categoryId === 'all') {
-      setFilteredShops(dhakaPetServices);
+      setFilteredShops(transformedServices);
     } else {
-      setFilteredShops(dhakaPetServices.filter(shop => shop.category === categoryId));
+      setFilteredShops(transformedServices.filter(shop => shop.category === categoryId));
     }
   };
 
@@ -251,7 +99,7 @@ export default function ShopsScreen() {
     Linking.openURL(`tel:${phone}`);
   };
 
-  const renderShopItem = ({ item }: { item: typeof dhakaPetServices[0] }) => (
+  const renderShopItem = ({ item }: { item: ReturnType<typeof transformServiceData> }) => (
     <TouchableOpacity style={styles.shopCard} onPress={() => handleShopPress(item.id)}>
       <Image source={{ uri: item.image }} style={styles.shopImage} />
       
@@ -259,7 +107,7 @@ export default function ShopsScreen() {
         <View style={styles.shopHeader}>
           <Text style={styles.shopName} numberOfLines={1}>{item.name}</Text>
           <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(item.category) }]}>
-            <Text style={styles.categoryText}>{item.category}</Text>
+            <Text style={styles.categoryText}>{getCategoryDisplayName(item.category)}</Text>
           </View>
         </View>
         
@@ -292,6 +140,17 @@ export default function ShopsScreen() {
   const getCategoryColor = (category: string) => {
     const cat = shopCategories.find(c => c.id === category);
     return cat ? cat.color : COLORS.primary;
+  };
+
+  const getCategoryDisplayName = (category: string) => {
+    switch (category) {
+      case 'veterinary': return 'Veterinary';
+      case 'grooming': return 'Grooming';
+      case 'training': return 'Training';
+      case 'pet-store': return 'Pet Store';
+      case 'boarding': return 'Boarding';
+      default: return 'Service';
+    }
   };
 
   return (
