@@ -20,6 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { Lock, Eye, EyeOff, Heart, CheckCircle } from 'lucide-react-native'
 import { supabase } from '../../lib/enhanced-auth'
+import { COLORS } from '@/constants/theme'
 
 export default function ResetPassword() {
   const router = useRouter()

@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { CheckCircle, XCircle, Heart } from 'lucide-react-native'
 import { supabase } from '../../lib/enhanced-auth'
+import { COLORS } from '@/constants/theme'
 
 export default function EmailConfirm() {
   const router = useRouter()
@@ -50,7 +51,7 @@ export default function EmailConfirm() {
 
         console.log('✅ Email confirmed successfully')
         setStatus('success')
-        setMessage('Your email has been confirmed! Welcome to PawMatch.')
+        setMessage('Your email has been confirmed! Welcome to PawfectMatch 2.0.')
 
         // Redirect to app after a delay
         setTimeout(() => {
@@ -103,7 +104,7 @@ export default function EmailConfirm() {
         return (
           <>
             <View style={styles.iconContainer}>
-              <ActivityIndicator size="large" color="#FF6B6B" />
+              <ActivityIndicator size="large" color={COLORS.primary} />
             </View>
             <Text style={styles.title}>Confirming Email...</Text>
             <Text style={styles.message}>Please wait while we confirm your email address.</Text>
@@ -113,14 +114,14 @@ export default function EmailConfirm() {
   }
 
   return (
-    <LinearGradient colors={['#FF6B6B', '#FF8E8E', '#FFB3B3']} style={styles.container}>
+    <LinearGradient colors={[COLORS.primary, COLORS.primaryLight, COLORS.primaryLighter]} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           <View style={styles.logoContainer}>
             <View style={styles.logoCircle}>
-              <Heart size={40} color="white" fill="white" />
+              <Text style={styles.pawLogo}>🐾</Text>
             </View>
-            <Text style={styles.appName}>PawMatch</Text>
+            <Text style={styles.appName}>PawfectMatch 2.0</Text>
           </View>
 
           <View style={styles.card}>
@@ -157,6 +158,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  pawLogo: {
+    fontSize: 36,
+    textAlign: 'center',
   },
   appName: {
     fontSize: 32,
@@ -201,7 +206,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 32,

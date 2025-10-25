@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { supabase, authService } from '../../lib/supabase';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { COLORS } from '@/constants/theme';
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -58,12 +59,16 @@ export default function AuthCallback() {
 
   return (
     <LinearGradient
-      colors={['#FF6B6B', '#FF8E8E']}
+      colors={[COLORS.primary, COLORS.primaryLight]}
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
+          <View style={styles.logoContainer}>
+            <Text style={styles.pawLogo}>🐾</Text>
+          </View>
           <Text style={styles.text}>Completing sign in...</Text>
+          <Text style={styles.subtitle}>Welcome to PawfectMatch 2.0!</Text>
         </View>
       </SafeAreaView>
     </LinearGradient>
@@ -83,9 +88,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
   },
+  logoContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  pawLogo: {
+    fontSize: 36,
+    textAlign: 'center',
+  },
   text: {
     fontSize: 18,
     color: 'white',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
   },
 });

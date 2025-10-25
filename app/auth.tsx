@@ -117,10 +117,10 @@ export default function AuthScreen() {
           {/* App Branding */}
           <View style={styles.brandingContainer}>
             <View style={styles.logoContainer}>
-              <Heart size={48} color={COLORS.white} fill={COLORS.white} />
+              <Text style={styles.pawLogo}>🐾</Text>
             </View>
-            <Text style={styles.title}>Welcome to PawfectMatch!</Text>
-            <Text style={styles.subtitle}>Find your perfect furry companion in Bangladesh</Text>
+            <Text style={styles.title}>PawfectMatch 2.0</Text>
+            <Text style={styles.subtitle}>Find your perfect companion in Bangladesh 🇧🇩</Text>
           </View>
 
           {/* Error Display */}
@@ -230,6 +230,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.lg,
+  },
+  pawLogo: {
+    fontSize: 48,
+    textAlign: 'center',
   },
   title: {
     ...TYPOGRAPHY.h1,
