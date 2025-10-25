@@ -6,10 +6,20 @@ export const mockPets = [
     breed: 'Munchkin',
     location: 'Dhaka, Bangladesh',
     image: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=800&h=1200',
+    additionalImages: [
+      'https://images.unsplash.com/photo-1606214174585-fe31582dc6ee?auto=format&fit=crop&w=800&h=1200',
+      'https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=800&h=1200'
+    ],
     personality: ['Playful', 'Curious', 'Sweet', 'Adorable'],
-    description: '🤍 Marshmallow is an absolutely adorable Munchkin kitten with stunning black and white markings! With her short legs and big personality, she loves to explore and play. This little sweetie has the most beautiful green eyes and would make the perfect companion for someone looking for a cuddly, loving kitten. She\'s litter trained and loves to be held!',
+    description: '🤍 Marshmallow is an absolutely adorable Munchkin kitten with stunning black and white markings! With her distinctive short legs and big personality, she loves to explore and play around the house. This little sweetie has the most beautiful green eyes and a playful spirit that will melt your heart. She\'s perfectly litter trained, loves to be held and cuddled, and gets along wonderfully with children. Marshmallow enjoys playing with feather toys and has a curious nature that makes every day an adventure!',
     gender: 'Female' as const,
     size: 'Small' as const,
+    vaccinated: true,
+    spayedNeutered: false,
+    goodWithKids: true,
+    goodWithPets: true,
+    energyLevel: 'High' as const,
+    specialNeeds: 'None - just lots of love and playtime!',
   },
   {
     id: '16',

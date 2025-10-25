@@ -1148,6 +1148,740 @@ Professional grooming not only keeps your pet looking great but also helps maint
     likes: 189,
     views: 1122,
   },
+  // Bangladesh-specific learning articles
+  {
+    id: 'bd-01',
+    title: 'Pet Care in Bangladesh\'s Climate: Essential Tips',
+    category: 'basic-care',
+    difficulty: 'beginner',
+    estimatedReadTime: 10,
+    content: `# Pet Care in Bangladesh's Climate: Essential Tips
+
+Bangladesh's tropical climate presents unique challenges for pet owners. High humidity, monsoon seasons, and intense heat require special care strategies to keep your pets healthy and comfortable.
+
+## Understanding Bangladesh's Climate Challenges
+
+### Monsoon Season (June-October)
+- **High humidity** (80-90%)
+- **Heavy rainfall** and flooding
+- **Increased fungal infections**
+- **Limited outdoor exercise opportunities**
+
+### Summer Season (March-May)
+- **Extreme heat** (up to 40°C/104°F)
+- **High humidity** making it feel hotter
+- **Risk of heat stroke**
+- **Dehydration concerns**
+
+### Winter Season (November-February)
+- **Mild temperatures** (10-25°C/50-77°F)
+- **Lower humidity**
+- **Ideal time for outdoor activities**
+- **Respiratory issues from dust**
+
+## Heat Management
+
+### Keeping Pets Cool
+- **Provide constant shade** when outdoors
+- **Use cooling mats** or wet towels
+- **Ensure fresh water** is always available
+- **Limit exercise** to early morning or evening
+- **Use fans or air conditioning** when possible
+
+### Recognizing Heat Stroke
+**Warning Signs:**
+- Excessive panting
+- Drooling
+- Weakness or collapse
+- Vomiting
+- Red or blue gums
+
+**Emergency Action:**
+1. Move pet to cool area immediately
+2. Apply cool (not cold) water to paw pads
+3. Offer small amounts of water
+4. Contact veterinarian immediately
+
+## Monsoon Care
+
+### Indoor Environment
+- **Use dehumidifiers** to reduce moisture
+- **Ensure proper ventilation**
+- **Keep pets dry** after going outside
+- **Regular grooming** to prevent matting
+
+### Health Monitoring
+- **Watch for skin infections** from humidity
+- **Check ears regularly** for infections
+- **Monitor for respiratory issues**
+- **Maintain vaccination schedule**
+
+### Flooding Precautions
+- **Have evacuation plan** for pets
+- **Keep carriers accessible**
+- **Store pet supplies** in waterproof containers
+- **Know location** of emergency veterinary clinics
+
+## Common Health Issues in Bangladesh
+
+### Skin Problems
+- **Fungal infections** from humidity
+- **Bacterial infections** from scratching
+- **Parasites** like fleas and ticks
+- **Hot spots** from excessive licking
+
+**Prevention:**
+- Regular bathing with antifungal shampoo
+- Keep fur dry and well-groomed
+- Use prescribed flea/tick prevention
+- Maintain clean living environment
+
+### Digestive Issues
+- **Food spoilage** in heat and humidity
+- **Waterborne parasites**
+- **Dietary changes** affecting digestion
+
+**Management:**
+- Store food in airtight containers
+- Use boiled or filtered water
+- Avoid feeding street food to pets
+- Monitor for signs of illness
+
+## Nutrition in Hot Climate
+
+### Feeding Guidelines
+- **Feed during cooler hours** (early morning/evening)
+- **Smaller, frequent meals** to aid digestion
+- **High-quality protein** for energy maintenance
+- **Avoid overfeeding** in hot weather
+
+### Hydration
+- **Multiple water sources** throughout home
+- **Clean, fresh water** changed daily
+- **Ice cubes** as treats (for dogs)
+- **Wet food** to increase water intake
+
+## Exercise and Activity
+
+### Safe Exercise Times
+- **Early morning** (5:00-7:00 AM)
+- **Late evening** (6:00-8:00 PM)
+- **Avoid midday** activities
+- **Check pavement temperature** before walks
+
+### Indoor Activities
+- **Interactive toys** and puzzles
+- **Training sessions** for mental stimulation
+- **Indoor play areas** during storms
+- **Stair climbing** for exercise
+
+## Grooming in Humid Climate
+
+### Regular Maintenance
+- **Daily brushing** to prevent matting
+- **Weekly baths** with appropriate shampoo
+- **Nail trimming** every 2-3 weeks
+- **Ear cleaning** to prevent infections
+
+### Professional Services
+Bangladesh has several professional grooming services:
+- **Pet Grooming BD** (Mohammadpur)
+- **Head to Tail** (Madani Avenue)
+- Mobile grooming services available
+
+## Healthcare Considerations
+
+### Finding Veterinary Care
+Quality veterinary services in Dhaka:
+- **Care & Cure Veterinary Clinic** (Dhanmondi)
+- **Pet Heaven Veterinary Clinic** (Mirpur)
+- **MR Veterinary Clinic** (East Bashabo)
+
+### Preventive Care
+- **Regular vaccinations** against local diseases
+- **Parasite prevention** year-round
+- **Health check-ups** every 6 months
+- **Dental care** to prevent infections
+
+## Emergency Preparedness
+
+### Natural Disasters
+- **Cyclone preparation** with pet supplies
+- **Flood evacuation** plans
+- **Emergency contact list** for veterinarians
+- **Pet identification** with updated information
+
+### First Aid Kit
+Essential items for Bangladesh climate:
+- Antifungal medication
+- Electrolyte solution
+- Cooling pads
+- Emergency veterinary contacts
+- Waterproof containers
+
+## Local Pet Supplies
+
+### Reliable Stores
+- **Paw Care** (Katabon) - Quality imported brands
+- **Bangladesh Pet House** (Katabon) - Local and imported supplies
+- **Head to Tail Pet Store** (Madani Avenue) - Premium accessories
+
+### What to Stock
+- High-quality pet food (store properly)
+- Antifungal shampoos
+- Flea and tick prevention
+- Cooling accessories
+- Waterproof bedding
+
+Living with pets in Bangladesh requires extra attention to climate-related challenges, but with proper care and preparation, your furry friends can thrive in this beautiful country.`,
+    summary: 'Navigate Bangladesh\'s unique climate challenges with essential pet care tips for monsoon seasons, extreme heat, and humidity management.',
+    tags: ['bangladesh', 'climate', 'monsoon', 'heat', 'humidity', 'tropical care'],
+    author: 'Dr. Rahman Ahmed, DVM (Dhaka)',
+    featuredImage: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=800&h=600',
+    createdAt: new Date('2024-01-20'),
+    likes: 145,
+    views: 892,
+  },
+  {
+    id: 'bd-02',
+    title: 'Popular Dog Breeds in Bangladesh: A Complete Guide',
+    category: 'breed-guide',
+    difficulty: 'beginner',
+    estimatedReadTime: 12,
+    content: `# Popular Dog Breeds in Bangladesh: A Complete Guide
+
+Bangladesh has a growing community of dog lovers, with certain breeds being particularly well-suited to the local climate and lifestyle. This guide covers the most popular breeds and their care requirements.
+
+## Climate-Suitable Breeds
+
+### German Shepherd
+**Why Popular in Bangladesh:**
+- Excellent guard dogs
+- Intelligent and trainable
+- Adapt well to heat with proper care
+- Strong presence for security
+
+**Special Care Needs:**
+- Regular grooming during shedding season
+- Plenty of exercise in cooler hours
+- High-quality diet for joint health
+- Air conditioning during extreme heat
+
+### Labrador Retriever
+**Why Popular:**
+- Friendly family dogs
+- Good with children
+- Swimming ability (useful during floods)
+- Relatively heat tolerant
+
+**Care Requirements:**
+- Daily exercise and swimming
+- Regular grooming
+- Weight management crucial
+- Joint supplements as they age
+
+### Local Mixed Breeds (Deshi Dogs)
+**Advantages:**
+- Naturally adapted to local climate
+- Strong immune systems
+- Lower maintenance costs
+- Excellent street smarts
+
+**Care Tips:**
+- Regular health check-ups
+- Proper nutrition despite hardy nature
+- Socialization training
+- Parasite prevention
+
+## Medium-Sized Breeds
+
+### Cocker Spaniel
+**Popularity Reasons:**
+- Moderate size suitable for apartments
+- Good temperament with families
+- Beautiful coat appealing to owners
+- Manageable exercise needs
+
+**Bangladesh-Specific Care:**
+- Daily brushing to prevent matting
+- Regular ear cleaning (humidity issues)
+- Professional grooming every 6 weeks
+- Indoor exercise during hot weather
+
+### Beagle
+**Why Chosen:**
+- Friendly and social
+- Good size for urban living
+- Hardy constitution
+- Good with children
+
+**Special Considerations:**
+- High energy needs regular outlets
+- Tendency to gain weight in hot weather
+- Need secure fencing (escape artists)
+- Regular health monitoring
+
+## Small Breeds
+
+### Pomeranian
+**Appeal Factors:**
+- Compact size for small homes
+- Beautiful fluffy coat
+- Alert watchdogs
+- Social media appeal
+
+**Heat Management:**
+- Air conditioning essential
+- Limited outdoor time
+- Regular grooming to prevent overheating
+- Cool water always available
+
+### Shih Tzu
+**Popularity:**
+- Friendly, outgoing personality
+- Good apartment dogs
+- Minimal exercise needs
+- Good with families
+
+**Climate Challenges:**
+- Breathing difficulties in heat
+- Daily facial cleaning needed
+- Professional grooming essential
+- Heat stroke risk - monitor closely
+
+## Large Breeds
+
+### Rottweiler
+**Why Kept:**
+- Excellent security dogs
+- Loyal family protectors
+- Strong, impressive appearance
+- Intelligent and trainable
+
+**Hot Climate Care:**
+- Extensive cooling measures needed
+- Exercise only in early morning/evening
+- Constant water access
+- Watch for overheating signs
+
+### Great Dane
+**Growing Popularity:**
+- Gentle giants personality
+- Status symbol appeal
+- Good apartment dogs (surprisingly)
+- Calm temperament
+
+**Special Needs in Bangladesh:**
+- High food costs and requirements
+- Joint health supplements essential
+- Climate control crucial
+- Regular veterinary monitoring
+
+## Breed-Specific Health Concerns
+
+### Hip Dysplasia (Large Breeds)
+**Common in:** German Shepherds, Labradors, Rottweilers
+**Prevention:**
+- Quality breeding selection
+- Proper nutrition during growth
+- Weight management
+- Regular exercise on soft surfaces
+
+### Respiratory Issues (Flat-Faced Breeds)
+**Affected Breeds:** Shih Tzu, Pug, Bulldog
+**Management:**
+- Air conditioning mandatory
+- Avoid exercise in heat
+- Weight control crucial
+- Monitor breathing closely
+
+### Skin Problems (All Breeds)
+**Common Issues:** Fungal infections, hot spots
+**Prevention:**
+- Regular grooming and bathing
+- Keep skin dry
+- Use antifungal shampoos
+- Proper ventilation
+
+## Choosing the Right Breed
+
+### Consider Your Lifestyle
+- **Apartment vs. House:** Size and exercise needs
+- **Family Situation:** Children, elderly members
+- **Experience Level:** First-time vs. experienced owners
+- **Budget:** Food, healthcare, grooming costs
+
+### Climate Compatibility
+- **Heat Tolerance:** Essential in Bangladesh
+- **Grooming Needs:** Professional vs. home care
+- **Exercise Requirements:** Indoor vs. outdoor options
+- **Health Risks:** Breed-specific concerns
+
+## Responsible Breeding
+
+### Finding Good Breeders
+- **Health testing** of parent dogs
+- **Proper socialization** of puppies
+- **Clean facilities** and healthy environment
+- **Ongoing support** after purchase
+
+### Red Flags to Avoid
+- **Puppy mills** with poor conditions
+- **No health records** for parents
+- **Multiple breeds** in same location
+- **Pressure sales** tactics
+
+## Local Breed Communities
+
+### Dog Shows and Clubs
+- **Bangladesh Kennel Club** - Breed standards and shows
+- **Local breed groups** on social media
+- **Training clubs** for specific breeds
+- **Meet-up groups** for breed socialization
+
+### Training Resources
+- **Professional trainers** familiar with breeds
+- **Breed-specific training needs**
+- **Socialization opportunities**
+- **Problem behavior solutions**
+
+## Cost Considerations
+
+### Initial Costs (BDT)
+- **Purebred puppy:** 15,000-150,000+
+- **Mixed breed:** 2,000-15,000
+- **Initial supplies:** 10,000-25,000
+- **First vet visit:** 2,000-5,000
+
+### Monthly Expenses (BDT)
+- **Food:** 3,000-10,000
+- **Veterinary care:** 1,000-5,000
+- **Grooming:** 1,500-5,000
+- **Supplies:** 1,000-3,000
+
+## Healthcare for Different Breeds
+
+### Vaccination Schedule
+All breeds need core vaccines:
+- **Distemper, Hepatitis, Parvovirus, Parainfluenza**
+- **Rabies** (legally required)
+- **Local disease considerations**
+
+### Breed-Specific Health Monitoring
+- **Large breeds:** Joint health, bloat prevention
+- **Small breeds:** Dental care, luxating patella
+- **Flat-faced breeds:** Respiratory monitoring
+- **All breeds:** Parasite prevention
+
+## Exercise and Recreation
+
+### Breed-Appropriate Activities
+- **High-energy breeds:** Agility, fetch, swimming
+- **Guard breeds:** Training, structured walks
+- **Small breeds:** Indoor play, short walks
+- **All breeds:** Mental stimulation games
+
+### Safe Locations in Dhaka
+- **Ramna Park** (early morning)
+- **Dhanmondi Lake** area
+- **Private dog parks** (emerging)
+- **Indoor training facilities**
+
+## Future Trends
+
+### Growing Breeds
+- **French Bulldog** - Apartment-friendly
+- **Border Collie** - Intelligence appeal
+- **Husky mixes** - Appearance (challenging for climate)
+- **Designer mixes** - Poodle crosses
+
+### Changing Attitudes
+- **Pet insurance** becoming available
+- **Professional services** expanding
+- **Better veterinary care** emerging
+- **Breed-specific rescue** organizations
+
+Remember: Every dog is an individual, regardless of breed. Proper care, training, and love are more important than breed characteristics. Choose a breed that fits your lifestyle and commitment level for a happy, lifelong partnership.`,
+    summary: 'Discover the most popular dog breeds in Bangladesh, their climate suitability, care requirements, and local breed community resources.',
+    tags: ['bangladesh', 'dog breeds', 'breed guide', 'climate suitability', 'local breeds'],
+    author: 'Md. Karim Hassan, Certified Dog Trainer (Dhaka)',
+    featuredImage: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=800&h=600',
+    createdAt: new Date('2024-01-18'),
+    likes: 298,
+    views: 1654,
+  },
+  {
+    id: 'bd-03',
+    title: 'Cat Breeds Perfect for Bangladesh: Munchkin and More',
+    category: 'breed-guide',
+    difficulty: 'beginner',
+    estimatedReadTime: 8,
+    content: `# Cat Breeds Perfect for Bangladesh: Munchkin and More
+
+Bangladesh's climate and lifestyle make certain cat breeds particularly suitable as companions. From the adorable Munchkin to hardy local breeds, discover which feline friends thrive in our tropical environment.
+
+## Climate-Friendly Cat Breeds
+
+### Munchkin Cats
+**Why Perfect for Bangladesh:**
+- **Heat tolerant** with short legs reducing ground heat
+- **Indoor lifestyle** suits apartment living
+- **Low exercise needs** perfect for hot climate
+- **Adaptable personality** thrives in family settings
+
+**Special Care in Bangladesh:**
+- Air conditioning recommended during peak summer
+- Regular grooming to prevent matting in humidity
+- Elevated feeding stations for comfort
+- Daily play sessions for mental stimulation
+
+**Munchkin Care Essentials:**
+- **Diet:** High-quality kitten/adult food as appropriate
+- **Exercise:** Interactive toys and climbing trees
+- **Health:** Regular vet checkups for spinal health
+- **Grooming:** Weekly brushing, more during shedding
+
+### Persian Cats
+**Popularity Reasons:**
+- **Beautiful long coat** appeals to cat lovers
+- **Calm temperament** suits quiet households
+- **Indoor preference** matches climate needs
+- **Prestigious appearance** status appeal
+
+**Bangladesh-Specific Needs:**
+- **Daily grooming** essential in humidity
+- **Air conditioning** mandatory for comfort
+- **Eye cleaning** daily due to flat face
+- **Professional grooming** every 6-8 weeks
+
+### Local Mixed Breeds (Deshi Cats)
+**Natural Advantages:**
+- **Climate adapted** over generations
+- **Strong immune systems** resist local diseases
+- **Low maintenance** grooming needs
+- **Excellent hunters** for pest control
+
+**Care Benefits:**
+- Minimal grooming requirements
+- Hardy health with proper nutrition
+- Natural heat tolerance
+- Lower veterinary costs
+
+## Indoor vs. Outdoor Considerations
+
+### Indoor Cat Benefits in Bangladesh
+- **Safety from traffic** in busy cities
+- **Protection from diseases** and parasites
+- **Climate control** during extreme weather
+- **Longer lifespan** with proper care
+
+### Creating Indoor Environment
+- **Multiple levels** with cat trees
+- **Window perches** for bird watching
+- **Interactive toys** for mental stimulation
+- **Scratching posts** for claw health
+
+### Supervised Outdoor Time
+- **Screened balconies** for fresh air
+- **Harness training** for safe exploration
+- **Garden enclosures** if available
+- **Early morning** or evening outdoor time
+
+## Health Considerations by Breed
+
+### Flat-Faced Breeds (Persian, Exotic)
+**Common Issues:**
+- Breathing difficulties in heat/humidity
+- Eye infections from tear duct problems
+- Skin fold dermatitis
+- Dental problems
+
+**Prevention:**
+- Air conditioning during hot weather
+- Daily face cleaning routines
+- Regular veterinary eye exams
+- Proper dental care
+
+### Long-Haired Breeds
+**Humidity Challenges:**
+- Matting and tangling
+- Skin infections under mats
+- Overheating in hot weather
+- Increased grooming needs
+
+**Management:**
+- Daily brushing routine
+- Professional grooming regularly
+- Cooling mats during summer
+- Proper nutrition for coat health
+
+### Short-Haired Breeds
+**Advantages in Bangladesh:**
+- Natural heat tolerance
+- Minimal grooming needs
+- Less humidity-related issues
+- Easier maintenance overall
+
+## Kitten Care in Bangladesh
+
+### Young Kitten Needs (0-6 months)
+- **Temperature control** crucial for tiny bodies
+- **Frequent feeding** every few hours
+- **Vaccination schedule** against local diseases
+- **Parasite prevention** from early age
+
+### Adolescent Care (6-12 months)
+- **Spaying/neutering** before first heat
+- **Adult food transition** around 12 months
+- **Behavioral training** and socialization
+- **Regular health monitoring**
+
+## Common Cat Health Issues in Bangladesh
+
+### Parasites
+**Types:** Fleas, ticks, intestinal worms
+**Prevention:**
+- Regular flea/tick treatments
+- Clean living environment
+- Regular deworming schedule
+- Veterinary-recommended preventatives
+
+### Skin Problems
+**Causes:** Humidity, allergens, poor grooming
+**Solutions:**
+- Regular grooming routines
+- Antifungal shampoos when needed
+- Clean, dry living spaces
+- Professional veterinary treatment
+
+### Respiratory Issues
+**Risk Factors:** Dust, humidity, poor ventilation
+**Management:**
+- Air purifiers in living spaces
+- Regular cleaning of bedding
+- Proper ventilation
+- Immediate veterinary care for symptoms
+
+## Nutrition for Bangladesh Cats
+
+### Quality Food Options
+**Available Brands:**
+- **Royal Canin** - breed-specific formulas
+- **Whiskas** - affordable, widely available
+- **Purina Pro Plan** - premium nutrition
+- **Local brands** - budget-friendly options
+
+### Feeding Guidelines
+- **Multiple small meals** better than large ones
+- **Fresh water** changed daily
+- **Temperature consideration** - room temperature food
+- **Storage** in airtight containers
+
+### Special Dietary Needs
+- **Indoor cats** - weight management formulas
+- **Long-haired breeds** - coat health nutrients
+- **Senior cats** - easy-to-digest options
+- **Medical conditions** - prescribed diets
+
+## Grooming Services in Bangladesh
+
+### Professional Groomers
+- **Pet Grooming BD** (Mohammadpur) - Full-service cat grooming
+- **Head to Tail** (Madani Avenue) - Specialized cat care
+- **Mobile groomers** - Home service available
+
+### Home Grooming Essentials
+- **Slicker brushes** for long-haired breeds
+- **Rubber brushes** for short-haired cats
+- **Nail clippers** - guillotine or scissor type
+- **Cat-specific shampoos** for occasional baths
+
+## Veterinary Care
+
+### Regular Health Checkups
+**Kitten Schedule:**
+- 6-8 weeks: First vaccines
+- 10-12 weeks: Second vaccines
+- 14-16 weeks: Final vaccines
+- 6 months: Spay/neuter consultation
+
+**Adult Schedule:**
+- Annual comprehensive exams
+- Semi-annual for senior cats (7+)
+- Regular dental checkups
+- Parasite screening
+
+### Emergency Veterinary Services
+**24-Hour Clinics in Dhaka:**
+- **Pet Heaven Veterinary Clinic** (Mirpur)
+- **Care & Cure Veterinary Clinic** (Dhanmondi)
+- **Emergency contact numbers** always accessible
+
+## Creating Cat-Friendly Homes
+
+### Essential Supplies
+- **Multiple litter boxes** (one per cat plus one extra)
+- **Scratching posts** - various textures
+- **Cat carriers** for vet visits
+- **Food and water bowls** - stainless steel preferred
+
+### Safety Considerations
+- **Window screens** to prevent falls
+- **Toxic plant removal** - many houseplants dangerous
+- **Secure balconies** with cat-proof barriers
+- **Emergency preparedness** for natural disasters
+
+## Cat Breeding in Bangladesh
+
+### Responsible Breeding Practices
+- **Health testing** of breeding cats
+- **Proper socialization** of kittens
+- **Clean breeding facilities**
+- **Genetic diversity** considerations
+
+### Finding Quality Breeders
+- **Bangladesh Cat Breeders Association** membership
+- **Health certificates** for breeding cats
+- **References** from previous buyers
+- **Lifetime support** offerings
+
+## Costs of Cat Ownership
+
+### Initial Expenses (BDT)
+- **Purebred kitten:** 10,000-80,000
+- **Mixed breed:** 1,000-8,000
+- **Initial supplies:** 5,000-15,000
+- **First veterinary care:** 1,500-3,000
+
+### Monthly Costs (BDT)
+- **Food:** 1,500-4,000
+- **Litter:** 800-1,500
+- **Healthcare:** 500-2,000
+- **Grooming:** 1,000-3,000
+
+## Community and Resources
+
+### Online Communities
+- **Facebook cat groups** for Bangladesh
+- **Local cat shows** and exhibitions
+- **Breed-specific groups** for specialized advice
+- **Rescue organizations** for adoption
+
+### Educational Resources
+- **Veterinary advice** from local professionals
+- **International cat care** websites
+- **Breed-specific information** from registries
+- **Local expert guidance** from experienced owners
+
+Whether you choose a special breed like the charming Munchkin or a hardy local cat, providing proper care in Bangladesh's unique environment will ensure your feline friend lives a happy, healthy life.`,
+    summary: 'Explore the best cat breeds for Bangladesh\'s climate, featuring the adorable Munchkin breed and essential care tips for tropical cat ownership.',
+    tags: ['bangladesh', 'cat breeds', 'munchkin', 'tropical cats', 'indoor cats', 'feline care'],
+    author: 'Dr. Fatima Khan, Feline Specialist (Dhaka)',
+    featuredImage: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=800&h=600',
+    createdAt: new Date('2024-01-15'),
+    likes: 256,
+    views: 1398,
+  },
 ];
 
 export const getFeaturedArticles = () => {
