@@ -107,7 +107,7 @@ export const bangladeshiLearningArticles: BangladeshiLearningArticle[] = [
     summary: 'বাংলাদেশে জনপ্রিয় কুকুরের জাত সম্পর্কে বিস্তারিত তথ্য এবং স্থানীয় জলবায়ুতে তাদের যত্ন নেওয়ার উপায়।',
     tags: ['বাংলাদেশ', 'কুকুর', 'জাত', 'গাইড', 'জলবায়ু'],
     author: 'ডাঃ রহিম উদ্দিন, ভেটেরিনারিয়ান',
-    featuredImage: 'https://example.com/bangladesh-dog-breeds.jpg',
+    featuredImage: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=400&h=300',
     location: 'bangladesh',
     createdAt: new Date('2024-01-15'),
     likes: 156,
@@ -155,7 +155,7 @@ export const bangladeshiLearningArticles: BangladeshiLearningArticle[] = [
     summary: 'বাংলাদেশের গরম আবহাওয়ায় কীভাবে পোষা প্রাণীর সঠিক যত্ন নেবেন এবং হিট স্ট্রোক প্রতিরোধ করবেন।',
     tags: ['গরম', 'যত্ন', 'হিট স্ট্রোক', 'পানি', 'বাংলাদেশ'],
     author: 'ডাঃ ফাতেমা খাতুন',
-    featuredImage: 'https://example.com/summer-pet-care-bd.jpg',
+    featuredImage: 'https://images.unsplash.com/photo-1568461603322-67b2eaccbfba?auto=format&fit=crop&w=400&h=300',
     location: 'bangladesh',
     createdAt: new Date('2024-03-15'),
     likes: 245,
@@ -214,7 +214,7 @@ export const dhakaVeterinaryServices: PetServiceProvider[] = [
     languages: ['English', 'Bangla'],
     acceptsInsurance: false,
     homeService: false,
-    featuredImage: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?auto=format&fit=crop&w=400&h=300'
+    featuredImage: 'https://www.facebook.com/photo/?fbid=487673666706478&set=a.487673626706482'
   },
   {
     id: 'dhk-vet-002',
@@ -254,7 +254,7 @@ export const dhakaVeterinaryServices: PetServiceProvider[] = [
     languages: ['English', 'Bangla'],
     acceptsInsurance: false,
     homeService: false,
-    featuredImage: 'https://images.unsplash.com/photo-1559190394-90caa8fc893c?auto=format&fit=crop&w=400&h=300'
+    featuredImage: 'https://www.facebook.com/photo/?fbid=939234154886046&set=a.417591410383659'
   },
   {
     id: 'dhk-vet-003',
@@ -294,7 +294,7 @@ export const dhakaVeterinaryServices: PetServiceProvider[] = [
     languages: ['English', 'Bangla'],
     acceptsInsurance: false,
     homeService: true,
-    featuredImage: 'https://images.unsplash.com/photo-1551884170-09fb70a3a2ed?auto=format&fit=crop&w=400&h=300'
+    featuredImage: 'https://www.facebook.com/photo/?fbid=462853412534052&set=a.433100225509371'
   }
 ];
 
@@ -337,7 +337,7 @@ export const dhakaGroomingServices: PetServiceProvider[] = [
     languages: ['English', 'Bangla'],
     acceptsInsurance: false,
     homeService: true,
-    featuredImage: 'https://images.unsplash.com/photo-1568461603322-67b2eaccbfba?auto=format&fit=crop&w=400&h=300'
+    featuredImage: 'https://www.facebook.com/photo/?fbid=178424715028124&set=a.115536984650231'
   },
   {
     id: 'dhk-groom-002',
@@ -399,7 +399,8 @@ export const dhakaTrainingServices: PetServiceProvider[] = [
     contact: {
       phone: ['01819-263621'],
       email: 'doghealthcare@yahoo.com',
-      website: 'www.petcareclinic-bd.com'
+      website: 'www.petcareclinic-bd.com',
+      facebook: 'facebook.com/petcareclinicbd'
     },
     timings: {
       weekdays: '6:00 AM - 10:00 AM, 5:00 PM - 8:00 PM',
@@ -418,7 +419,7 @@ export const dhakaTrainingServices: PetServiceProvider[] = [
     languages: ['English', 'Bangla'],
     acceptsInsurance: false,
     homeService: true,
-    featuredImage: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=400&h=300'
+    featuredImage: 'https://graph.facebook.com/petcareclinicbd/picture?type=large'
   },
   {
     id: 'dhk-train-002',
