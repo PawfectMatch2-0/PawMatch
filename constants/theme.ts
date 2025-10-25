@@ -13,6 +13,43 @@ export const COLORS = {
   secondaryLight: '#5FBFD9',
   secondaryDark: '#1E8BA8',
   
+  // Category-based Colors for Visual Variety
+  categories: {
+    // Pet Services Colors
+    veterinary: '#10B981',      // Emerald - Health & Medical
+    grooming: '#8B5CF6',        // Purple - Beauty & Care
+    training: '#F59E0B',        // Amber - Learning & Skills
+    boarding: '#EF4444',        // Red - Shelter & Care
+    petStore: '#6366F1',        // Indigo - Shopping
+    emergency: '#DC2626',       // Dark Red - Urgent Care
+    
+    // Pet Types Colors
+    dog: '#F97316',             // Orange - Energetic
+    cat: '#06B6D4',             // Cyan - Calm
+    bird: '#84CC16',            // Lime - Light & Free
+    fish: '#0EA5E9',            // Blue - Aquatic
+    rabbit: '#EC4899',          // Pink - Cute & Soft
+    
+    // App Sections
+    discovery: '#E67E9C',       // Primary Pink
+    saved: '#2FA5C7',           // Secondary Blue
+    aiVet: '#10B981',           // Green - AI/Tech
+    learn: '#8B5CF6',           // Purple - Education
+    services: '#F59E0B',        // Amber - Business
+    profile: '#2FA5C7',         // Blue - Personal
+  },
+  
+  // Gradient Combinations
+  gradients: {
+    primary: ['#E67E9C', '#F7A8C4'],
+    secondary: ['#2FA5C7', '#5FBFD9'],
+    sunset: ['#F97316', '#F59E0B'],
+    ocean: ['#0EA5E9', '#06B6D4'],
+    forest: ['#10B981', '#34D399'],
+    purple: ['#8B5CF6', '#A78BFA'],
+    warm: ['#EF4444', '#F87171'],
+  },
+  
   // Semantic Colors
   success: '#10B981',
   successLight: '#34D399',

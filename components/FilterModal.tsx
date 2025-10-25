@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import { X, ChevronDown } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '../constants/theme';
 
 export interface Filters {
   breed: string;
@@ -122,7 +123,7 @@ export default function FilterModal({ visible, onClose, onApplyFilters, currentF
             
             <TouchableOpacity style={styles.applyButton} onPress={handleApplyFilters}>
               <LinearGradient
-                colors={['#FF6B6B', '#FF8E8E']}
+                colors={COLORS.gradients.primary}
                 style={styles.applyButtonGradient}
               >
                 <Text style={styles.applyButtonText}>Apply Filters</Text>
@@ -186,8 +187,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   dropdownActive: {
-    borderColor: '#FF6B6B',
-    backgroundColor: '#FFF5F5',
+    borderColor: COLORS.primary,
+    backgroundColor: `${COLORS.primary}15`,
   },
   dropdownText: {
     fontSize: 16,
@@ -218,7 +219,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F0F0F0',
   },
   optionSelected: {
-    backgroundColor: '#FFF5F5',
+    backgroundColor: `${COLORS.primary}15`,
   },
   optionText: {
     fontSize: 16,
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   optionTextSelected: {
-    color: '#FF6B6B',
+    color: COLORS.primary,
     fontFamily: 'Nunito-SemiBold',
   },
   footer: {

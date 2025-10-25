@@ -95,7 +95,7 @@ export default function ProfileScreen() {
   };
 
   const stats = [
-    { label: 'Saved Pets', value: '12', color: COLORS.primary },
+    { label: 'Saved Pets', value: '12', color: COLORS.secondary },
     { label: 'Matches', value: '8', color: COLORS.secondary },
     { label: 'Favorites', value: '24', color: '#50C878' }
   ];
@@ -113,7 +113,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={[COLORS.primary, `${COLORS.primary}CC`]}
+        colors={[COLORS.secondary, `${COLORS.secondary}CC`]}
         style={styles.header}
       >
         <View style={styles.profileSection}>
@@ -126,7 +126,7 @@ export default function ProfileScreen() {
               style={styles.editButton}
               onPress={handleEditProfile}
             >
-              <Edit size={16} color={COLORS.primary} />
+              <Edit size={16} color={COLORS.secondary} />
             </TouchableOpacity>
           </View>
           
@@ -162,8 +162,8 @@ export default function ProfileScreen() {
             onPress={handleLogout}
           >
             <View style={styles.menuItemLeft}>
-              <View style={[styles.menuIcon, { backgroundColor: `${COLORS.primary}20` }]}>
-                <LogOut size={20} color={COLORS.primary} />
+              <View style={[styles.menuIcon, { backgroundColor: `${COLORS.secondary}20` }]}>
+                <LogOut size={20} color={COLORS.secondary} />
               </View>
               <Text style={styles.menuText}>Sign Out</Text>
             </View>

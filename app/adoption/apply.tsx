@@ -18,7 +18,9 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Send } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AdoptionApplication } from '../../lib/adoption-flow';
+import { COLORS } from '../../constants/theme';
 
 export default function AdoptionApplicationScreen() {
   const router = useRouter();
@@ -108,13 +110,16 @@ export default function AdoptionApplicationScreen() {
         style={styles.keyboardView}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <LinearGradient
+          colors={[COLORS.secondary, `${COLORS.secondary}CC`]}
+          style={styles.header}
+        >
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <ArrowLeft size={24} color="#333" />
+            <ArrowLeft size={24} color="white" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Adoption Application</Text>
           <View style={styles.placeholder} />
-        </View>
+        </LinearGradient>
 
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
@@ -294,9 +299,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e1e1e1',
+    borderBottomColor: 'rgba(255,255,255,0.2)',
   },
   backButton: {
     padding: 5,
@@ -304,7 +308,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: 'white',
   },
   placeholder: {
     width: 34,
@@ -323,7 +327,7 @@ const styles = StyleSheet.create({
   },
   petName: {
     fontWeight: 'bold',
-    color: '#FF6B6B',
+    color: COLORS.primary,
   },
   section: {
     marginBottom: 25,
@@ -368,8 +372,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   radioOptionSelected: {
-    backgroundColor: '#FF6B6B',
-    borderColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   radioText: {
     fontSize: 14,
@@ -385,7 +389,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#e1e1e1',
   },
   submitButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',

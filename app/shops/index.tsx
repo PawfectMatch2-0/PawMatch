@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, MapPin, Star, Phone, Clock } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '../../constants/theme';
 
 // Mock pet shops data
 const mockPetShops = [
@@ -76,16 +77,41 @@ export default function ShopsScreen() {
     console.log('Call:', phone);
   };
 
-  const renderShopItem = ({ item }: { item: typeof mockPetShops[0] }) => (
-    <TouchableOpacity style={styles.shopCard} onPress={() => handleShopPress(item.id)}>
-      <Image source={{ uri: item.image }} style={styles.shopImage} />
-      <View style={styles.shopInfo}>
-        <View style={styles.shopHeader}>
-          <Text style={styles.shopName}>{item.name}</Text>
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{item.category}</Text>
+  const getCategoryColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'veterinary':
+        return COLORS.categories.veterinary;
+      case 'grooming':
+        return COLORS.categories.grooming;
+      case 'training':
+        return COLORS.categories.training;
+      case 'boarding':
+        return COLORS.categories.boarding;
+      case 'pet store':
+        return COLORS.categories.petStore;
+      default:
+        return COLORS.primary;
+    }
+  };
+
+  const renderShopItem = ({ item }: { item: typeof mockPetShops[0] }) => {
+    const categoryColor = getCategoryColor(item.category);
+    
+    return (
+      <TouchableOpacity style={styles.shopCard} onPress={() => handleShopPress(item.id)}>
+        <LinearGradient
+          colors={[`${categoryColor}15`, `${categoryColor}25`]}
+          style={styles.cardGradient}
+        />
+        <Image source={{ uri: item.image }} style={styles.shopImage} />
+        <View style={styles.shopInfo}>
+          <View style={styles.shopHeader}>
+            <Text style={styles.shopName}>{item.name}</Text>
+            <View style={[styles.categoryBadge, { backgroundColor: `${categoryColor}20` }]}>
+              <Text style={[styles.categoryText, { color: categoryColor }]}>{item.category}</Text>
+            </View>
           </View>
-        </View>
+    );
         
         <View style={styles.ratingContainer}>
           <Star size={16} color="#FFB800" fill="#FFB800" />
@@ -114,26 +140,27 @@ export default function ShopsScreen() {
         
         <View style={styles.actionsContainer}>
           <TouchableOpacity 
-            style={styles.callButton}
+            style={[styles.callButton, { backgroundColor: categoryColor }]}
             onPress={() => handleCall(item.phone)}
           >
             <Phone size={16} color="white" />
             <Text style={styles.callButtonText}>Call</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.visitButton}>
-            <Text style={styles.visitButtonText}>Visit Store</Text>
+          <TouchableOpacity style={[styles.visitButton, { borderColor: categoryColor }]}>
+            <Text style={[styles.visitButtonText, { color: categoryColor }]}>Visit Store</Text>
           </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <LinearGradient
-        colors={['#FF6F61', '#D32F2F']}
+        colors={[COLORS.categories.emergency, COLORS.categories.boarding]}
         style={styles.header}
       >
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -212,6 +239,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     overflow: 'hidden',
+  },
+  cardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 16,
   },
   shopImage: {
     width: '100%',
