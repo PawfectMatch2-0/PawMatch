@@ -1,11 +1,24 @@
 import { Tabs } from 'expo-router';
 import { Bookmark, BookOpen, Store, Bot, Home, Sparkles } from 'lucide-react-native';
 import { COLORS } from '@/constants/theme';
-import { Platform } from 'react-native';
+import { Platform, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { height: screenHeight } = Dimensions.get('window');
+  
+  // Calculate proper bottom spacing for Android navigation
+  const getTabBarHeight = () => {
+    if (Platform.OS === 'ios') {
+      return 80 + insets.bottom;
+    }
+    
+    // For Android, ensure enough space above navigation buttons
+    const baseHeight = 65;
+    const bottomPadding = Math.max(insets.bottom, 12);
+    return baseHeight + bottomPadding;
+  };
   
   return (
     <Tabs
@@ -22,11 +35,11 @@ export default function TabLayout() {
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.1,
           shadowRadius: 8,
-          // Dynamic height based on device safe area
-          height: Platform.OS === 'ios' ? 80 + insets.bottom : 70,
-          paddingBottom: Platform.OS === 'ios' ? insets.bottom : 12,
+          // Dynamic height with proper safe area handling
+          height: getTabBarHeight(),
+          paddingBottom: Platform.OS === 'ios' ? insets.bottom : Math.max(insets.bottom, 12),
           paddingTop: 8,
-          // Ensure it's above device navigation
+          // Ensure proper positioning
           position: 'absolute',
           bottom: 0,
           left: 0,
@@ -36,10 +49,11 @@ export default function TabLayout() {
           fontSize: 11,
           fontWeight: '600',
           marginTop: 2,
-          marginBottom: Platform.OS === 'android' ? 4 : 0,
+          marginBottom: Platform.OS === 'android' ? 6 : 0,
         },
         tabBarItemStyle: {
-          paddingVertical: 4,
+          paddingVertical: Platform.OS === 'android' ? 6 : 4,
+          paddingHorizontal: 4,
         },
       }}
     >

@@ -64,7 +64,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="+not-found" />
           </Stack>
-          <StatusBar style="dark" backgroundColor="#f8f9fa" translucent={false} />
+          <StatusBar style="dark" backgroundColor="#FFFFFF" translucent={false} />
         </GestureHandlerRootView>
       </AuthProvider>
     </SafeAreaProvider>
