@@ -51,7 +51,7 @@ export default function SplashScreen() {
               <View style={styles.logoCircle}>
                 <Heart size={60} color="white" fill="white" />
               </View>
-              <Text style={styles.appName}>PawMatch</Text>
+              <Text style={styles.appName}>PawfectMatch</Text>
               <Text style={styles.tagline}>Loading...</Text>
             </View>
           </View>
@@ -62,7 +62,7 @@ export default function SplashScreen() {
 
   return (
     <LinearGradient
-      colors={COLORS.gradients.secondary}
+      colors={COLORS.gradients.primary}
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea}>
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   primaryButtonText: {
-    color: '#E67E9C',
+    color: COLORS.primary,
     fontSize: 17,
     fontFamily: 'Poppins-SemiBold',
   },
