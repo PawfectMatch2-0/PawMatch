@@ -16,7 +16,7 @@ import {
   User,
   LucideIcon
 } from 'lucide-react-native';
-import { learningCategories, mockLearningArticles, getFeaturedArticles } from '@/data/learningContent';
+import { learningCategories, learningCategoriesWithCounts, mockLearningArticles, getFeaturedArticles } from '@/data/learningContent';
 import { LinearGradient } from 'expo-linear-gradient';
 import AnimatedButton from '@/components/AnimatedButton';
 import { databaseService, supabase, LearningArticle } from '@/lib/supabase';
@@ -39,8 +39,8 @@ export default function LearnScreen() {
   const router = useRouter();
   const featuredArticles = getFeaturedArticles();
   
-  // Use all categories for the main categories section
-  const mainCategories = learningCategories;
+  // Use categories with actual counts
+  const mainCategories = learningCategoriesWithCounts;
 
   useEffect(() => {
     // Initialize database articles

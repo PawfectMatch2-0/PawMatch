@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Dimensions, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'expo-router';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Filter, Bell, Heart, X, MapPin, Star, User } from 'lucide-react-native';
 import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
 import LoadingState, { CardLoadingState } from '@/components/ui/LoadingState';
@@ -74,6 +74,14 @@ export default function HomeScreen() {
     initializeData();
     checkOnboardingStatus();
   }, []);
+
+  // Refresh pets when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      // Refresh data when returning to this screen
+      initializeData();
+    }, [])
+  );
 
   // Check if user needs onboarding
   const checkOnboardingStatus = async () => {

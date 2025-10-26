@@ -105,87 +105,64 @@ INSERT INTO pets (
  'available', NOW(), NOW());
 
 -- Insert pet services (veterinary clinics, grooming, food stores)
+-- Note: Using the newer schema from 18_bangladesh_pet_services.sql
 INSERT INTO pet_services (
-  id, name, service_type, description, address, phone, email, 
-  city, state, zip_code, website, is_verified, rating, created_at, updated_at
+  id, name, category, description, location_address, location_district, 
+  contact_phone, contact_email, contact_website, rating, 
+  price_range, created_at, updated_at
 ) VALUES 
-(gen_random_uuid(), 'ঢাকা ভেটেরিনারি হাসপাতাল', 'veterinary', 
+('bengali-vet-001', 'ঢাকা ভেটেরিনারি হাসপাতাল', 'veterinary', 
  'ঢাকার প্রমুখ পশু চিকিৎসা কেন্দ্র। ২৪/৭ জরুরি সেবা উপলব্ধ।', 
- 'ধানমন্ডি ১৫, ঢাকা', '+8802-9611234', 'info@dhakapet.vet',
- 'ঢাকা', 'ঢাকা বিভাগ', '1205', 'https://dhakapet.vet', true,
- 4.8, NOW(), NOW()),
+ 'ধানমন্ডি ১৫, ঢাকা', 'ঢাকা', '["+8802-9611234"]'::jsonb, 'info@dhakapet.vet',
+ 'https://dhakapet.vet', 4.8, 'moderate', NOW(), NOW()),
 
-(gen_random_uuid(), 'পেট পার্লার & গ্রুমিং', 'grooming', 
+('bengali-groom-001', 'পেট পার্লার & গ্রুমিং', 'grooming', 
  'আপনার পোষা প্রাণীর জন্য সম্পূর্ণ গ্রুমিং সেবা। স্নান, চুল কাটা, নখ কাটা।', 
- 'গুলশান ১, ঢাকা', '+8801712345678', 'contact@petparlor.bd',
- 'ঢাকা', 'ঢাকা বিভাগ', '1212', 'https://petparlor.bd', true,
- 4.5, NOW(), NOW()),
+ 'গুলশান ১, ঢাকা', 'ঢাকা', '["+8801712345678"]'::jsonb, 'contact@petparlor.bd',
+ 'https://petparlor.bd', 4.5, 'moderate', NOW(), NOW()),
 
-(gen_random_uuid(), 'পেট ফুড হাউজ', 'store', 
+('bengali-store-001', 'পেট ফুড হাউজ', 'pet-store', 
  'সকল ধরনের পোষা প্রাণীর খাবার ও যন্ত্রাংশ পাওয়া যায়। অনলাইন ডেলিভারি সুবিধা।', 
- 'নিউ মার্কেট, ঢাকা', '+8801812345679', 'orders@petfoodhouse.bd',
- 'ঢাকা', 'ঢাকা বিভাগ', '1205', 'https://petfoodhouse.bd', true,
- 4.3, NOW(), NOW()),
+ 'নিউ মার্কেট, ঢাকা', 'ঢাকা', '["+8801812345679"]'::jsonb, 'orders@petfoodhouse.bd',
+ 'https://petfoodhouse.bd', 4.3, 'moderate', NOW(), NOW()),
 
-(gen_random_uuid(), 'বাংলাদেশ এনিমেল শেল্টার', 'shelter', 
+('bengali-board-001', 'বাংলাদেশ এনিমেল শেল্টার', 'boarding', 
  'পরিত্যক্ত প্রাণীদের যত্ন ও দত্তক সেবা। স্বেচ্ছাসেবক হিসেবে যোগ দিন।', 
- 'সাভার, ঢাকা', '+8801912345680', 'help@animalsheltbd.org',
- 'সাভার', 'ঢাকা বিভাগ', '1340', 'https://animalsheltbd.org', true,
- 4.9, NOW(), NOW()),
+ 'সাভার, ঢাকা', 'ঢাকা', '["+8801912345680"]'::jsonb, 'help@animalsheltbd.org',
+ 'https://animalsheltbd.org', 4.9, 'budget', NOW(), NOW()),
 
-(gen_random_uuid(), 'চট্টগ্রাম পশু হাসপাতাল', 'veterinary', 
+('bengali-vet-002', 'চট্টগ্রাম পশু হাসপাতাল', 'veterinary', 
  'চট্টগ্রামের আধুনিক পশু চিকিৎসা কেন্দ্র। বিশেষজ্ঞ চিকিৎসক দ্বারা সেবা।', 
- 'আগ্রাবাদ, চট্টগ্রাম', '+8801612345681', 'care@ctgpethos.com',
- 'চট্টগ্রাম', 'চট্টগ্রাম বিভাগ', '4100', 'https://ctgpethos.com', true,
- 4.6, NOW(), NOW());
+ 'আগ্রাবাদ, চট্টগ্রাম', 'চট্টগ্রাম', '["+8801612345681"]'::jsonb, 'care@ctgpethos.com',
+ 'https://ctgpethos.com', 4.6, 'moderate', NOW(), NOW());
 
 -- Insert sample users (pet owners and adopters)
-INSERT INTO user_profiles (
-  id, email, full_name, phone, location, 
-  preferences, is_admin, created_at, updated_at
-) VALUES 
-(gen_random_uuid(), 'rahman.ahmed@gmail.com', 'আহমেদ রহমান', '+8801712345001', 'ধানমন্ডি, ঢাকা',
- '{"preferred_pets": ["dogs", "cats"], "size_preference": ["medium", "large"], "experience": "intermediate"}',
- false, NOW(), NOW()),
+-- Note: These will fail if auth.users doesn't have matching UUIDs
+-- Consider creating these users through the app's sign-up flow instead
+-- Or comment out this section if not needed for production
 
-(gen_random_uuid(), 'fatima.begum@yahoo.com', 'ফাতিমা বেগম', '+8801812345002', 'উত্তরা, ঢাকা',
- '{"preferred_pets": ["cats"], "size_preference": ["small", "medium"], "experience": "beginner"}',
- false, NOW(), NOW()),
-
-(gen_random_uuid(), 'karim.hassan@hotmail.com', 'করিম হাসান', '+8801912345003', 'গুলশান, ঢাকা',
- '{"preferred_pets": ["dogs"], "size_preference": ["large"], "experience": "advanced"}',
- false, NOW(), NOW()),
-
-(gen_random_uuid(), 'nasir.uddin@gmail.com', 'নাসির উদ্দিন', '+8801612345004', 'চট্টগ্রাম',
- '{"preferred_pets": ["dogs", "cats"], "size_preference": ["any"], "experience": "intermediate"}',
- false, NOW(), NOW()),
-
-(gen_random_uuid(), 'salma.khatun@gmail.com', 'সালমা খাতুন', '+8801712345005', 'সিলেট',
- '{"preferred_pets": ["cats"], "size_preference": ["small"], "experience": "beginner"}',
- false, NOW(), NOW()),
-
--- Admin user
-(gen_random_uuid(), 'pawfect.mew@gmail.com', 'PawMatch Admin', '+8801700000000', 'ঢাকা',
- '{"role": "admin", "permissions": ["all"]}',
- true, NOW(), NOW());
+-- INSERT INTO user_profiles (
+--   id, email, full_name, phone, location, 
+--   preferences, is_admin, created_at, updated_at
+-- ) VALUES 
+-- (gen_random_uuid(), 'rahman.ahmed@gmail.com', 'আহমেদ রহমান', '+8801712345001', 'ধানমন্ডি, ঢাকা',
+--  '{"preferred_pets": ["dogs", "cats"], "size_preference": ["medium", "large"], "experience": "intermediate"}',
+--  false, NOW(), NOW()),
+-- ... (commented out for production - users should sign up through the app)
 
 -- Insert some sample learning articles in Bengali
+-- Only using absolute minimum required columns
 INSERT INTO learning_articles (
-  id, title, content, excerpt, author, category, subcategory,
-  difficulty, read_time, tags, featured_image, published, created_at, updated_at
+  id, title, content, excerpt, category, read_time
 ) VALUES 
 (gen_random_uuid(), 'কুকুরের যত্ন নেওয়ার বেসিক গাইড', 
- 'আপনার নতুন কুকুরের যত্ন নেওয়া একটি আনন্দদায়ক অভিজ্ঞতা হতে পারে। এই গাইডে আমরা আলোচনা করব কীভাবে আপনি আপনার কুকুরের সঠিক যত্ন নিতে পারেন...', 
- 'নতুন কুকুরের মালিকদের জন্য প্রয়োজনীয় তথ্য', 'ডাঃ আবুল কাসেম', 'pet_care', 'dogs',
- 'beginner', 5, ARRAY['কুকুর', 'যত্ন', 'খাবার', 'স্বাস্থ্য'], 
- 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=800&h=600',
- true, NOW(), NOW()),
+ 'আপনার নতুন কুকুরের যত্ন নেওয়া একটি আনন্দদায়ক অভিজ্ঞতা হতে পারে। এই গাইডে আমরা আলোচনা করব কীভাবে আপনি আপনার কুকুরের সঠিক যত্ন নিতে পারেন। খাবার, স্বাস্থ্য, এবং প্রশিক্ষণ সম্পর্কে বিস্তারিত তথ্য দেওয়া হয়েছে।',
+ 'নতুন কুকুরের মালিকদের জন্য প্রয়োজনীয় তথ্য', 
+ 'pet_care', 5),
 
 (gen_random_uuid(), 'বিড়ালের স্বাস্থ্য রক্ষা', 
- 'বিড়াল একটি স্বাধীন প্রাণী হলেও তাদের নিয়মিত স্বাস্থ্য পরীক্ষা প্রয়োজন। এই আর্টিকেলে আমরা জানব কীভাবে আপনার বিড়ালের স্বাস্থ্য ভালো রাখবেন...', 
- 'বিড়ালের স্বাস্থ্য সুরক্ষার জন্য গুরুত্বপূর্ণ টিপস', 'ডাঃ রাহেলা খানম', 'health', 'cats',
- 'intermediate', 7, ARRAY['বিড়াল', 'স্বাস্থ্য', 'টিকা', 'চেকআপ'], 
- 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&h=600',
- true, NOW(), NOW());
+ 'বিড়াল একটি স্বাধীন প্রাণী হলেও তাদের নিয়মিত স্বাস্থ্য পরীক্ষা প্রয়োজন। এই আর্টিকেলে আমরা জানব কীভাবে আপনার বিড়ালের স্বাস্থ্য ভালো রাখবেন। টিকা, পুষ্টি এবং নিয়মিত চেকআপের গুরুত্ব সম্পর্কে আলোচনা করা হয়েছে।',
+ 'বিড়ালের স্বাস্থ্য সুরক্ষার জন্য গুরুত্বপূর্ণ টিপস', 
+ 'health', 7);
 
 COMMIT;

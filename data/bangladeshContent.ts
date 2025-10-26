@@ -214,7 +214,7 @@ export const dhakaVeterinaryServices: PetServiceProvider[] = [
     languages: ['English', 'Bangla'],
     acceptsInsurance: false,
     homeService: false,
-    featuredImage: 'https://www.facebook.com/photo/?fbid=487673666706478&set=a.487673626706482'
+    featuredImage: 'https://images.unsplash.com/photo-1629219869348-4f8d368c2630?auto=format&fit=crop&w=400&h=300'
   },
   {
     id: 'dhk-vet-002',
@@ -254,7 +254,7 @@ export const dhakaVeterinaryServices: PetServiceProvider[] = [
     languages: ['English', 'Bangla'],
     acceptsInsurance: false,
     homeService: false,
-    featuredImage: 'https://www.facebook.com/photo/?fbid=939234154886046&set=a.417591410383659'
+    featuredImage: 'https://images.unsplash.com/photo-1666911566041-5d5db9c44e3a?auto=format&fit=crop&w=400&h=300'
   },
   {
     id: 'dhk-vet-003',
@@ -294,7 +294,7 @@ export const dhakaVeterinaryServices: PetServiceProvider[] = [
     languages: ['English', 'Bangla'],
     acceptsInsurance: false,
     homeService: true,
-    featuredImage: 'https://www.facebook.com/photo/?fbid=462853412534052&set=a.433100225509371'
+    featuredImage: 'https://images.unsplash.com/photo-1530041539828-114de669390e?auto=format&fit=crop&w=400&h=300'
   }
 ];
 
@@ -337,7 +337,7 @@ export const dhakaGroomingServices: PetServiceProvider[] = [
     languages: ['English', 'Bangla'],
     acceptsInsurance: false,
     homeService: true,
-    featuredImage: 'https://www.facebook.com/photo/?fbid=178424715028124&set=a.115536984650231'
+    featuredImage: 'https://images.unsplash.com/photo-1570197788417-0e82375c9371?auto=format&fit=crop&w=400&h=300'
   },
   {
     id: 'dhk-groom-002',
@@ -375,7 +375,7 @@ export const dhakaGroomingServices: PetServiceProvider[] = [
     languages: ['English', 'Bangla'],
     acceptsInsurance: false,
     homeService: false,
-    featuredImage: 'https://images.unsplash.com/photo-1570197788417-0e82375c9371?auto=format&fit=crop&w=400&h=300'
+    featuredImage: 'https://images.unsplash.com/photo-1616001414363-c0e3d4a9f3a6?auto=format&fit=crop&w=400&h=300'
   }
 ];
 
@@ -419,7 +419,7 @@ export const dhakaTrainingServices: PetServiceProvider[] = [
     languages: ['English', 'Bangla'],
     acceptsInsurance: false,
     homeService: true,
-    featuredImage: 'https://graph.facebook.com/petcareclinicbd/picture?type=large'
+    featuredImage: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=400&h=300'
   },
   {
     id: 'dhk-train-002',
@@ -457,7 +457,7 @@ export const dhakaTrainingServices: PetServiceProvider[] = [
     languages: ['English', 'Bangla'],
     acceptsInsurance: false,
     homeService: true,
-    featuredImage: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=400&h=300'
+    featuredImage: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=400&h=300'
   }
 ];
 

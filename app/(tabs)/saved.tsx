@@ -115,7 +115,7 @@ export default function SavedScreen() {
       id: pet.id,
       name: pet.name,
       breed: pet.breed,
-      age: parseInt(pet.age.replace(/[^\d]/g, '')) || 1,
+      age: pet.age, // Keep the original age string (e.g., "4 months", "2 years")
       gender: pet.gender.toLowerCase() as 'male' | 'female',
       size: pet.size.toLowerCase() as 'small' | 'medium' | 'large',
       color: 'Mixed',

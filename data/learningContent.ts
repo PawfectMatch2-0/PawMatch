@@ -1882,7 +1882,1054 @@ Whether you choose a special breed like the charming Munchkin or a hardy local c
     likes: 256,
     views: 1398,
   },
+  // Additional Bangladesh-specific Basic Care articles
+  {
+    id: 'bd-basic-1',
+    title: 'Pet Care Essentials for Dhaka Residents',
+    category: 'basic-care',
+    difficulty: 'beginner',
+    estimatedReadTime: 7,
+    content: `# Pet Care Essentials for Dhaka Residents
+
+Living in Dhaka presents unique challenges for pet owners. This guide covers everything you need to know about caring for pets in Bangladesh's capital city.
+
+## Dealing with Dhaka's Climate
+
+### Hot and Humid Conditions
+- Keep pets indoors during peak heat (11 AM - 4 PM)
+- Ensure constant access to fresh, cool water
+- Use fans or AC to maintain comfortable temperature
+- Watch for signs of heat stress: excessive panting, lethargy
+
+### Monsoon Season Care
+- Keep paws dry to prevent fungal infections
+- Increase grooming frequency during humid months
+- Ensure indoor exercise options during heavy rains
+- Check for water-logged areas in your neighborhood
+
+## Nutrition in Bangladesh
+
+### Locally Available Foods
+- Premium brands: Pedigree, Royal Canin (imported)
+- Budget-friendly: Bonzo, Top Breed (local)
+- Fresh meat from trusted sources in Kawran Bazar
+- Rice and boiled chicken as occasional treats
+
+### Feeding Schedule
+- 2-3 meals daily for adult pets
+- Fresh water changed 3-4 times in hot weather
+- Avoid feeding during hottest hours
+- Store food in airtight containers (humidity protection)
+
+## Healthcare Access
+
+### Finding Vets in Dhaka
+- Central Animal Hospital (Farmgate)
+- Gulshan Pet Clinic (Road 90, Gulshan-2)
+- Banani Veterinary Services
+- Mobile vet services available via apps
+
+### Vaccination Schedule
+- Core vaccines: Rabies, Distemper, Parvovirus
+- Follow Bangladesh Animal Welfare guidelines
+- Keep vaccination card updated
+- Annual booster shots required
+
+## Local Pet Supplies
+
+### Where to Shop
+- Katabon Pet Market (largest selection)
+- Gulshan Pet Shops (premium products)
+- Online: daraz.com.bd, chaldal.com
+- Import options for specialty items
+
+### Essential Supplies
+- Cooling mats for summer
+- Waterproof beds for monsoon
+- Anti-tick/flea treatments (crucial)
+- Air purifiers (if you have AC)
+
+## Community and Support
+
+### Local Pet Groups
+- Dhaka Pet Owners Facebook groups
+- Weekend pet meetups in parks
+- WhatsApp communities by area
+- Pet adoption networks
+
+### Emergency Contacts
+- Animal Rescue Bangladesh: 01XXX-XXXXXX
+- 24/7 Emergency Vets in Gulshan and Banani
+- Poison Control (for accidental ingestion)
+- Lost & Found Pet Networks
+
+Living with pets in Dhaka requires planning, but with the right approach and resources, your furry friends can thrive in the city!`,
+    summary: 'Complete guide to pet care in Dhaka, covering climate challenges, local resources, and essential tips for city pet owners in Bangladesh.',
+    tags: ['dhaka', 'bangladesh', 'urban pet care', 'tropical climate', 'city pets'],
+    author: 'Shakil Ahmed, Pet Care Expert (Dhaka)',
+    featuredImage: 'https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=800&h=600',
+    createdAt: new Date('2024-02-10'),
+    likes: 189,
+    views: 1050,
+  },
+  {
+    id: 'bd-basic-2',
+    title: 'Monsoon Pet Care: Bangladesh Edition',
+    category: 'basic-care',
+    difficulty: 'beginner',
+    estimatedReadTime: 6,
+    content: `# Monsoon Pet Care: Bangladesh Edition
+
+The monsoon season in Bangladesh brings heavy rainfall and high humidity. Here's how to keep your pets safe and comfortable during this challenging time.
+
+## Pre-Monsoon Preparation
+
+### Home Readiness
+- Check for roof leaks near pet areas
+- Waterproof outdoor kennels
+- Stock up on pet supplies before heavy rains
+- Create elevated resting spots
+
+### Health Checkup
+- Visit vet before monsoon starts
+- Update flea and tick prevention
+- Check paw pads for cracks
+- Trim nails to prevent slipping
+
+## During Monsoon Months
+
+### Hygiene Maintenance
+- Dry paws thoroughly after walks
+- Use pet-safe paw wipes
+- Bathe more frequently (every 2 weeks)
+- Check ears daily for moisture
+
+### Indoor Activities
+- Puzzle toys for mental stimulation
+- Indoor fetch games
+- Training sessions
+- Hide-and-seek treats
+
+## Common Monsoon Health Issues
+
+### Skin Problems
+- Fungal infections from dampness
+- Hot spots from constant moisture
+- Allergies triggered by mold
+- Treatment: Keep dry, use medicated shampoos
+
+### Digestive Issues
+- Contaminated water concerns
+- Food storage problems in humidity
+- Solutions: Boiled water, sealed containers
+
+## Monsoon Safety Tips
+
+### Walking Precautions
+- Avoid peak rain hours
+- Use reflective gear in low visibility
+- Stay away from flooded areas
+- Keep walks shorter but more frequent
+
+### Waterborne Diseases
+- Leptospirosis risk in stagnant water
+- Prevention: Vaccination, avoid puddles
+- Symptoms: Fever, vomiting, lethargy
+- Action: Immediate vet visit if suspected
+
+## Post-Rain Care
+
+### Drying Routine
+1. Towel dry immediately
+2. Use blow dryer on cool setting
+3. Check between toes
+4. Inspect for leeches (in semi-urban areas)
+
+### Cleaning Protocol
+- Wipe down bedding weekly
+- Disinfect food/water bowls daily
+- Air out pet areas when sun appears
+- Use dehumidifiers if possible
+
+Stay prepared and your pets will weather the monsoon season comfortably!`,
+    summary: 'Essential monsoon care guide for pet owners in Bangladesh, covering hygiene, safety, and health tips for the rainy season.',
+    tags: ['monsoon', 'rainy season', 'bangladesh weather', 'pet hygiene', 'seasonal care'],
+    author: 'Dr. Nusrat Jahan, Veterinarian (Chittagong)',
+    featuredImage: 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=800&h=600',
+    createdAt: new Date('2024-06-05'),
+    likes: 234,
+    views: 1289,
+  },
+  {
+    id: 'bd-basic-3',
+    title: 'Feeding Your Pet in Bangladesh: A Complete Guide',
+    category: 'basic-care',
+    difficulty: 'beginner',
+    estimatedReadTime: 8,
+    content: `# Feeding Your Pet in Bangladesh: A Complete Guide
+
+Proper nutrition is the foundation of pet health. This guide covers food options available in Bangladesh and how to create a balanced diet.
+
+## Commercial Pet Food in Bangladesh
+
+### Premium Brands (Imported)
+- **Royal Canin**: Breed-specific formulas, available at major pet shops
+- **Pedigree**: Widely available, good quality-to-price ratio
+- **Drools**: Indian brand, popular in Bangladesh
+- **Me-O**: Cat food, good quality, moderately priced
+
+### Local Brands
+- **Bonzo**: Affordable, decent quality
+- **Top Breed**: Local production, budget-friendly
+- **Quality varies**: Check ingredients carefully
+
+### Where to Buy
+- Katabon Pet Market (best prices)
+- Gulshan/Banani pet shops (premium selection)
+- Online: Daraz, Chaldal (convenient but check expiry)
+- Vet clinics (prescription diets)
+
+## Reading Labels in Bangladesh
+
+### What to Look For
+- Meat as first ingredient
+- Named protein source (chicken, not "poultry")
+- Complete and balanced statement
+- Manufacturing and expiry dates
+- AAFCO or similar certification
+
+### Red Flags
+- Grains as main ingredients
+- Generic "meat by-products"
+- Unclear origin
+- Damaged packaging (humidity issues)
+- Suspiciously cheap prices
+
+## Home-Cooked Meals
+
+### Safe Bangladesh Foods
+
+**Proteins:**
+- Chicken (broiler or desi)
+- Beef (small amounts)
+- Fish: Rui, Katla, Hilsa (remove bones!)
+- Eggs (boiled)
+- Liver (limited, once weekly)
+
+**Carbohydrates:**
+- White rice (easily digestible)
+- Sweet potato (good fiber)
+- Pumpkin (digestive aid)
+- Oats (for variety)
+
+**Vegetables:**
+- Carrots
+- Green beans
+- Spinach (in moderation)
+- Cucumber (cooling in summer)
+
+### Foods to NEVER Give
+
+**Toxic:**
+- Paan/Jorda (betel)
+- Chocolate
+- Onions, garlic
+- Grapes
+- Xylitol (artificial sweetener)
+
+**Problematic:**
+- Spicy biryani
+- Fried foods (samosas, etc.)
+- Mishti (sweets)
+- Cha (tea/coffee)
+- Bones that splinter (cooked chicken bones)
+
+## Meal Planning
+
+### Daily Portions
+**Small Dogs (5-10 kg):**
+- 1-1.5 cups dry food OR
+- 300-400g home-cooked
+
+**Medium Dogs (10-25 kg):**
+- 2-3 cups dry food OR
+- 500-700g home-cooked
+
+**Large Dogs (25+ kg):**
+- 3-5 cups dry food OR
+- 800-1200g home-cooked
+
+**Cats:**
+- 1/2-1 cup dry food OR
+- 200-250g wet food
+
+### Feeding Schedule
+- Puppies/Kittens: 3-4 times daily
+- Adults: 2 times daily
+- Seniors: 2 times (smaller portions)
+
+**Best Times:**
+- Morning: 7-8 AM
+- Evening: 6-7 PM
+- Avoid feeding during peak heat
+
+## Special Considerations
+
+### Hot Weather (April-June)
+- Increase water intake
+- Lighter meals
+- Add cooling foods: cucumber, watermelon (small amounts)
+- Avoid heavy proteins during midday
+
+### Monsoon (July-October)
+- Store food in airtight containers
+- Check for mold frequently
+- Slightly warm food (not hot)
+- Extra hygiene for bowls
+
+### Load Shedding Impact
+- Food spoilage risk
+- Keep dry food in sealed containers
+- Freeze portions if possible
+- Buy smaller quantities if no generator
+
+## Budget-Friendly Tips
+
+### Cost-Effective Nutrition
+- Buy in bulk during sales
+- Mix premium and mid-range foods
+- Supplement with home-cooked protein
+- Use rice as filler (not more than 20%)
+
+### Free/Low-Cost Foods
+- Rice water (digestive aid)
+- Chicken bones for stock (strain bones out!)
+- Seasonal vegetables from kitchen
+- Egg shells (calcium, grind finely)
+
+## Storage in Bangladesh Climate
+
+### Dry Food
+- Airtight containers (essential!)
+- Cool, dry place
+- Check for weevils regularly
+- Buy 1-month supply at a time
+
+### Wet Food
+- Refrigerate after opening
+- Use within 2 days
+- Warm slightly before serving
+- Power cuts: transfer to cooler
+
+### Home-Cooked
+- Refrigerate immediately
+- Freeze portions
+- Thaw in fridge, not counter
+- Discard if questionable
+
+## Supplements
+
+### When Needed
+- Home-cooked diets (usually need calcium)
+- Joint health (older pets)
+- Coat health in monsoon
+- Consult vet before adding
+
+### Available in Bangladesh
+- Calcium powder
+- Omega-3 fish oil
+- Multivitamins
+- Probiotics
+
+## Signs of Good Nutrition
+
+Your pet is well-fed if:
+- Shiny coat
+- Healthy weight (ribs felt, not seen)
+- Good energy levels
+- Normal stools
+- Clear eyes
+
+## When to Consult a Vet
+
+- Sudden appetite loss
+- Vomiting after meals
+- Diarrhea
+- Weight loss despite eating
+- Food allergies (itching, rashes)
+
+Remember: Every pet is unique. What works for one may not work for another. Observe your pet and adjust accordingly!`,
+    summary: 'Comprehensive feeding guide for Bangladesh pet owners, covering commercial foods, home-cooked meals, and budget-friendly nutrition tips.',
+    tags: ['pet nutrition', 'bangladesh pet food', 'feeding guide', 'home-cooked pet food', 'budget pet care'],
+    author: 'Rafiq Hossain, Pet Nutrition Consultant (Dhaka)',
+    featuredImage: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?auto=format&fit=crop&w=800&h=600',
+    createdAt: new Date('2024-07-20'),
+    likes: 201,
+    views: 987,
+  },
+  // Training articles for Bangladesh
+  {
+    id: 'bd-training-1',
+    title: 'Training Your Pet in Bengali: Basic Commands',
+    category: 'training',
+    difficulty: 'beginner',
+    estimatedReadTime: 8,
+    content: `# Training Your Pet in Bengali: Basic Commands
+
+Training your pet using Bengali commands creates a unique bond and helps in multi-lingual households common in Bangladesh.
+
+## Why Bengali Commands?
+
+### Benefits
+- Consistent communication in Bangla-speaking households
+- Cultural connection with your pet
+- Useful when relatives visit
+- Prevents confusion with English words used in daily conversation
+
+## Essential Bengali Commands
+
+### Basic Obedience (বেসিক আদেশ)
+
+**বসো (Bosho) - Sit**
+- Say firmly: "বসো!"
+- Hand signal: Palm facing up, moving upward
+- Practice: 5-10 minutes, 3 times daily
+- Reward immediately with treats
+
+**দাঁড়াও (Darao) - Stay**
+- Say clearly: "দাঁড়াও!"
+- Hand signal: Palm facing forward (stop gesture)
+- Start with 5 seconds, gradually increase
+- Don't punish if they break early
+
+**এসো (Esho) - Come**
+- Call enthusiastically: "এসো!"
+- Use excited tone
+- Always reward when they come
+- Never call for punishment
+
+**শুয়ে পড়ো (Shuye Poro) - Lie Down**
+- Command: "শুয়ে পড়ো!"
+- Guide with treat to ground
+- Hold position for increasing durations
+
+**ছেড়ে দাও (Chhere Dao) - Drop It/Leave It**
+- Firm command: "ছেড়ে দাও!"
+- Essential for safety
+- Practice with toys before food
+
+## Advanced Commands (উন্নত আদেশ)
+
+**ধীরে (Dhire) - Slow**
+- Use during excited walking
+- Helpful in crowded Bangladeshi streets
+
+**অপেক্ষা করো (Opekkha Koro) - Wait**
+- Before meals
+- Before entering/exiting doors
+- Builds patience
+
+**নিশ্চুপ (Nishchup) - Quiet**
+- For barking control
+- Important in apartment buildings
+
+## Training Schedule
+
+### Daily Routine
+- Morning (7-8 AM): 10 minutes basic commands
+- Afternoon (4-5 PM): 15 minutes leash training
+- Evening (7-8 PM): 10 minutes tricks/play
+
+### Weekly Goals
+- Week 1: Master "বসো" and "এসো"
+- Week 2: Add "দাঁড়াও" and "শুয়ে পড়ো"
+- Week 3: Refine all commands
+- Week 4: Introduce advanced commands
+
+## Common Challenges in Bangladesh
+
+### Distractions
+- Street noise (rickshaws, horns)
+- Other animals
+- Crowded areas
+- Solution: Start indoor, gradually increase difficulty
+
+### Heat and Timing
+- Avoid midday training (too hot)
+- Best times: Early morning, late evening
+- Keep sessions short (10-15 minutes)
+- Always have water available
+
+## Socialization with Bengali Culture
+
+### Street Exposure
+- Gradual introduction to busy streets
+- Practice commands in markets (controlled distance)
+- Expose to various sounds (azaan, wedding music)
+- Reward calm behavior
+
+### Visitor Protocol
+- "বসো" when guests arrive
+- "দাঁড়াও" during meal times
+- Respect for elderly visitors
+- No jumping on people
+
+## Treats and Rewards
+
+### Local Treat Options
+- Small pieces of roti
+- Boiled chicken (from Kawran Bazar)
+- Commercial treats from Katabon market
+- Homemade biscuits (pet-safe recipe)
+
+### Timing Rewards
+- Immediately after correct response
+- Use verbal praise in Bengali: "শাবাশ!" (Shabash!)
+- Gradually reduce treats, increase praise
+
+## Training Tools Available in Bangladesh
+
+### Where to Buy
+- Katabon Pet Market: Leashes, collars, clickers
+- Online (Daraz): Training pads, treat pouches
+- DIY: Make training aids at home
+
+### Essential Tools
+- 6-foot leash (for controlled training)
+- Clicker (if using clicker training)
+- Treat pouch
+- Training whistle
+
+Remember: Consistency is key! Use the same Bengali words every time, and involve all family members in using identical commands.`,
+    summary: 'Learn to train your pet using Bengali commands, perfect for Bangladeshi households with practical tips and cultural considerations.',
+    tags: ['bengali commands', 'bangladesh training', 'bangla pet training', 'cultural training', 'বাংলা'],
+    author: 'Tahmid Rahman, Professional Dog Trainer (Dhaka)',
+    featuredImage: 'https://images.unsplash.com/photo-1558788353-f76d92427f16?auto=format&fit=crop&w=800&h=600',
+    createdAt: new Date('2024-03-20'),
+    likes: 312,
+    views: 1673,
+  },
+  {
+    id: 'bd-training-2',
+    title: 'Behavior Training in Small Dhaka Apartments',
+    category: 'training',
+    difficulty: 'intermediate',
+    estimatedReadTime: 9,
+    content: `# Behavior Training in Small Dhaka Apartments
+
+Living in Dhaka's compact apartments requires special training approaches to ensure your pet is well-behaved and happy in limited space.
+
+## Space Management
+
+### Apartment-Specific Challenges
+- Limited indoor space (400-800 sq ft typical)
+- Noise concerns (thin walls)
+- No backyard access
+- Shared building spaces
+
+### Solutions
+- Vertical space utilization (cat trees, wall shelves)
+- Designated pet zones
+- Quiet hours training
+- Balcony safety measures
+
+## Noise Control Training
+
+### Barking Management
+Essential in apartment buildings:
+
+**Why Dogs Bark Here**
+- Doorbell/knock sensitivity
+- Other pets in building
+- Street sounds (horns, crowds)
+- Loneliness during work hours
+
+**Training Steps**
+1. Identify triggers
+2. Desensitize gradually
+3. Reward quiet behavior
+4. Use "নিশ্চুপ" (quiet) command
+
+### Considerate Timing
+- No loud play before 8 AM
+- Quiet activities after 9 PM
+- Inform neighbors about training period
+- Apologize proactively for any disturbances
+
+## Toilet Training in Apartments
+
+### Indoor Solutions
+- Pee pads on balcony
+- Litter box training (even for small dogs!)
+- Regular schedule adherence
+- Designated spot consistency
+
+### Schedule
+- First thing morning
+- After each meal (30 min)
+- Before bedtime
+- Every 3-4 hours for puppies
+
+## Dealing with Separation Anxiety
+
+### Common in Dhaka
+- Long work hours (9-10 hours common)
+- Traffic delays
+- No one home during day
+
+### Prevention Strategies
+- Gradual departure training
+- Leave engaging toys
+- Consider pet cam
+- Hire dog walker if possible
+
+### Coping Mechanisms
+- Kong toys with frozen treats
+- Puzzle feeders
+- Leave TV/radio on
+- Safe, comfortable crate
+
+## Exercise in Limited Space
+
+### Indoor Activities
+**High Energy Breeds:**
+- Hallway fetch (with permission)
+- Tug-of-war games
+- Hide-and-seek treats
+- Stair climbing (if building allows)
+
+**Mental Stimulation:**
+- Puzzle toys
+- Scent games
+- Training new tricks
+- Food-dispensing toys
+
+### Building Amenities
+- Rooftop access (if available)
+- Parking area early morning
+- Nearby parks schedule
+- Weekend longer walks
+
+## Furniture and Boundaries
+
+### Protecting Your Space
+- "Off" command for furniture
+- Designated pet bed
+- Scratching posts for cats
+- Chew toys to redirect
+
+### Bangladesh-Specific Items
+- Rattan furniture (easy to clean)
+- Washable covers essential
+- Marble/tile floors (cooling, easy clean)
+- Mosquito nets (keep pet in, insects out)
+
+## Multi-Pet Harmony
+
+### Common Scenario
+Many Dhaka families have:
+- Multiple pets in small space
+- Visiting relatives' pets
+- Building community pets
+
+### Managing Multiple Pets
+- Individual feeding stations
+- Separate toy boxes
+- Scheduled play times
+- Fair attention distribution
+
+## Neighbor Relations
+
+### Building Etiquette
+- Introduce pet to neighbors
+- Share phone number for emergencies
+- Control pet in common areas
+- Clean up immediately
+- Respect those with pet fears/allergies
+
+### Common Area Rules
+- Always leash in corridors
+- Use elevator during off-peak (if allowed)
+- No marking in stairwells
+- Carry cleanup supplies
+
+## Emergency Preparedness
+
+### Apartment-Specific
+- Know pet-friendly exit routes
+- Have carrier ready
+- Emergency contact list on door
+- Inform building security about pet
+
+### Natural Disasters
+Bangladesh faces:
+- Floods (keep pet carrier accessible)
+- Heat waves (cooling strategies)
+- Power cuts (battery fans, ice packs)
+
+## Long-term Success Tips
+
+### Daily Routine
+- Consistent wake/sleep times
+- Regular meal schedule
+- Predictable walk times
+- Quiet evening wind-down
+
+### Community Integration
+- Join building pet owner group
+- Share pet-sitting duties
+- Organize pet playdates
+- Respect non-pet owners
+
+### Adaptation Signs
+Your pet is well-adjusted when:
+- Calm during your absence
+- Quiet in apartment
+- No destructive behavior
+- Happy to see you, not desperate
+
+Living in a Dhaka apartment with pets is absolutely doable with the right training and mindset. Many families successfully raise happy, well-behaved pets in small spaces across the city!`,
+    summary: 'Comprehensive guide to raising well-behaved pets in Dhaka\'s compact apartments, covering noise control, space management, and neighbor relations.',
+    tags: ['apartment living', 'dhaka apartments', 'small space training', 'urban pets', 'bangladesh housing'],
+    author: 'Sadia Alam, Animal Behaviorist (Gulshan, Dhaka)',
+    featuredImage: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&h=600',
+    createdAt: new Date('2024-04-15'),
+    likes: 278,
+    views: 1445,
+  },
+  // Health articles for Bangladesh
+  {
+    id: 'bd-health-1',
+    title: 'Common Pet Diseases in Bangladesh and Prevention',
+    category: 'health',
+    difficulty: 'intermediate',
+    estimatedReadTime: 10,
+    content: `# Common Pet Diseases in Bangladesh and Prevention
+
+Bangladesh's tropical climate and urban environment create unique health challenges for pets. This comprehensive guide covers prevention, symptoms, and treatment.
+
+## Climate-Related Diseases
+
+### Heat Stroke (তাপাঘাত)
+
+**High Risk Periods:**
+- April to June (pre-monsoon)
+- Afternoon hours (12-4 PM)
+- During load shedding (no AC/fans)
+
+**Symptoms:**
+- Excessive panting, drooling
+- Red or pale gums
+- Vomiting, diarrhea
+- Collapse, seizures
+
+**Prevention:**
+- Keep indoors during peak heat
+- Multiple water bowls
+- Cooling mats/wet towels
+- Never leave in parked vehicles
+
+**First Aid:**
+- Move to cool area immediately
+- Apply cool (not ice cold) water
+- Fan them gently
+- Rush to nearest vet
+
+### Fungal Skin Infections
+
+**Why Common Here:**
+- High humidity year-round
+- Monsoon dampness
+- Poor air circulation
+- Delayed drying after baths
+
+**Prevention:**
+- Thorough drying after water exposure
+- Antifungal shampoos monthly
+- Keep bedding dry
+- Good ventilation
+
+## Vector-Borne Diseases
+
+### Tick Fever (Ehrlichiosis)
+
+**Prevalence:**
+- Very common in Bangladesh
+- Year-round but worse in summer
+- Transmitted by brown dog tick
+
+**Symptoms:**
+- High fever
+- Loss of appetite
+- Lethargy, weakness
+- Bleeding disorders
+
+**Prevention:**
+- Monthly tick prevention (Bravecto, NexGard)
+- Daily tick checks after outdoor time
+- Yard treatment if applicable
+- Immediate tick removal
+
+### Heartworm Disease
+
+**Risk Factors:**
+- Mosquito-borne (Bangladesh has many!)
+- Fatal if untreated
+- Year-round transmission
+
+**Prevention:**
+- Monthly preventive medication
+- Mosquito control at home
+- Mosquito nets over pet areas
+- Regular vet check-ups
+
+**Available Medications in Bangladesh:**
+- Heartgard Plus
+- Ivermectin (vet prescription)
+- Monthly dosing crucial
+
+## Parasitic Infections
+
+### Intestinal Worms
+
+**Common Types:**
+- Roundworms
+- Hookworms
+- Tapeworms
+- Whipworms
+
+**How Pets Get Them:**
+- Contaminated soil (parks, playgrounds)
+- Infected street animals
+- Fleas (for tapeworms)
+- Raw/undercooked meat
+
+**Deworming Schedule:**
+- Puppies/Kittens: Every 2 weeks until 12 weeks
+- Adults: Every 3 months
+- More frequent if high exposure
+
+**Products Available:**
+- Drontal Plus
+- Panacur
+- Endogard
+- Available at Katabon, vet clinics
+
+### Giardia
+
+**Why Prevalent:**
+- Contaminated water sources
+- Poor sanitation in some areas
+- Street animal contact
+
+**Symptoms:**
+- Chronic diarrhea
+- Weight loss despite eating
+- Poor coat quality
+
+**Prevention:**
+- Filtered/boiled water only
+- Avoid puddles
+- Clean food/water bowls daily
+
+## Infectious Diseases
+
+### Rabies (জলাতঙ্ক)
+
+**Serious Concern:**
+- Bangladesh is rabies-endemic
+- Transmitted by bites (dogs, cats, bats)
+- Always fatal once symptoms appear
+- Both pet and human risk
+
+**Mandatory Vaccination:**
+- First dose: 12-16 weeks
+- Booster: 1 year later
+- Annual boosters thereafter
+- Required by Bangladesh law
+
+**Post-Exposure Protocol:**
+- Wash bite immediately (soap, water)
+- Visit doctor within 24 hours
+- Report to local authorities
+- Quarantine biting animal
+
+### Parvovirus
+
+**High Risk:**
+- Unvaccinated puppies
+- Crowded areas (Katabon market)
+- Contaminated environments
+
+**Symptoms:**
+- Severe bloody diarrhea
+- Vomiting
+- Dehydration
+- High mortality if untreated
+
+**Prevention:**
+- Complete vaccination series
+- Avoid public places until fully vaccinated
+- Disinfect home if infected dog
+
+### Distemper
+
+**Transmission:**
+- Airborne (from infected dogs)
+- Common in stray population
+
+**Symptoms:**
+- Fever, eye/nose discharge
+- Coughing
+- Neurological signs later
+- Often fatal
+
+**Vaccination:**
+- DHPP vaccine (includes distemper)
+- Puppy series plus boosters
+- Don't skip vaccinations!
+
+## Nutrition-Related Issues
+
+### Food Poisoning
+
+**Common Causes in Bangladesh:**
+- Spoiled food (humidity)
+- Contaminated street food
+- Toxic local foods fed by well-meaning people
+
+**Foods to NEVER Give:**
+- Jorda/Paan (betel leaf)
+- Biryani (too rich, spices harmful)
+- Cha (tea - caffeine toxic)
+- Mishti (sweets - sugar, dairy issues)
+
+### Malnutrition
+
+**Despite Good Intentions:**
+- Table scraps don't meet nutritional needs
+- Cheap food brands lack nutrients
+- Homemade diets often unbalanced
+
+**Solution:**
+- Quality commercial food
+- Consult vet for home cooking
+- Regular weight monitoring
+
+## Healthcare Access in Bangladesh
+
+### Finding Quality Vets
+
+**Dhaka:**
+- Central Animal Hospital, Farmgate
+- Gulshan Pet Clinic
+- BAU Vet Teaching Hospital
+
+**Chittagong:**
+- Chittagong Veterinary Hospital
+- Private clinics in Agrabad
+
+**Online Consultation:**
+- Some vets offer WhatsApp/video calls
+- Useful for initial assessment
+- Not replacement for emergency care
+
+### Medication Availability
+
+**Where to Buy:**
+- Vet clinics (most reliable)
+- Katabon Pet Market
+- Selected pharmacies
+- Online (be cautious of fakes)
+
+**Storage:**
+- Many medications need refrigeration
+- Check expiry dates carefully
+- Humidity protection essential
+
+## Emergency Preparedness
+
+### Home First Aid Kit
+
+**Essentials:**
+- Digital thermometer
+- Gauze, bandages
+- Antiseptic solution
+- Emergency vet numbers
+- Pet carrier ready
+
+### 24/7 Emergency Contacts
+
+**Keep Handy:**
+- Your regular vet
+- 24-hour emergency clinic
+- Pet ambulance services (if available)
+- Poison control information
+
+## Seasonal Health Calendar
+
+**January-March:** Cool season
+- Less heat stress
+- Continue parasite prevention
+- Dry skin may need moisturizing
+
+**April-June:** Hot season
+- Heat stroke risk HIGH
+- Increase water intake
+- Limit outdoor time
+- Watch for dehydration
+
+**July-October:** Monsoon
+- Fungal infection risk HIGH
+- Waterborne diseases
+- Leptospirosis vaccination
+- Extra hygiene needed
+
+**November-December:** Post-monsoon
+- Mosquito population peak
+- Heartworm prevention crucial
+- Flu-like symptoms common
+
+## Cost Considerations
+
+### Average Vet Costs (BDT)
+- Consultation: 500-1,500
+- Vaccination: 300-800 per shot
+- Deworming: 200-500
+- Emergency visit: 1,500-3,000
+- Surgery: 5,000-50,000+
+
+### Pet Insurance
+- Limited options in Bangladesh
+- Consider setting aside monthly amount
+- Emergency fund recommended: 20,000-50,000 BDT
+
+Prevention is always cheaper than treatment! Regular vet visits, timely vaccinations, and proper nutrition can prevent most of these diseases.`,
+    summary: 'Detailed guide to common pet diseases in Bangladesh, covering climate-related illnesses, prevention strategies, and local healthcare resources.',
+    tags: ['pet diseases', 'bangladesh veterinary', 'tropical diseases', 'pet health', 'prevention'],
+    author: 'Dr. Ashraf Ali, DVM (Dhaka Veterinary Hospital)',
+    featuredImage: 'https://images.unsplash.com/photo-1530041539828-114de669390e?auto=format&fit=crop&w=800&h=600',
+    createdAt: new Date('2024-05-12'),
+    likes: 445,
+    views: 2103,
+  },
 ];
+
+// Calculate actual article counts dynamically
+const calculateArticleCounts = () => {
+  const counts: Record<string, number> = {};
+  mockLearningArticles.forEach(article => {
+    counts[article.category] = (counts[article.category] || 0) + 1;
+  });
+  return counts;
+};
+
+// Update learning categories with actual counts
+const articleCounts = calculateArticleCounts();
+export const learningCategoriesWithCounts = learningCategories.map(category => ({
+  ...category,
+  articleCount: articleCounts[category.id] || 0
+}));
 
 export const getFeaturedArticles = () => {
   return mockLearningArticles.slice(0, 3);
