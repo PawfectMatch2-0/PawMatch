@@ -229,10 +229,15 @@ class AuthService {
     try {
       this.setLoading(true)
       
+      if (!isSupabaseConfigured()) {
+        this.setLoading(false)
+        return { success: false, error: 'Authentication service not configured. Please check environment variables.' }
+      }
+      
       const redirectUrl = getEmailRedirectUrl('/auth/confirm')
       console.log('🔐 [Auth] Sign up with email redirect:', redirectUrl)
       
-      const { data: authData, error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase!.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -295,7 +300,12 @@ class AuthService {
     try {
       this.setLoading(true)
       
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
+      if (!isSupabaseConfigured()) {
+        this.setLoading(false)
+        return { success: false, error: 'Authentication service not configured. Please check environment variables.' }
+      }
+      
+      const { data: authData, error } = await supabase!.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       })
@@ -322,10 +332,15 @@ class AuthService {
     try {
       this.setLoading(true)
       
+      if (!isSupabaseConfigured()) {
+        this.setLoading(false)
+        return { success: false, error: 'Authentication service not configured. Please check environment variables.' }
+      }
+      
       const redirectUrl = getEmailRedirectUrl('/auth/reset-password')
       console.log('🔐 [Auth] Password reset with email redirect:', redirectUrl)
       
-      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+      const { error } = await supabase!.auth.resetPasswordForEmail(data.email, {
         redirectTo: redirectUrl
       })
 
@@ -373,7 +388,12 @@ class AuthService {
     try {
       this.setLoading(true)
       
-      const { data: authData, error } = await supabase.auth.updateUser({
+      if (!isSupabaseConfigured()) {
+        this.setLoading(false)
+        return { success: false, error: 'Authentication service not configured. Please check environment variables.' }
+      }
+      
+      const { data: authData, error } = await supabase!.auth.updateUser({
         password: data.password
       })
 
@@ -399,7 +419,12 @@ class AuthService {
     try {
       this.setLoading(true)
       
-      const { error } = await supabase.auth.signOut()
+      if (!isSupabaseConfigured()) {
+        this.setLoading(false)
+        return { success: false, error: 'Authentication service not configured. Please check environment variables.' }
+      }
+      
+      const { error } = await supabase!.auth.signOut()
       
       if (error) {
         console.error('🔐 [Auth] Sign out error:', error)
@@ -423,10 +448,15 @@ class AuthService {
     try {
       this.setLoading(true)
       
+      if (!isSupabaseConfigured()) {
+        this.setLoading(false)
+        return { success: false, error: 'Authentication service not configured. Please check environment variables.' }
+      }
+      
       const redirectUrl = getEmailRedirectUrl('/auth/confirm')
       console.log('🔐 [Auth] Resend confirmation with email redirect:', redirectUrl)
       
-      const { error } = await supabase.auth.resend({
+      const { error } = await supabase!.auth.resend({
         type: 'signup',
         email: email,
         options: {
@@ -456,7 +486,12 @@ class AuthService {
     try {
       this.setLoading(true)
       
-      const { data, error } = await supabase.auth.updateUser({
+      if (!isSupabaseConfigured()) {
+        this.setLoading(false)
+        return { success: false, error: 'Authentication service not configured. Please check environment variables.' }
+      }
+      
+      const { data, error } = await supabase!.auth.updateUser({
         data: updates
       })
 
@@ -480,7 +515,11 @@ class AuthService {
   // Get JWT token
   async getAccessToken(): Promise<string | null> {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      if (!isSupabaseConfigured()) {
+        return null
+      }
+      
+      const { data: { session } } = await supabase!.auth.getSession()
       return session?.access_token || null
     } catch (error) {
       console.error('🔐 [Auth] Get access token failed:', error)
@@ -491,7 +530,11 @@ class AuthService {
   // Refresh session
   async refreshSession() {
     try {
-      const { data, error } = await supabase.auth.refreshSession()
+      if (!isSupabaseConfigured()) {
+        return { success: false, error: 'Authentication service not configured. Please check environment variables.' }
+      }
+      
+      const { data, error } = await supabase!.auth.refreshSession()
       
       if (error) {
         console.error('🔐 [Auth] Refresh session error:', error)

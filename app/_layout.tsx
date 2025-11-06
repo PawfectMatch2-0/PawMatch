@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useFonts } from 'expo-font';
 import { AuthProvider } from '@/hooks/useAuth';
+import { checkEnvironment } from '@/lib/env-check';
 import {
   Poppins_400Regular,
   Poppins_500Medium,
@@ -45,6 +46,8 @@ export default function RootLayout() {
   // Enhanced auth system handles all authentication
   useEffect(() => {
     console.log('🔐 [App] Enhanced JWT auth system initialized (NO OAUTH)');
+    // Check environment configuration
+    checkEnvironment();
   }, [router]);
 
   if (!fontsLoaded && !fontError) {
