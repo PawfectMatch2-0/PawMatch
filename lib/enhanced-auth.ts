@@ -9,27 +9,41 @@ import { createClient } from '@supabase/supabase-js'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Platform } from 'react-native'
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
 
 // Environment detection
 const isDevelopment = process.env.APP_ENV !== 'production'
 const isDebugMode = process.env.EXPO_PUBLIC_DEBUG_AUTH === 'true'
 
-// Enhanced Supabase client with JWT configuration - NO OAUTH
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false, // Disable OAuth URL detection
-  },
-})
+// Validate environment variables first
+if (!supabaseUrl || !supabaseAnonKey || 
+    supabaseUrl.includes('your_supabase_url_here') || 
+    supabaseAnonKey.includes('your_supabase_anon_key_here')) {
+  console.warn('⚠️ Supabase environment variables not configured. Auth will not work.')
+}
 
-// Validate environment variables
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('🚨 [Auth] Missing Supabase environment variables')
-  throw new Error('Supabase configuration missing')
+// Enhanced Supabase client with JWT configuration - NO OAUTH
+export const supabase = (supabaseUrl && supabaseAnonKey && 
+                         !supabaseUrl.includes('your_supabase_url_here') && 
+                         !supabaseAnonKey.includes('your_supabase_anon_key_here'))
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        storage: AsyncStorage,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false, // Disable OAuth URL detection
+      },
+    })
+  : null
+
+// Helper to check if Supabase is configured
+const isSupabaseConfigured = () => {
+  if (!supabase) {
+    console.warn('⚠️ Supabase not configured. Auth operations will not work.')
+    return false
+  }
+  return true
 }
 
 if (isDevelopment && isDebugMode) {
@@ -129,8 +143,13 @@ class AuthService {
     try {
       this.setLoading(true)
       
+      if (!isSupabaseConfigured()) {
+        this.updateAuthState({ user: null, session: null, loading: false, initialized: true })
+        return
+      }
+      
       // Check for existing session
-      const { data: { session }, error } = await supabase.auth.getSession()
+      const { data: { session }, error } = await supabase!.auth.getSession()
       
       if (error) {
         console.error('🔐 [Auth] Session initialization error:', error)
@@ -152,7 +171,7 @@ class AuthService {
       }
 
       // Listen for auth changes
-      supabase.auth.onAuthStateChange((event, session) => {
+      supabase!.auth.onAuthStateChange((event, session) => {
         console.log('🔐 [Auth] State change:', event, session?.user?.email)
         
         if (session) {

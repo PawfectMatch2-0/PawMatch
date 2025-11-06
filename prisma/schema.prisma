@@ -1,0 +1,303 @@
+// PawMatch Database Schema - Prisma ORM
+// This schema represents all database tables and relationships
+// Run: npx prisma generate - to generate Prisma Client
+// Run: npx prisma db push - to sync schema with database
+// Run: npx prisma studio - to open visual database browser
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model UserProfile {
+  id                      String   @id @db.Uuid
+  email                   String   @unique
+  fullName                String?  @map("full_name")
+  avatarUrl               String?  @map("avatar_url")
+  phone                   String?
+  location                String?
+  preferences             Json     @default("{}")
+  isAdmin                 Boolean  @default(false) @map("is_admin")
+  createdAt               DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  ownedPets               Pet[]              @relation("PetOwner")
+  favorites               PetFavorite[]
+  interactions            PetInteraction[]
+  adoptionApplications    AdoptionApplication[] @relation("Applicant")
+  reviewedApplications    AdoptionApplication[] @relation("Reviewer")
+  aiChatSessions          AIChatSession[]
+  learningProgress        LearningProgress[]
+
+  @@map("user_profiles")
+}
+
+// ============================================
+// PETS & ADOPTION
+// ============================================
+
+model Pet {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String
+  breed             String
+  age               Int
+  gender            Gender
+  size              Size
+  color             String?
+  personality       String[]
+  description       String?
+  images            String[]
+  location          String?
+  contactInfo       Json?    @map("contact_info")
+  adoptionStatus    AdoptionStatus @default(available) @map("adoption_status")
+  ownerId           String?  @map("owner_id") @db.Uuid
+  shelterId         String?  @map("shelter_id") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  owner             UserProfile? @relation("PetOwner", fields: [ownerId], references: [id])
+  shelter           PetService?  @relation(fields: [shelterId], references: [id])
+  favorites         PetFavorite[]
+  interactions      PetInteraction[]
+  adoptionApplications AdoptionApplication[]
+
+  @@index([adoptionStatus])
+  @@index([location])
+  @@index([breed])
+  @@map("pets")
+}
+
+model PetFavorite {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  petId     String   @map("pet_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet       Pet         @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, petId])
+  @@index([userId])
+  @@map("pet_favorites")
+}
+
+model PetInteraction {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String          @map("user_id") @db.Uuid
+  petId           String          @map("pet_id") @db.Uuid
+  interactionType InteractionType @map("interaction_type")
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  user            UserProfile     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet             Pet             @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, petId])
+  @@index([userId])
+  @@map("pet_interactions")
+}
+
+model AdoptionApplication {
+  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  petId           String              @map("pet_id") @db.Uuid
+  userId          String              @map("user_id") @db.Uuid
+  status          ApplicationStatus   @default(pending)
+  applicationData Json                @default("{}") @map("application_data")
+  submittedAt     DateTime            @default(now()) @map("submitted_at") @db.Timestamptz(6)
+  reviewedAt      DateTime?           @map("reviewed_at") @db.Timestamptz(6)
+  reviewedBy      String?             @map("reviewed_by") @db.Uuid
+  notes           String?
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  pet             Pet                 @relation(fields: [petId], references: [id], onDelete: Cascade)
+  user            UserProfile         @relation("Applicant", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer        UserProfile?        @relation("Reviewer", fields: [reviewedBy], references: [id])
+
+  @@unique([userId, petId])
+  @@index([userId])
+  @@index([petId])
+  @@index([status])
+  @@index([submittedAt])
+  @@map("adoption_applications")
+}
+
+// ============================================
+// PET SERVICES (SHELTERS, VETS, etc.)
+// ============================================
+
+model PetService {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  type           ServiceType
+  description    String?
+  address        String?
+  phone          String?
+  email          String?
+  website        String?
+  location       Json?
+  images         String[]
+  services       String[]
+  openingHours   Json?         @map("opening_hours")
+  rating         Float?
+  verified       Boolean       @default(false)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  pets           Pet[]
+
+  @@index([type])
+  @@index([verified])
+  @@map("pet_services")
+}
+
+// ============================================
+// LEARNING & ARTICLES
+// ============================================
+
+model LearningArticle {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String
+  content        String
+  excerpt        String?
+  author         String?
+  category       String
+  subcategory    String?
+  difficulty     Difficulty?
+  readTime       Int?         @map("read_time")
+  tags           String[]
+  featuredImage  String?      @map("featured_image")
+  published      Boolean      @default(false)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  progress       LearningProgress[]
+
+  @@index([category])
+  @@index([published])
+  @@map("learning_articles")
+}
+
+model LearningProgress {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String          @map("user_id") @db.Uuid
+  articleId      String          @map("article_id") @db.Uuid
+  completed      Boolean         @default(false)
+  progress       Int             @default(0) // 0-100
+  timeSpent      Int             @default(0) @map("time_spent") // in seconds
+  lastAccessed   DateTime        @default(now()) @map("last_accessed") @db.Timestamptz(6)
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  user           UserProfile     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article        LearningArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@index([userId])
+  @@map("learning_progress")
+}
+
+// ============================================
+// AI CHAT & ASSISTANCE
+// ============================================
+
+model AIChatSession {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String          @map("user_id") @db.Uuid
+  sessionName    String?         @map("session_name")
+  context        Json            @default("{}")
+  messageCount   Int             @default(0) @map("message_count")
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  user           UserProfile     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages       AIChatMessage[]
+
+  @@index([userId])
+  @@map("ai_chat_sessions")
+}
+
+model AIChatMessage {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId      String          @map("session_id") @db.Uuid
+  role           MessageRole
+  content        String
+  metadata       Json            @default("{}")
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  session        AIChatSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("ai_chat_messages")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Gender {
+  male
+  female
+}
+
+enum Size {
+  small
+  medium
+  large
+}
+
+enum AdoptionStatus {
+  available
+  pending
+  adopted
+}
+
+enum InteractionType {
+  like
+  pass
+  super_like
+}
+
+enum ApplicationStatus {
+  pending
+  under_review
+  approved
+  rejected
+}
+
+enum ServiceType {
+  shelter
+  veterinary
+  grooming
+  training
+  pet_store
+  daycare
+}
+
+enum Difficulty {
+  beginner
+  intermediate
+  advanced
+}
+
+enum MessageRole {
+  user
+  assistant
+  system
+}
