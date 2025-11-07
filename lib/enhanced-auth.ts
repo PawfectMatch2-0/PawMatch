@@ -8,13 +8,16 @@
 import { createClient } from '@supabase/supabase-js'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Platform } from 'react-native'
+import Constants from 'expo-constants'
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+// Try to get from Constants.expoConfig.extra first (works on all platforms)
+// Falls back to process.env for web
+const supabaseUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
 
 // Environment detection
 const isDevelopment = process.env.APP_ENV !== 'production'
-const isDebugMode = process.env.EXPO_PUBLIC_DEBUG_AUTH === 'true'
+const isDebugMode = Constants.expoConfig?.extra?.EXPO_PUBLIC_DEBUG_AUTH === 'true' || process.env.EXPO_PUBLIC_DEBUG_AUTH === 'true'
 
 // Validate environment variables first
 if (!supabaseUrl || !supabaseAnonKey || 
@@ -251,14 +254,17 @@ class AuthService {
 
       if (error) {
         // Development fallback for email service issues
-        if (isDevelopment && isDebugMode && error.message.includes('Error sending confirmation email')) {
-          console.warn('🚧 [Auth] Email service not configured - using development mode')
+        if (isDevelopment && isDebugMode && 
+            (error.message.includes('Error sending confirmation email') || 
+             error.message.includes('email rate limit exceeded'))) {
+          console.warn('🚧 [Auth] Email service not configured or rate limited - using development mode')
           console.log('📧 [Auth] Development: Confirmation email would be sent to:', data.email)
+          console.log('💡 [Auth] Tip: Disable email confirmation in Supabase Dashboard for development')
           
           this.setLoading(false)
           return { 
             success: true, 
-            message: `Development Mode: Account created. Email confirmation logged to console.` 
+            message: `Development Mode: Account created. Email confirmation skipped. Go to Supabase Dashboard → Auth → Settings and disable "Confirm email" for development.` 
           }
         }
         
@@ -275,18 +281,27 @@ class AuthService {
 
       console.log('🔐 [Auth] Sign up successful:', authData.user?.email)
       
-      // Check if email confirmation is required
-      if (!authData.session && authData.user) {
+      // Note: Profile creation skipped here because RLS policies are blocking it
+      // Profiles will be created on first app use via the fallback mechanism
+      // Or you can manually create them in Supabase dashboard
+      
+      // If we have a session, user is auto-confirmed (email confirmation disabled)
+      if (authData.session) {
+        console.log('✅ [Auth] User has session, auto-signed in')
         this.setLoading(false)
-        return { 
-          success: true, 
-          requiresEmailConfirmation: true,
-          message: 'Please check your email to confirm your account'
-        }
+        return { success: true, user: authData.user }
       }
-
+      
+      // No session means email confirmation is required
+      // ⚠️ WARNING: Email confirmation is enabled but SMTP is not configured!
+      // To fix: Go to Supabase → Authentication → Providers → Email → Turn OFF "Confirm email"
+      console.log('⚠️ [Auth] No session - email confirmation required but emails may not send!')
       this.setLoading(false)
-      return { success: true, user: authData.user }
+      return { 
+        success: true, 
+        requiresEmailConfirmation: true,
+        message: 'Account created! Please check your email to confirm your account.'
+      }
 
     } catch (error) {
       console.error('🔐 [Auth] Sign up failed:', error)

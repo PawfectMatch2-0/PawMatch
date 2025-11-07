@@ -2,12 +2,15 @@ import { createClient } from '@supabase/supabase-js'
 import * as AuthSession from 'expo-auth-session'
 import * as WebBrowser from 'expo-web-browser'
 import { Platform } from 'react-native'
+import Constants from 'expo-constants'
 
 // Initialize WebBrowser for mobile auth
 WebBrowser.maybeCompleteAuthSession()
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+// Try to get from Constants.expoConfig.extra first (works on all platforms)
+// Falls back to process.env for web
+const supabaseUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
 
 // Helper function to get the appropriate redirect URI
 // Get appropriate redirect URI based on environment - OAuth Engineer Fix
@@ -485,6 +488,13 @@ export const databaseService = {
   async getPetById(id: string): Promise<Pet | null> {
     if (!supabase) return null
     
+    // Validate UUID format to prevent database errors
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      console.warn('⚠️ Invalid UUID format for pet ID:', id, '- Skipping database query');
+      return null; // Let the caller handle fallback to mock data
+    }
+    
     const { data, error } = await supabase
       .from('pets')
       .select('*')
@@ -492,7 +502,7 @@ export const databaseService = {
       .single()
     
     if (error) {
-      console.error('Error fetching pet:', error)
+      console.error('❌ Error fetching pet:', error)
       return null
     }
     
@@ -618,24 +628,69 @@ export const databaseService = {
   },
 
   async getPetsExcludingInteracted(userId: string, limit = 20): Promise<Pet[]> {
-    if (!supabase) return []
-    
-    const { data, error } = await supabase
-      .from('pets')
-      .select('*')
-      .eq('adoption_status', 'available')
-      .not('id', 'in', `(
-        SELECT pet_id FROM pet_interactions WHERE user_id = '${userId}'
-      )`)
-      .order('created_at', { ascending: false })
-      .limit(limit)
-    
-    if (error) {
-      console.error('Error fetching uninteracted pets:', error)
+    if (!supabase) {
+      console.log('📦 [Database] Supabase not configured, returning empty array')
       return []
     }
     
-    return (data as unknown as Pet[]) || []
+    try {
+      console.log('🔍 [Database] Fetching pets excluding interacted for user:', userId)
+      
+      // First, get all pet IDs the user has interacted with
+      const { data: interactions, error: interactionError } = await supabase
+        .from('pet_interactions')
+        .select('pet_id')
+        .eq('user_id', userId)
+      
+      if (interactionError) {
+        console.warn('⚠️ [Database] Error fetching interactions, continuing without filter:', interactionError.message)
+        // Continue without filtering - just get all available pets
+        const { data: allPets, error: petsError } = await supabase
+          .from('pets')
+          .select('*')
+          .eq('adoption_status', 'available')
+          .order('created_at', { ascending: false })
+          .limit(limit)
+        
+        if (petsError) {
+          console.error('❌ [Database] Error fetching pets:', petsError.message)
+          return []
+        }
+        
+        console.log(`✅ [Database] Fetched ${allPets?.length || 0} pets (no interaction filter)`)
+        return (allPets as unknown as Pet[]) || []
+      }
+      
+      // Extract pet IDs
+      const interactedPetIds = interactions?.map((i: any) => i.pet_id).filter(Boolean) || []
+      console.log(`📊 [Database] User has interacted with ${interactedPetIds.length} pets`)
+      
+      // Build query to get available pets
+      let query = supabase
+        .from('pets')
+        .select('*')
+        .eq('adoption_status', 'available')
+        .order('created_at', { ascending: false })
+        .limit(limit)
+      
+      // Exclude interacted pets if any exist
+      if (interactedPetIds.length > 0) {
+        query = query.not('id', 'in', `(${interactedPetIds.join(',')})`)
+      }
+      
+      const { data, error } = await query
+      
+      if (error) {
+        console.error('❌ [Database] Error fetching uninteracted pets:', error.message)
+        return []
+      }
+      
+      console.log(`✅ [Database] Fetched ${data?.length || 0} uninteracted pets`)
+      return (data as unknown as Pet[]) || []
+    } catch (err) {
+      console.error('💥 [Database] Unexpected error in getPetsExcludingInteracted:', err)
+      return []
+    }
   },
 
   // Learning articles functions

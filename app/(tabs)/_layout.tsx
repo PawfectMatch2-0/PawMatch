@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Bookmark, BookOpen, Store, Bot, Home, Sparkles } from 'lucide-react-native';
+import { Bookmark, BookOpen, Store, Bot, Home, Sparkles, User } from 'lucide-react-native';
 import { COLORS } from '@/constants/theme';
 import { Platform, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -100,6 +100,12 @@ export default function TabLayout() {
           tabBarIcon: ({ size, color }) => (
             <Store size={size * 0.9} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          href: null, // Hide from tab bar, accessible via upper right button
         }}
       />
     </Tabs>

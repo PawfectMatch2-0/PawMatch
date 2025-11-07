@@ -103,37 +103,54 @@ export default function HomeScreen() {
     try {
       setIsLoading(true);
       
+      console.log('🔄 [Discover] Initializing data...');
+      
       // Get current user
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
+      console.log('👤 [Discover] Current user:', currentUser?.email || 'Guest');
       
       // Load pets from database
       if (supabase) {
+        console.log('🗄️ [Discover] Loading pets from database...');
         const petsData = currentUser 
           ? await databaseService.getPetsExcludingInteracted(currentUser.id)
           : await databaseService.getAvailablePets();
         
-        if (petsData.length > 0) {
+        console.log(`📊 [Discover] Received ${petsData?.length || 0} pets from database`);
+        
+        if (petsData && petsData.length > 0) {
           setPets(petsData);
           setFilteredPets(petsData);
+          console.log('✅ [Discover] Using database pets');
         } else {
           // Fallback to mock data if no database pets
+          console.log('⚠️ [Discover] No database pets found, using mock data');
           const mockPetsConverted = convertMockPetsToDBFormat(mockPets);
           setPets(mockPetsConverted);
           setFilteredPets(mockPetsConverted);
         }
       } else {
         // Use mock data if Supabase not configured
+        console.log('⚠️ [Discover] Supabase not configured, using mock data');
         const mockPetsConverted = convertMockPetsToDBFormat(mockPets);
         setPets(mockPetsConverted);
         setFilteredPets(mockPetsConverted);
       }
+      
+      console.log('✅ [Discover] Data initialization complete');
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('❌ [Discover] Error loading data:', error);
       // Fallback to mock data on error
-      const mockPetsConverted = convertMockPetsToDBFormat(mockPets);
-      setPets(mockPetsConverted);
-      setFilteredPets(mockPetsConverted);
+      try {
+        console.log('🔄 [Discover] Attempting fallback to mock data...');
+        const mockPetsConverted = convertMockPetsToDBFormat(mockPets);
+        setPets(mockPetsConverted);
+        setFilteredPets(mockPetsConverted);
+        console.log('✅ [Discover] Fallback to mock data successful');
+      } catch (fallbackError) {
+        console.error('💥 [Discover] Fatal error - even mock data failed:', fallbackError);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -217,14 +234,21 @@ export default function HomeScreen() {
     if (currentPet) {
       setLikedPets(prev => [...prev, currentPet.id]);
       
+      console.log('❤️ [Discover] User liked pet:', currentPet.name, currentPet.id);
+      
       // Record interaction in database if user is logged in
       if (user && supabase) {
         try {
+          console.log('📝 [Discover] Recording interaction for user:', user.id);
           await databaseService.recordPetInteraction(user.id, currentPet.id, 'like');
+          console.log('💾 [Discover] Adding to favorites...');
           await databaseService.addToFavorites(user.id, currentPet.id);
+          console.log('✅ [Discover] Successfully added to favorites!');
         } catch (error) {
-          console.error('Error recording like:', error);
+          console.error('❌ [Discover] Error recording like:', error);
         }
+      } else {
+        console.log('⚠️ [Discover] User not logged in - like not saved to database');
       }
     }
     nextCard();

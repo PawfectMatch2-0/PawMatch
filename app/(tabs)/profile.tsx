@@ -3,7 +3,7 @@
  * Displays and allows editing of user profile information
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,17 +14,17 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { User, Mail, Phone, MapPin, Edit2, LogOut, Save, Plus, Trash2, Camera, Heart } from 'lucide-react-native';
+import { User, Mail, Phone, MapPin, Edit2, LogOut, Save, Plus, Trash2 } from 'lucide-react-native';
 import { COLORS } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
-import { getUserProfile, updateUserProfile, uploadAvatar, UserProfile } from '@/lib/services/profileService';
+import { getUserProfile, updateUserProfile, UserProfile } from '@/lib/services/profileService';
 import { getUserPets, deleteUserPet, UserPet } from '@/lib/services/userPetsService';
-import { getUserStats, UserStats } from '@/lib/services/statsService';
 import { useRouter, useFocusEffect } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
+import { useCallback } from 'react';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
@@ -39,31 +39,21 @@ export default function ProfileScreen() {
   const [userPets, setUserPets] = useState<UserPet[]>([]);
   const [petsLoading, setPetsLoading] = useState(false);
   
-  // User statistics
-  const [stats, setStats] = useState<UserStats>({
-    likedPetsCount: 0,
-    myPetsCount: 0,
-    nearbyPetsCount: 0,
-  });
-  
   // Form fields
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
     loadProfile();
     loadUserPets();
-    loadUserStats();
   }, [user]);
 
-  // Refresh pets and stats when screen comes into focus (e.g., after adding a pet)
+  // Refresh pets when screen comes into focus (e.g., after adding a pet)
   useFocusEffect(
     useCallback(() => {
       if (user) {
         loadUserPets();
-        loadUserStats();
       }
     }, [user])
   );
@@ -76,93 +66,22 @@ export default function ProfileScreen() {
 
     try {
       setLoading(true);
-      console.log('🔄 [Profile] Loading profile for user:', user.id);
-      
       const { data, error } = await getUserProfile(user.id);
 
-      // Handle errors gracefully
       if (error) {
-        console.error('❌ [Profile] Failed to load profile:', error);
-        
-        // Create a basic profile from user session data
-        const basicProfile: UserProfile = {
-          id: user.id,
-          email: user.email || '',
-          full_name: user.user_metadata?.full_name || user.user_metadata?.name || 'Pet Lover',
-          phone: user.user_metadata?.phone || '',
-          location: '',
-          created_at: new Date().toISOString(),
-        };
-        
-        setProfile(basicProfile);
-        setFullName(basicProfile.full_name || '');
-        setPhone(basicProfile.phone || '');
-        setLocation('');
-        
-        console.log('✅ [Profile] Using session data as fallback');
+        console.error('Failed to load profile:', error);
+        Alert.alert('Error', 'Failed to load profile');
         return;
       }
 
-      // Profile doesn't exist in database - create it
-      if (!data) {
-        console.log('📝 [Profile] No profile found in database, creating from session data...');
-        
-        const basicProfile: UserProfile = {
-          id: user.id,
-          email: user.email || '',
-          full_name: user.user_metadata?.full_name || user.user_metadata?.name || 'Pet Lover',
-          phone: user.user_metadata?.phone || '',
-          location: '',
-          created_at: new Date().toISOString(),
-        };
-        
-        // Try to create profile in database using upsert
-        const { error: createError } = await updateUserProfile(
-          user.id,
-          {
-            email: basicProfile.email,
-            full_name: basicProfile.full_name,
-            phone: basicProfile.phone,
-            location: basicProfile.location,
-          },
-          basicProfile.email // Pass email explicitly for first creation
-        );
-
-        if (createError) {
-          console.warn('⚠️ [Profile] Could not create profile in database, using session data:', createError);
-        } else {
-          console.log('✅ [Profile] Profile created in database successfully');
-        }
-
-        setProfile(basicProfile);
-        setFullName(basicProfile.full_name || '');
-        setPhone(basicProfile.phone || '');
-        setLocation('');
-        return;
-      }
-
-      // Profile loaded successfully
       if (data) {
         setProfile(data);
         setFullName(data.full_name || '');
         setPhone(data.phone || '');
         setLocation(data.location || '');
-        console.log('✅ [Profile] Profile loaded successfully');
       }
     } catch (error) {
-      console.error('💥 [Profile] Load profile error:', error);
-      
-      // Fallback to session data
-      const basicProfile: UserProfile = {
-        id: user.id,
-        email: user.email || '',
-        full_name: user.user_metadata?.full_name || '',
-        phone: '',
-        location: '',
-        created_at: new Date().toISOString(),
-      };
-      setProfile(basicProfile);
-      setFullName(basicProfile.full_name || '');
+      console.error('Load profile error:', error);
     } finally {
       setLoading(false);
     }
@@ -187,23 +106,6 @@ export default function ProfileScreen() {
     }
   };
 
-  const loadUserStats = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await getUserStats(user.id);
-
-      if (error) {
-        console.error('Failed to load user stats:', error);
-      } else if (data) {
-        setStats(data);
-        console.log('✅ [Profile] Stats loaded:', data);
-      }
-    } catch (error) {
-      console.error('Load user stats error:', error);
-    }
-  };
-
   const handleDeletePet = async (petId: string, petName: string) => {
     Alert.alert(
       'Delete Pet',
@@ -218,7 +120,6 @@ export default function ProfileScreen() {
             if (success) {
               Alert.alert('Success', `${petName} has been deleted`);
               loadUserPets(); // Refresh list
-              loadUserStats(); // Refresh stats
             } else {
               Alert.alert('Error', 'Failed to delete pet');
             }
@@ -228,80 +129,26 @@ export default function ProfileScreen() {
     );
   };
 
-  const handleUploadAvatar = async () => {
-    try {
-      // Request permissions
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'We need permission to access your photos');
-        return;
-      }
-
-      // Pick image
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        const uri = result.assets[0].uri;
-        
-        setUploadingAvatar(true);
-
-        // Upload to Supabase
-        const { url, error } = await uploadAvatar(user!.id, uri);
-
-        if (error || !url) {
-          Alert.alert('Upload Failed', 'Failed to upload avatar image');
-          setUploadingAvatar(false);
-          return;
-        }
-
-        // Update profile with new avatar URL
-        const { data, error: updateError } = await updateUserProfile(user!.id, {
-          avatar_url: url,
-        });
-
-        setUploadingAvatar(false);
-
-        if (updateError) {
-          Alert.alert('Error', 'Failed to update profile with new avatar');
-        } else {
-          setProfile({ ...profile!, avatar_url: url });
-          Alert.alert('Success', 'Avatar updated successfully!');
-        }
-      }
-    } catch (error) {
-      console.error('Avatar upload error:', error);
-      setUploadingAvatar(false);
-      Alert.alert('Error', 'Something went wrong while uploading avatar');
-    }
-  };
-
   const handleSave = async () => {
     if (!user) return;
 
     try {
       setSaving(true);
-      const updates = {
-        email: profile?.email || user.email || '',
+      const { data, error } = await updateUserProfile(user.id, {
         full_name: fullName,
         phone: phone,
         location: location,
-      };
+      });
 
-      const { data, error } = await updateUserProfile(user.id, updates);
+      if (error) {
+        Alert.alert('Error', 'Failed to update profile');
+        return;
+      }
 
-      // Even if there's an error, the service now returns the data as fallback
       if (data) {
-        setProfile({ ...profile!, ...data });
+        setProfile(data);
         setEditing(false);
         Alert.alert('Success', 'Profile updated successfully!');
-      } else {
-        // Should not reach here with new upsert logic
-        Alert.alert('Error', 'Failed to update profile');
       }
     } catch (error) {
       console.error('Save profile error:', error);
@@ -380,68 +227,19 @@ export default function ProfileScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
-          <TouchableOpacity 
-            style={styles.avatarContainer}
-            onPress={handleUploadAvatar}
-            disabled={uploadingAvatar}
-          >
-            {uploadingAvatar ? (
-              <View style={styles.avatarPlaceholder}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
-              </View>
-            ) : profile.avatar_url ? (
+          <View style={styles.avatarContainer}>
+            {profile.avatar_url ? (
               <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <User size={60} color={COLORS.primary} />
               </View>
             )}
-            {!uploadingAvatar && (
-              <View style={styles.cameraButton}>
-                <Camera size={20} color="white" />
-              </View>
-            )}
-          </TouchableOpacity>
+          </View>
           <Text style={styles.emailText}>{profile.email}</Text>
           <Text style={styles.memberSince}>
             Member since {new Date(profile.created_at || '').toLocaleDateString()}
           </Text>
-          <TouchableOpacity onPress={handleUploadAvatar} disabled={uploadingAvatar}>
-            <Text style={styles.changePhotoText}>
-              {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Stats Card */}
-        <View style={styles.statsCard}>
-          <TouchableOpacity style={styles.statItem} onPress={() => router.push('/(tabs)/saved')}>
-            <View style={styles.statIconContainer}>
-              <Heart size={24} color={COLORS.primary} />
-            </View>
-            <Text style={styles.statNumber}>{stats.likedPetsCount}</Text>
-            <Text style={styles.statLabel}>Liked</Text>
-          </TouchableOpacity>
-
-          <View style={styles.statDivider} />
-
-          <View style={styles.statItem}>
-            <View style={styles.statIconContainer}>
-              <User size={24} color={COLORS.primary} />
-            </View>
-            <Text style={styles.statNumber}>{stats.myPetsCount}</Text>
-            <Text style={styles.statLabel}>My Pets</Text>
-          </View>
-
-          <View style={styles.statDivider} />
-
-          <View style={styles.statItem}>
-            <View style={styles.statIconContainer}>
-              <MapPin size={24} color={COLORS.primary} />
-            </View>
-            <Text style={styles.statNumber}>{stats.nearbyPetsCount}</Text>
-            <Text style={styles.statLabel}>Nearby</Text>
-          </View>
         </View>
 
         {/* Profile Information */}
@@ -662,7 +460,6 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     marginBottom: 16,
-    position: 'relative',
   },
   avatar: {
     width: 120,
@@ -680,25 +477,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 4,
     borderColor: COLORS.primary,
-  },
-  cameraButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: 'white',
-  },
-  changePhotoText: {
-    fontSize: 14,
-    color: COLORS.primary,
-    fontFamily: 'Nunito-SemiBold',
-    marginTop: 8,
   },
   emailText: {
     fontSize: 16,
@@ -868,49 +646,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
     lineHeight: 20,
   },
-  statsCard: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    borderRadius: 16,
-    marginHorizontal: 20,
-    marginTop: -30,
-    marginBottom: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#FFF0F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  statNumber: {
-    fontSize: 24,
-    fontFamily: 'Poppins-Bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
+  addPetHint: {
+    fontSize: 13,
+    color: '#999',
     fontFamily: 'Nunito-Regular',
-    color: '#666',
-  },
-  statDivider: {
-    width: 1,
-    height: '100%',
-    backgroundColor: '#F0F0F0',
-    marginHorizontal: 12,
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });

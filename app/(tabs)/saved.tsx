@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'expo-router';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Heart, MapPin, MessageCircle, Share2, Clock, CheckCircle, XCircle, User, FileText, Calendar } from 'lucide-react-native';
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
 import LoadingState from '@/components/ui/LoadingState';
@@ -82,6 +82,13 @@ export default function SavedScreen() {
     loadSavedPets();
   }, []);
 
+  // Refresh saved pets when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadSavedPets();
+    }, [])
+  );
+
   const loadSavedPets = async () => {
     try {
       setIsLoading(true);
@@ -90,20 +97,24 @@ export default function SavedScreen() {
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
       
+      console.log('🔄 [Saved] Loading saved pets...');
+      console.log('👤 [Saved] Current user:', currentUser?.email || 'Not logged in');
+      
       if (currentUser && supabase) {
         // Load user's favorite pets from database
+        console.log('📊 [Saved] Loading favorites from database for user:', currentUser.id);
         const favorites = await databaseService.getUserFavorites(currentUser.id);
+        console.log('✅ [Saved] Loaded', favorites.length, 'favorite pets from database');
         setSavedPets(favorites);
       } else {
-        // Fallback to mock data if not logged in or Supabase not configured
-        const mockPetsConverted = convertMockPetsToDBFormat(mockPets.slice(0, 3));
-        setSavedPets(mockPetsConverted);
+        // Empty list if not logged in (no mock data fallback)
+        console.log('⚠️ [Saved] User not logged in or Supabase not configured - showing empty list');
+        setSavedPets([]);
       }
     } catch (error) {
-      console.error('Error loading saved pets:', error);
-      // Fallback to mock data on error
-      const mockPetsConverted = convertMockPetsToDBFormat(mockPets.slice(0, 3));
-      setSavedPets(mockPetsConverted);
+      console.error('❌ [Saved] Error loading saved pets:', error);
+      // Show empty list on error instead of mock data
+      setSavedPets([]);
     } finally {
       setIsLoading(false);
     }

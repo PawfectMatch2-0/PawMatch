@@ -1,11 +1,11 @@
-import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity as RNTouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-import { Heart, User } from 'lucide-react-native';
+import { Heart, User, LogOut } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { useAuthStatus } from '../hooks/useAuth';
+import { useAuth, useAuthStatus } from '../hooks/useAuth';
 import { COLORS } from '../constants/theme';
 
 const { width, height } = Dimensions.get('window');
@@ -14,6 +14,8 @@ export default function SplashScreen() {
   const router = useRouter();
   const [showContent, setShowContent] = useState(false);
   const { isSignedIn, isLoading, isReady, user } = useAuthStatus();
+  const { signOut } = useAuth();
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -22,13 +24,13 @@ export default function SplashScreen() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Handle auth state
+  // Handle auth state - but don't auto-redirect if we're signing out
   useEffect(() => {
-    if (isReady && isSignedIn) {
+    if (isReady && isSignedIn && !signingOut) {
       console.log('🔍 [Splash] User already signed in:', user?.email);
       router.replace('/(tabs)');
     }
-  }, [isReady, isSignedIn, user, router]);
+  }, [isReady, isSignedIn, user, router, signingOut]);
 
   const handleGetStarted = () => {
     // Skip auth - go straight to browsing
@@ -37,6 +39,13 @@ export default function SplashScreen() {
 
   const handleAuthOptions = () => {
     router.push('/auth-enhanced');
+  };
+
+  const handleForceSignOut = async () => {
+    setSigningOut(true);
+    await signOut();
+    setSigningOut(false);
+    // The user will now see the sign-up options
   };
 
   if (isLoading) {
@@ -81,6 +90,19 @@ export default function SplashScreen() {
 
           {showContent && (
             <View style={styles.buttonContainer}>
+              {isSignedIn && (
+                <RNTouchableOpacity 
+                  style={styles.signOutButton} 
+                  onPress={handleForceSignOut}
+                  disabled={signingOut}
+                >
+                  <LogOut size={18} color="#F44336" />
+                  <Text style={styles.signOutButtonText}>
+                    {signingOut ? 'Signing out...' : 'Sign Out & Create New Account'}
+                  </Text>
+                </RNTouchableOpacity>
+              )}
+              
               <TouchableOpacity style={styles.primaryButton} onPress={handleGetStarted}>
                 <User size={20} color={COLORS.primary} />
                 <Text style={styles.primaryButtonText}>Start Browsing Pets</Text>
@@ -161,6 +183,24 @@ const styles = StyleSheet.create({
   buttonContainer: {
     width: '100%',
     paddingHorizontal: 20,
+  },
+  signOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFEBEE',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    marginBottom: 20,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#F44336',
+  },
+  signOutButtonText: {
+    fontSize: 14,
+    fontFamily: 'Nunito-SemiBold',
+    color: '#F44336',
   },
   primaryButton: {
     flexDirection: 'row',
