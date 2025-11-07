@@ -10,6 +10,7 @@ import { mockPets } from '@/data/pets';
 import { supabase, databaseService, authService, Pet } from '@/lib/supabase';
 import AdoptionStatusTracker from '@/components/AdoptionStatusTracker';
 import { AdoptionStatus } from '@/lib/adoption-flow';
+import { useAuth } from '@/hooks/useAuth';
 
 // Mock adoption requests data
 const mockAdoptionRequests = [
@@ -73,10 +74,10 @@ const getStatusColor = (status: string) => {
 
 export default function SavedScreen() {
   const router = useRouter();
+  const { user } = useAuth(); // Get user from auth context
   const [activeTab, setActiveTab] = useState<'saved' | 'requests'>('saved');
   const [savedPets, setSavedPets] = useState<Pet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     loadSavedPets();
@@ -93,17 +94,13 @@ export default function SavedScreen() {
     try {
       setIsLoading(true);
       
-      // Get current user
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
-      
       console.log('🔄 [Saved] Loading saved pets...');
-      console.log('👤 [Saved] Current user:', currentUser?.email || 'Not logged in');
+      console.log('👤 [Saved] Current user:', user?.email || 'Not logged in');
       
-      if (currentUser && supabase) {
+      if (user && supabase) {
         // Load user's favorite pets from database
-        console.log('📊 [Saved] Loading favorites from database for user:', currentUser.id);
-        const favorites = await databaseService.getUserFavorites(currentUser.id);
+        console.log('📊 [Saved] Loading favorites from database for user:', user.id);
+        const favorites = await databaseService.getUserFavorites(user.id);
         console.log('✅ [Saved] Loaded', favorites.length, 'favorite pets from database');
         setSavedPets(favorites);
       } else {

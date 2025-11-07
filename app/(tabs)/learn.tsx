@@ -13,14 +13,16 @@ import {
   GraduationCap,
   Stethoscope,
   AlertTriangle,
+  MapPin,
   User,
   LucideIcon
 } from 'lucide-react-native';
-import { learningCategories, learningCategoriesWithCounts, mockLearningArticles, getFeaturedArticles } from '@/data/learningContent';
+import { learningCategories, learningCategoriesWithCounts, mockLearningArticles, getFeaturedArticles as getMockFeaturedArticles } from '@/data/learningContent';
 import { LinearGradient } from 'expo-linear-gradient';
 import AnimatedButton from '@/components/AnimatedButton';
-import { databaseService, supabase, LearningArticle } from '@/lib/supabase';
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
+import * as learningService from '@/lib/services/learningService';
+import type { LearningArticle } from '@/lib/services/learningService';
 
 // Icon mapping for category icons
 const iconMap: Record<string, LucideIcon> = {
@@ -29,38 +31,76 @@ const iconMap: Record<string, LucideIcon> = {
   Stethoscope: Stethoscope,
   BookOpen: BookOpen,
   AlertTriangle: AlertTriangle,
+  MapPin: MapPin,
 };
 
 export default function LearnScreen() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<typeof mockLearningArticles>([]);
+  const [searchResults, setSearchResults] = useState<LearningArticle[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [articles, setArticles] = useState<LearningArticle[]>([]);
+  const [featuredArticles, setFeaturedArticles] = useState<LearningArticle[]>([]);
+  const [categories, setCategories] = useState(learningCategoriesWithCounts);
+  const [useDatabase, setUseDatabase] = useState(false);
   const router = useRouter();
-  const featuredArticles = getFeaturedArticles();
-  
-  // Use categories with actual counts
-  const mainCategories = learningCategoriesWithCounts;
 
   useEffect(() => {
-    // Initialize database articles
-    const loadArticles = async () => {
-      try {
-        if (supabase) {
-          // Try to load articles from database
-          await databaseService.getPublishedArticles();
-        }
-      } catch (error) {
-        console.log('Using mock data for articles');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadArticles();
+    loadArticlesData();
   }, []);
 
-  const handleSearch = (text: string) => {
+  const loadArticlesData = async () => {
+    try {
+      setIsLoading(true);
+      console.log('📚 [Learn] Loading articles...');
+      
+      // Try to load from database first
+      const { data: dbArticles, error: articlesError } = await learningService.getPublishedArticles();
+      const { data: dbFeatured, error: featuredError } = await learningService.getFeaturedArticles();
+      const { data: categoryCounts, error: countsError } = await learningService.getCategoryCounts();
+      
+      if (dbArticles && dbArticles.length > 0) {
+        // Successfully loaded from database
+        console.log(`✅ [Learn] Loaded ${dbArticles.length} articles from database`);
+        setArticles(dbArticles);
+        setUseDatabase(true);
+        
+        // Set featured articles
+        if (dbFeatured && dbFeatured.length > 0) {
+          setFeaturedArticles(dbFeatured);
+        } else {
+          setFeaturedArticles(dbArticles.slice(0, 1));
+        }
+        
+        // Update category counts if available
+        if (categoryCounts && Object.keys(categoryCounts).length > 0) {
+          const updatedCategories = learningCategories.map(cat => ({
+            ...cat,
+            articleCount: categoryCounts[cat.id] || 0,
+          }));
+          setCategories(updatedCategories);
+        }
+      } else {
+        // Fallback to mock data
+        console.log('⚠️ [Learn] No database articles, using mock data');
+        setArticles(mockLearningArticles as any);
+        setFeaturedArticles(getMockFeaturedArticles() as any);
+        setCategories(learningCategoriesWithCounts);
+        setUseDatabase(false);
+      }
+    } catch (error) {
+      console.error('❌ [Learn] Error loading articles:', error);
+      // Fallback to mock data on error
+      setArticles(mockLearningArticles as any);
+      setFeaturedArticles(getMockFeaturedArticles() as any);
+      setCategories(learningCategoriesWithCounts);
+      setUseDatabase(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearch = async (text: string) => {
     setSearchQuery(text);
     
     if (text.trim() === '') {
@@ -70,13 +110,29 @@ export default function LearnScreen() {
     }
     
     setIsSearching(true);
-    const filtered = mockLearningArticles.filter(article => 
-      article.title.toLowerCase().includes(text.toLowerCase()) ||
-      article.summary.toLowerCase().includes(text.toLowerCase()) ||
-      article.tags.some(tag => tag.toLowerCase().includes(text.toLowerCase()))
-    );
     
-    setSearchResults(filtered);
+    if (useDatabase) {
+      // Search database articles
+      try {
+        const { data, error } = await learningService.searchArticles(text);
+        if (data && data.length > 0) {
+          setSearchResults(data);
+        } else {
+          setSearchResults([]);
+        }
+      } catch (error) {
+        console.error('Error searching articles:', error);
+        setSearchResults([]);
+      }
+    } else {
+      // Search mock articles
+      const filtered = articles.filter((article: any) => 
+        article.title.toLowerCase().includes(text.toLowerCase()) ||
+        article.summary.toLowerCase().includes(text.toLowerCase()) ||
+        article.tags.some((tag: string) => tag.toLowerCase().includes(text.toLowerCase()))
+      );
+      setSearchResults(filtered as any);
+    }
   };
 
   const clearSearch = () => {
@@ -129,7 +185,7 @@ export default function LearnScreen() {
     );
   };
 
-  const renderArticleCard = (article: typeof mockLearningArticles[0], isLarge = false) => (
+  const renderArticleCard = (article: any, isLarge = false) => (
     <TouchableOpacity
       key={article.id}
       style={[styles.articleCard, isLarge && styles.largeArticleCard]}
@@ -270,26 +326,35 @@ export default function LearnScreen() {
         {!isSearching && !isLoading && (
           <>
             {/* Featured Article */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Star size={20} color={COLORS.primary} />
-                <Text style={styles.sectionTitle}>Featured Article</Text>
+            {featuredArticles.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Star size={20} color={COLORS.primary} />
+                  <Text style={styles.sectionTitle}>Featured Article</Text>
+                  {useDatabase && (
+                    <View style={styles.liveBadge}>
+                      <View style={styles.liveDot} />
+                      <Text style={styles.liveText}>Live</Text>
+                    </View>
+                  )}
+                </View>
+                {renderArticleCard(featuredArticles[0], true)}
               </View>
-              {renderArticleCard(featuredArticles[0], true)}
-            </View>
+            )}
 
             {/* Categories */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Explore Topics</Text>
               <View style={styles.categoriesContainer}>
-                {mainCategories.map(renderCategoryCard)}
+                {categories.map(renderCategoryCard)}
               </View>
             </View>
 
             {/* Recent Articles */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Latest Articles</Text>
-              {mockLearningArticles.slice(1, 4).map(article => (
+            {articles.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Latest Articles</Text>
+                {articles.slice(0, 3).map((article: any) => (
                 <TouchableOpacity 
                   key={article.id} 
                   style={styles.recentArticle}
@@ -314,7 +379,8 @@ export default function LearnScreen() {
                   </View>
                 </TouchableOpacity>
               ))}
-            </View>
+              </View>
+            )}
 
           </>
         )}
@@ -667,5 +733,26 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito-Regular',
     color: '#666',
     marginTop: 12,
+  },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 'auto',
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#4CAF50',
+    marginRight: 4,
+  },
+  liveText: {
+    fontSize: 11,
+    fontFamily: 'Nunito-SemiBold',
+    color: '#4CAF50',
   },
 });

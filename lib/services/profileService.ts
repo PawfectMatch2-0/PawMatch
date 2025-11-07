@@ -3,7 +3,7 @@
  * Manages user profile data in Supabase
  */
 
-import { supabase } from '../supabase';
+import { supabase } from '../enhanced-auth';
 
 export interface UserProfile {
   id: string;

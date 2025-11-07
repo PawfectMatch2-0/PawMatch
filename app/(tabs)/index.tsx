@@ -21,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { mockPets } from '@/data/pets';
 import FilterModal, { Filters } from '@/components/FilterModal';
 import { supabase, databaseService, authService, Pet } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
 
 const { width, height } = Dimensions.get('window');
 const CARD_WIDTH = width - 30;
@@ -29,6 +30,7 @@ const SWIPE_THRESHOLD = width * 0.25;
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { user } = useAuth(); // Get user from auth context
   const [currentIndex, setCurrentIndex] = useState(0);
   const [likedPets, setLikedPets] = useState<string[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -45,7 +47,6 @@ export default function HomeScreen() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [filteredPets, setFilteredPets] = useState<Pet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
   
   // Double buffer: maintain two separate card states
   const [cardAData, setCardAData] = useState(0); // Index for card A
@@ -104,18 +105,12 @@ export default function HomeScreen() {
       setIsLoading(true);
       
       console.log('🔄 [Discover] Initializing data...');
-      
-      // Get current user
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
-      console.log('👤 [Discover] Current user:', currentUser?.email || 'Guest');
+      console.log('👤 [Discover] Current user:', user?.email || 'Guest');
       
       // Load pets from database
-      if (supabase) {
-        console.log('🗄️ [Discover] Loading pets from database...');
-        const petsData = currentUser 
-          ? await databaseService.getPetsExcludingInteracted(currentUser.id)
-          : await databaseService.getAvailablePets();
+      if (supabase && user) {
+        console.log('🗄️ [Discover] Loading pets from database for logged-in user...');
+        const petsData = await databaseService.getPetsExcludingInteracted(user.id);
         
         console.log(`📊 [Discover] Received ${petsData?.length || 0} pets from database`);
         
@@ -124,8 +119,22 @@ export default function HomeScreen() {
           setFilteredPets(petsData);
           console.log('✅ [Discover] Using database pets');
         } else {
-          // Fallback to mock data if no database pets
-          console.log('⚠️ [Discover] No database pets found, using mock data');
+          console.log('⚠️ [Discover] No database pets found - showing mock data for demo');
+          console.log('💡 [Discover] Add real pets to database to enable saving likes');
+          const mockPetsConverted = convertMockPetsToDBFormat(mockPets);
+          setPets(mockPetsConverted);
+          setFilteredPets(mockPetsConverted);
+        }
+      } else if (supabase && !user) {
+        console.log('🗄️ [Discover] Loading pets from database (guest mode)...');
+        const petsData = await databaseService.getAvailablePets();
+        
+        if (petsData && petsData.length > 0) {
+          setPets(petsData);
+          setFilteredPets(petsData);
+          console.log('✅ [Discover] Using database pets');
+        } else {
+          console.log('⚠️ [Discover] No database pets - using mock data');
           const mockPetsConverted = convertMockPetsToDBFormat(mockPets);
           setPets(mockPetsConverted);
           setFilteredPets(mockPetsConverted);
@@ -238,14 +247,23 @@ export default function HomeScreen() {
       
       // Record interaction in database if user is logged in
       if (user && supabase) {
-        try {
-          console.log('📝 [Discover] Recording interaction for user:', user.id);
-          await databaseService.recordPetInteraction(user.id, currentPet.id, 'like');
-          console.log('💾 [Discover] Adding to favorites...');
-          await databaseService.addToFavorites(user.id, currentPet.id);
-          console.log('✅ [Discover] Successfully added to favorites!');
-        } catch (error) {
-          console.error('❌ [Discover] Error recording like:', error);
+        // Validate UUID format before attempting database operation
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const isValidUUID = uuidRegex.test(currentPet.id);
+        
+        if (!isValidUUID) {
+          console.log('⚠️ [Discover] Mock pet detected (non-UUID ID) - skipping database save');
+          console.log('💡 [Discover] Tip: Add real pets to database to save likes');
+        } else {
+          try {
+            console.log('📝 [Discover] Recording interaction for user:', user.id);
+            await databaseService.recordPetInteraction(user.id, currentPet.id, 'like');
+            console.log('💾 [Discover] Adding to favorites...');
+            await databaseService.addToFavorites(user.id, currentPet.id);
+            console.log('✅ [Discover] Successfully added to favorites!');
+          } catch (error) {
+            console.error('❌ [Discover] Error recording like:', error);
+          }
         }
       } else {
         console.log('⚠️ [Discover] User not logged in - like not saved to database');
@@ -256,10 +274,18 @@ export default function HomeScreen() {
 
   const handlePass = async () => {
     if (currentPet && user && supabase) {
-      try {
-        await databaseService.recordPetInteraction(user.id, currentPet.id, 'pass');
-      } catch (error) {
-        console.error('Error recording pass:', error);
+      // Validate UUID format before attempting database operation
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const isValidUUID = uuidRegex.test(currentPet.id);
+      
+      if (isValidUUID) {
+        try {
+          await databaseService.recordPetInteraction(user.id, currentPet.id, 'pass');
+        } catch (error) {
+          console.error('Error recording pass:', error);
+        }
+      } else {
+        console.log('⚠️ [Discover] Mock pet - skipping pass recording');
       }
     }
     nextCard();

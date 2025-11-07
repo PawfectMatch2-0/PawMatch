@@ -168,8 +168,16 @@ export default function ProfileScreen() {
           text: 'Sign Out',
           style: 'destructive',
           onPress: async () => {
-            await signOut();
-            router.replace('/auth');
+            try {
+              console.log('🚪 [Profile] Signing out...');
+              await signOut();
+              console.log('✅ [Profile] Sign out successful, redirecting to welcome screen');
+              // Navigate to welcome/splash screen (index.tsx)
+              router.replace('/');
+            } catch (error) {
+              console.error('❌ [Profile] Sign out error:', error);
+              Alert.alert('Error', 'Failed to sign out. Please try again.');
+            }
           },
         },
       ]

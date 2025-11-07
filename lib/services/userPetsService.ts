@@ -159,6 +159,7 @@ export async function deleteUserPet(petId: string): Promise<{ success: boolean; 
 
 /**
  * Upload pet images to Supabase Storage
+ * Note: For React Native, we need to use FormData with ArrayBuffer
  */
 export async function uploadPetImages(
   petId: string,
@@ -173,20 +174,24 @@ export async function uploadPetImages(
       const fileName = `${petId}-${Date.now()}-${i}.${fileExt}`;
       const filePath = `pet-images/${fileName}`;
 
-      // Convert URI to blob
+      // For React Native, fetch and convert to ArrayBuffer
       const response = await fetch(uri);
-      const blob = await response.blob();
+      const arrayBuffer = await response.arrayBuffer();
+      
+      // Convert ArrayBuffer to Uint8Array for Supabase
+      const fileData = new Uint8Array(arrayBuffer);
 
       // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('pet-images')
-        .upload(filePath, blob, {
-          contentType: 'image/jpeg',
+        .upload(filePath, fileData, {
+          contentType: `image/${fileExt}`,
           upsert: true,
         });
 
       if (uploadError) {
         console.error('❌ [UserPets] Error uploading image:', uploadError);
+        console.error('❌ [UserPets] Upload error details:', uploadError.message);
         continue;
       }
 
@@ -196,9 +201,10 @@ export async function uploadPetImages(
         .getPublicUrl(filePath);
 
       uploadedUrls.push(urlData.publicUrl);
+      console.log(`✅ [UserPets] Image ${i + 1}/${imageUris.length} uploaded`);
     }
 
-    console.log(`✅ [UserPets] Uploaded ${uploadedUrls.length} images`);
+    console.log(`✅ [UserPets] Uploaded ${uploadedUrls.length}/${imageUris.length} images successfully`);
     return { urls: uploadedUrls, error: null };
   } catch (error) {
     console.error('❌ [UserPets] Upload images failed:', error);

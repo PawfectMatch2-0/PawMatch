@@ -321,8 +321,16 @@ export default function ProfileScreen() {
           text: 'Sign Out',
           style: 'destructive',
           onPress: async () => {
-            await signOut();
-            router.replace('/auth');
+            try {
+              console.log('🚪 [Profile] Signing out...');
+              await signOut();
+              console.log('✅ [Profile] Sign out successful, redirecting to welcome screen');
+              // Navigate to welcome/splash screen (index.tsx)
+              router.replace('/');
+            } catch (error) {
+              console.error('❌ [Profile] Sign out error:', error);
+              Alert.alert('Error', 'Failed to sign out. Please try again.');
+            }
           },
         },
       ]
@@ -332,7 +340,7 @@ export default function ProfileScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={COLORS.secondary} />
         <Text style={styles.loadingText}>Loading profile...</Text>
       </View>
     );
@@ -349,7 +357,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <LinearGradient
-        colors={[COLORS.primary, COLORS.primaryLight]}
+        colors={COLORS.gradients.secondary}
         style={styles.header}
       >
         <View style={styles.headerContent}>
@@ -387,13 +395,13 @@ export default function ProfileScreen() {
           >
             {uploadingAvatar ? (
               <View style={styles.avatarPlaceholder}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
+                <ActivityIndicator size="large" color={COLORS.secondary} />
               </View>
             ) : profile.avatar_url ? (
               <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
             ) : (
               <View style={styles.avatarPlaceholder}>
-                <User size={60} color={COLORS.primary} />
+                <User size={60} color={COLORS.secondary} />
               </View>
             )}
             {!uploadingAvatar && (
@@ -416,7 +424,7 @@ export default function ProfileScreen() {
         {/* Stats Card */}
         <View style={styles.statsCard}>
           <TouchableOpacity style={styles.statItem} onPress={() => router.push('/(tabs)/saved')}>
-            <View style={styles.statIconContainer}>
+            <View style={[styles.statIconContainer, { backgroundColor: '#FFE8F0' }]}>
               <Heart size={24} color={COLORS.primary} />
             </View>
             <Text style={styles.statNumber}>{stats.likedPetsCount}</Text>
@@ -426,8 +434,8 @@ export default function ProfileScreen() {
           <View style={styles.statDivider} />
 
           <View style={styles.statItem}>
-            <View style={styles.statIconContainer}>
-              <User size={24} color={COLORS.primary} />
+            <View style={[styles.statIconContainer, { backgroundColor: '#E8F5F9' }]}>
+              <User size={24} color={COLORS.secondary} />
             </View>
             <Text style={styles.statNumber}>{stats.myPetsCount}</Text>
             <Text style={styles.statLabel}>My Pets</Text>
@@ -436,7 +444,7 @@ export default function ProfileScreen() {
           <View style={styles.statDivider} />
 
           <View style={styles.statItem}>
-            <View style={styles.statIconContainer}>
+            <View style={[styles.statIconContainer, { backgroundColor: '#FFE8F0' }]}>
               <MapPin size={24} color={COLORS.primary} />
             </View>
             <Text style={styles.statNumber}>{stats.nearbyPetsCount}</Text>
@@ -450,8 +458,8 @@ export default function ProfileScreen() {
 
           {/* Full Name */}
           <View style={styles.inputGroup}>
-            <View style={styles.inputIcon}>
-              <User size={20} color={COLORS.primary} />
+            <View style={[styles.inputIcon, { backgroundColor: '#E8F5F9' }]}>
+              <User size={20} color={COLORS.secondary} />
             </View>
             <View style={styles.inputContent}>
               <Text style={styles.inputLabel}>Full Name</Text>
@@ -471,8 +479,8 @@ export default function ProfileScreen() {
 
           {/* Email (Read-only) */}
           <View style={styles.inputGroup}>
-            <View style={styles.inputIcon}>
-              <Mail size={20} color={COLORS.primary} />
+            <View style={[styles.inputIcon, { backgroundColor: '#E8F5F9' }]}>
+              <Mail size={20} color={COLORS.secondary} />
             </View>
             <View style={styles.inputContent}>
               <Text style={styles.inputLabel}>Email</Text>
@@ -482,8 +490,8 @@ export default function ProfileScreen() {
 
           {/* Phone */}
           <View style={styles.inputGroup}>
-            <View style={styles.inputIcon}>
-              <Phone size={20} color={COLORS.primary} />
+            <View style={[styles.inputIcon, { backgroundColor: '#E8F5F9' }]}>
+              <Phone size={20} color={COLORS.secondary} />
             </View>
             <View style={styles.inputContent}>
               <Text style={styles.inputLabel}>Phone</Text>
@@ -504,8 +512,8 @@ export default function ProfileScreen() {
 
           {/* Location */}
           <View style={styles.inputGroup}>
-            <View style={styles.inputIcon}>
-              <MapPin size={20} color={COLORS.primary} />
+            <View style={[styles.inputIcon, { backgroundColor: '#E8F5F9' }]}>
+              <MapPin size={20} color={COLORS.secondary} />
             </View>
             <View style={styles.inputContent}>
               <Text style={styles.inputLabel}>Location</Text>
@@ -534,12 +542,12 @@ export default function ProfileScreen() {
               router.push('/pet/add');
             }}
           >
-            <Plus size={20} color={COLORS.primary} />
+            <Plus size={20} color={COLORS.secondary} />
             <Text style={styles.addPetText}>Add Pet for Adoption</Text>
           </TouchableOpacity>
           
           {petsLoading ? (
-            <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: 20 }} />
+              <ActivityIndicator size="small" color={COLORS.secondary} style={{ marginTop: 20 }} />
           ) : userPets.length > 0 ? (
             <>
               <Text style={styles.petsCount}>{userPets.length} pet{userPets.length > 1 ? 's' : ''} listed</Text>
@@ -669,7 +677,7 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     borderWidth: 4,
-    borderColor: COLORS.primary,
+    borderColor: COLORS.secondary,
   },
   avatarPlaceholder: {
     width: 120,
@@ -679,7 +687,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 4,
-    borderColor: COLORS.primary,
+    borderColor: COLORS.secondary,
   },
   cameraButton: {
     position: 'absolute',
@@ -688,7 +696,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.secondary,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
@@ -696,7 +704,7 @@ const styles = StyleSheet.create({
   },
   changePhotoText: {
     fontSize: 14,
-    color: COLORS.primary,
+    color: COLORS.secondary,
     fontFamily: 'Nunito-SemiBold',
     marginTop: 8,
   },
@@ -735,7 +743,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFF0F0',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -780,14 +787,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 16,
     borderRadius: 12,
-    backgroundColor: '#FFF0F0',
+    backgroundColor: '#E8F5F9',
     borderWidth: 2,
-    borderColor: COLORS.primary,
+    borderColor: COLORS.secondary,
     marginBottom: 12,
   },
   addPetText: {
     fontSize: 16,
-    color: COLORS.primary,
+    color: COLORS.secondary,
     fontFamily: 'Poppins-SemiBold',
     marginLeft: 8,
   },
@@ -891,7 +898,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#FFF0F0',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,

@@ -3,6 +3,9 @@ import * as AuthSession from 'expo-auth-session'
 import * as WebBrowser from 'expo-web-browser'
 import { Platform } from 'react-native'
 import Constants from 'expo-constants'
+// IMPORTANT: Import the authenticated Supabase client from enhanced-auth
+// This ensures all database operations use the same session
+import { supabase as enhancedSupabase } from './enhanced-auth'
 
 // Initialize WebBrowser for mobile auth
 WebBrowser.maybeCompleteAuthSession()
@@ -47,23 +50,9 @@ if (false && __DEV__ && process.env.EXPO_PUBLIC_DEBUG_AUTH === 'true') {
   console.log('💡 Current environment URI:', getRedirectUri());
 }
 
-// Check if environment variables are configured and create client
-let supabaseClient: ReturnType<typeof createClient> | null = null
-
-if (!supabaseUrl || !supabaseAnonKey || 
-    supabaseUrl.includes('your_supabase_url_here') || 
-    supabaseAnonKey.includes('your_supabase_anon_key_here')) {
-  console.warn('⚠️ Supabase environment variables not configured. Using mock data.')
-  supabaseClient = null
-} else {
-  supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      detectSessionInUrl: false, // Prevents issues with React Native
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  })
-}
+// Use the enhanced auth Supabase client which has the active session
+// This replaces the old client creation to ensure consistent authentication
+const supabaseClient = enhancedSupabase
 
 export const supabase = supabaseClient
 
@@ -612,13 +601,17 @@ export const databaseService = {
       throw new Error('Supabase not configured')
     }
     
+    // Use upsert to handle duplicate interactions gracefully
     const { data, error } = await supabase
       .from('pet_interactions')
       // @ts-ignore - Type issues with Supabase generated types
-      .insert({
+      .upsert({
         user_id: userId,
         pet_id: petId,
         interaction_type: interactionType
+      }, {
+        onConflict: 'user_id,pet_id',
+        ignoreDuplicates: false // Update existing record instead of ignoring
       })
       .select()
       .single()

@@ -15,6 +15,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -32,6 +33,7 @@ import {
   AlertCircle,
 } from 'lucide-react-native'
 import { authService, SignUpData, SignInData } from '../lib/enhanced-auth'
+import { COLORS } from '../constants/theme'
 
 type AuthMode = 'signin' | 'signup' | 'forgot' | 'reset' | 'email-sent' | 'email-confirm'
 
@@ -469,7 +471,7 @@ export default function EnhancedAuth() {
   }
 
   return (
-    <LinearGradient colors={['#FF6B6B', '#FF8E8E', '#FFB3B3']} style={styles.container}>
+    <LinearGradient colors={COLORS.gradients.primary} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
           style={styles.keyboardAvoid}
@@ -482,10 +484,14 @@ export default function EnhancedAuth() {
             <View style={styles.content}>
               {mode === 'signin' && (
                 <View style={styles.logoContainer}>
-                  <View style={styles.logoCircle}>
-                    <Heart size={40} color="white" fill="white" />
+                  <View style={styles.logoImageWrapper}>
+                    <Image 
+                      source={require('../assets/images/icon.png')} 
+                      style={styles.logoImage}
+                      resizeMode="contain"
+                    />
                   </View>
-                  <Text style={styles.appName}>PawMatch</Text>
+                  <Text style={styles.appName}>Pawfect Match</Text>
                 </View>
               )}
 
@@ -532,6 +538,24 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     marginBottom: 40,
+  },
+  logoImageWrapper: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  logoImage: {
+    width: 85,
+    height: 85,
   },
   logoCircle: {
     width: 80,
@@ -627,13 +651,13 @@ const styles = StyleSheet.create({
   forgotButtonText: {
     fontSize: 14,
     fontFamily: 'Nunito-Medium',
-    color: '#FF6B6B',
+    color: COLORS.primary,
   },
   primaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF6B6B',
+    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingVertical: 16,
     gap: 8,
