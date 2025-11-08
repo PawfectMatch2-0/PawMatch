@@ -22,12 +22,10 @@ const getRedirectUri = () => {
     // For web deployment, use your actual domain
     if (typeof window !== 'undefined') {
       const origin = window.location.origin;
-      if (origin.includes('pawfectmatch.expo.app')) {
-        return 'https://pawfectmatch.expo.app/oauth/callback';
-      }
+      console.log('🌐 [Auth] Web origin detected:', origin);
       return `${origin}/oauth/callback`;
     }
-    return 'http://localhost:8082/oauth/callback';
+    return 'http://localhost:8081/oauth/callback';
   }
   
   // For mobile: ALWAYS use auth.expo.io proxy in development
@@ -620,66 +618,51 @@ export const databaseService = {
     return data as unknown as PetInteraction
   },
 
-  async getPetsExcludingInteracted(userId: string, limit = 20): Promise<Pet[]> {
+  /**
+   * Get pets for infinite/repeating discover feed
+   * 
+   * NEW BEHAVIOR: Pets repeat in a loop!
+   * - Gets ALL pets where adoption_status = 'available'
+   * - Does NOT exclude interacted pets (allows infinite swiping)
+   * - Includes user-uploaded pets for all users
+   * - Pets will reappear after you swipe through all of them
+   * 
+   * @param userId - Current user's ID (for logging)
+   * @param limit - Maximum number of pets to return
+   */
+  async getPetsExcludingInteracted(userId: string, limit = 50): Promise<Pet[]> {
     if (!supabase) {
       console.log('📦 [Database] Supabase not configured, returning empty array')
       return []
     }
     
     try {
-      console.log('🔍 [Database] Fetching pets excluding interacted for user:', userId)
+      console.log('🔍 [Database] Fetching ALL pets (including adopted) for infinite feed (user:', userId, ')')
       
-      // First, get all pet IDs the user has interacted with
+      // Get ALL pets regardless of adoption status
+      // This allows users to see adopted pets and their status
+      const { data: allPets, error: petsError } = await supabase
+        .from('pets')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit)
+      
+      if (petsError) {
+        console.error('❌ [Database] Error fetching pets:', petsError.message)
+        return []
+      }
+      
+      // Get interaction count for logging purposes
       const { data: interactions, error: interactionError } = await supabase
         .from('pet_interactions')
         .select('pet_id')
         .eq('user_id', userId)
       
-      if (interactionError) {
-        console.warn('⚠️ [Database] Error fetching interactions, continuing without filter:', interactionError.message)
-        // Continue without filtering - just get all available pets
-        const { data: allPets, error: petsError } = await supabase
-          .from('pets')
-          .select('*')
-          .eq('adoption_status', 'available')
-          .order('created_at', { ascending: false })
-          .limit(limit)
-        
-        if (petsError) {
-          console.error('❌ [Database] Error fetching pets:', petsError.message)
-          return []
-        }
-        
-        console.log(`✅ [Database] Fetched ${allPets?.length || 0} pets (no interaction filter)`)
-        return (allPets as unknown as Pet[]) || []
-      }
+      const interactionCount = interactions?.length || 0
+      console.log(`📊 [Database] User has interacted with ${interactionCount} pets (but showing all anyway)`)
+      console.log(`✅ [Database] Fetched ${allPets?.length || 0} pets for infinite feed`)
       
-      // Extract pet IDs
-      const interactedPetIds = interactions?.map((i: any) => i.pet_id).filter(Boolean) || []
-      console.log(`📊 [Database] User has interacted with ${interactedPetIds.length} pets`)
-      
-      // Build query to get available pets
-      let query = supabase
-        .from('pets')
-        .select('*')
-        .eq('adoption_status', 'available')
-        .order('created_at', { ascending: false })
-        .limit(limit)
-      
-      // Exclude interacted pets if any exist
-      if (interactedPetIds.length > 0) {
-        query = query.not('id', 'in', `(${interactedPetIds.join(',')})`)
-      }
-      
-      const { data, error } = await query
-      
-      if (error) {
-        console.error('❌ [Database] Error fetching uninteracted pets:', error.message)
-        return []
-      }
-      
-      console.log(`✅ [Database] Fetched ${data?.length || 0} uninteracted pets`)
-      return (data as unknown as Pet[]) || []
+      return (allPets as unknown as Pet[]) || []
     } catch (err) {
       console.error('💥 [Database] Unexpected error in getPetsExcludingInteracted:', err)
       return []

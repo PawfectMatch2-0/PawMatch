@@ -2,80 +2,18 @@ import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Linking, Ale
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Heart, MapPin, MessageCircle, Share2, Clock, CheckCircle, XCircle, User, FileText, Calendar } from 'lucide-react-native';
+import { Heart, MapPin, MessageCircle, User } from 'lucide-react-native';
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
 import LoadingState from '@/components/ui/LoadingState';
 import EmptyState, { NoSavedPetsEmptyState } from '@/components/ui/EmptyState';
-import { mockPets } from '@/data/pets';
-import { supabase, databaseService, authService, Pet } from '@/lib/supabase';
-import AdoptionStatusTracker from '@/components/AdoptionStatusTracker';
-import { AdoptionStatus } from '@/lib/adoption-flow';
+import { supabase, databaseService, Pet } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 
-// Mock adoption requests data
-const mockAdoptionRequests = [
-  {
-    id: '1',
-    petId: '1',
-    petName: 'Max',
-    petImage: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=400&h=400',
-    status: 'approved',
-    submittedDate: '2025-08-01',
-    responseDate: '2025-08-02',
-    shelter: 'Happy Paws Rescue'
-  },
-  {
-    id: '2',
-    petId: '2',
-    petName: 'Luna',
-    petImage: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=400&h=400',
-    status: 'pending',
-    submittedDate: '2025-07-30',
-    responseDate: null,
-    shelter: 'City Animal Shelter'
-  },
-  {
-    id: '3',
-    petId: '3',
-    petName: 'Charlie',
-    petImage: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&h=400',
-    status: 'rejected',
-    submittedDate: '2025-07-25',
-    responseDate: '2025-07-28',
-    shelter: 'Furry Friends Foundation'
-  }
-];
 
-const StatusIcon = ({ status }: { status: string }) => {
-  switch (status) {
-    case 'approved':
-      return <CheckCircle size={20} color="#10B981" />;
-    case 'pending':
-      return <Clock size={20} color="#F59E0B" />;
-    case 'rejected':
-      return <XCircle size={20} color="#EF4444" />;
-    default:
-      return <Clock size={20} color="#9CA3AF" />;
-  }
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'approved':
-      return '#10B981';
-    case 'pending':
-      return '#F59E0B';
-    case 'rejected':
-      return '#EF4444';
-    default:
-      return '#9CA3AF';
-  }
-};
 
 export default function SavedScreen() {
   const router = useRouter();
   const { user } = useAuth(); // Get user from auth context
-  const [activeTab, setActiveTab] = useState<'saved' | 'requests'>('saved');
   const [savedPets, setSavedPets] = useState<Pet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -155,103 +93,54 @@ export default function SavedScreen() {
 
   const handlePetPress = (petId: string) => {
     router.push({
-      pathname: '/pet-details/[id]',
+      pathname: '/pet/[id]',
       params: { id: petId }
     });
   };
 
-  const handleRequestPress = (request: typeof mockAdoptionRequests[0]) => {
-    router.push({
-      pathname: '/pet-details/[id]',
-      params: { id: request.petId }
-    });
-  };
-
-  const handleMessage = (petId: string) => {
+  const handleMessage = async (petId: string) => {
     const pet = savedPets.find(p => p.id === petId);
     if (pet) {
-      const message = `Hi! I'm interested in adopting ${pet.name}, a ${pet.breed}. Could you please provide more information?`;
-      const phoneNumber = '1234567890'; // This would come from the pet owner/shelter
-      const whatsappUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
-      
-      Linking.canOpenURL(whatsappUrl)
-        .then(supported => {
-          if (supported) {
-            return Linking.openURL(whatsappUrl);
-          } else {
-            Alert.alert('WhatsApp not installed', 'Please install WhatsApp to send messages.');
+      try {
+        // Get contact info from pet's database record
+        let phoneNumber = pet.contact_info?.phone || pet.contact_info?.whatsapp;
+        
+        // If no contact in pet record, try to get owner's phone from profile
+        if (!phoneNumber && pet.owner_id && supabase) {
+          const { data: profileData } = await supabase
+            .from('user_profiles')
+            .select('phone')
+            .eq('id', pet.owner_id)
+            .single();
+          
+          if (profileData?.phone) {
+            phoneNumber = profileData.phone;
           }
-        })
-        .catch(err => console.error('Error opening WhatsApp:', err));
+        }
+        
+        if (!phoneNumber) {
+          Alert.alert('Contact Unavailable', 'No contact information available for this pet.');
+          return;
+        }
+        
+        // Clean the phone number (remove spaces, dashes, etc.)
+        const cleanNumber = phoneNumber.replace(/\D/g, '');
+        
+        const message = `Hi! I'm interested in ${pet.name}, a ${pet.breed}. Could you please provide more information?`;
+        const whatsappUrl = `whatsapp://send?phone=${cleanNumber}&text=${encodeURIComponent(message)}`;
+        
+        const supported = await Linking.canOpenURL(whatsappUrl);
+        if (supported) {
+          await Linking.openURL(whatsappUrl);
+        } else {
+          Alert.alert('WhatsApp not installed', 'Please install WhatsApp to send messages.');
+        }
+      } catch (error) {
+        console.error('Error opening WhatsApp:', error);
+        Alert.alert('Error', 'Unable to open WhatsApp. Please try again.');
+      }
     }
   };
-
-  const handleShare = (petId: string) => {
-    const pet = savedPets.find(p => p.id === petId);
-    if (pet) {
-      const shareMessage = `🐾 Check out this adorable ${pet.breed} named ${pet.name}! They're looking for a loving home. ❤️`;
-      const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(shareMessage)}`;
-      
-      Linking.canOpenURL(whatsappUrl)
-        .then(supported => {
-          if (supported) {
-            return Linking.openURL(whatsappUrl);
-          } else {
-            Alert.alert('WhatsApp not installed', 'Please install WhatsApp to share.');
-          }
-        })
-        .catch(err => console.error('Error sharing via WhatsApp:', err));
-    }
-  };
-
-  const renderAdoptionRequest = ({ item }: { item: typeof mockAdoptionRequests[0] }) => (
-    <TouchableOpacity style={styles.requestCard} onPress={() => handleRequestPress(item)}>
-      <Image source={{ uri: item.petImage }} style={styles.requestPetImage} />
-      <View style={styles.requestInfo}>
-        <View style={styles.requestHeader}>
-          <Text style={styles.requestPetName}>{item.petName}</Text>
-          <View style={styles.statusBadge}>
-            <StatusIcon status={item.status} />
-            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-              {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-            </Text>
-          </View>
-        </View>
-        <Text style={styles.shelterName}>{item.shelter}</Text>
-        <Text style={styles.requestDate}>
-          Submitted: {new Date(item.submittedDate).toLocaleDateString()}
-        </Text>
-        {item.responseDate && (
-          <Text style={styles.responseDate}>
-            Response: {new Date(item.responseDate).toLocaleDateString()}
-          </Text>
-        )}
-        {item.status === 'approved' && (
-          <TouchableOpacity 
-            style={styles.contactButton} 
-            onPress={() => {
-              const message = `Hi! I received approval for adopting ${item.petName}. What are the next steps?`;
-              const phoneNumber = '1234567890'; // Shelter contact number
-              const whatsappUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
-              
-              Linking.canOpenURL(whatsappUrl)
-                .then(supported => {
-                  if (supported) {
-                    return Linking.openURL(whatsappUrl);
-                  } else {
-                    Alert.alert('WhatsApp not installed', 'Please install WhatsApp to contact the shelter.');
-                  }
-                })
-                .catch(err => console.error('Error opening WhatsApp:', err));
-            }}
-          >
-            <MessageCircle size={16} color={COLORS.primary} />
-            <Text style={styles.contactButtonText}>Contact Shelter</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
 
   const renderPetItem = ({ item }: { item: Pet }) => (
     <TouchableOpacity style={styles.petCard} onPress={() => handlePetPress(item.id)}>
@@ -283,35 +172,21 @@ export default function SavedScreen() {
           ))}
         </View>
         
-        {/* ADOPTION FLOW INTEGRATION */}
-        <View style={styles.adoptionSection}>
+        <View style={styles.actionButtons}>
           <TouchableOpacity 
-            style={styles.adoptButton}
+            style={styles.locationButton}
             onPress={(e) => {
               e.stopPropagation();
-              router.push({
-                pathname: '/adoption/apply',
-                params: { petId: item.id, petName: item.name }
-              });
+              const url = `https://maps.google.com/?q=${encodeURIComponent(item.location)}`;
+              Linking.openURL(url).catch(err => 
+                console.error('Error opening maps:', err)
+              );
             }}
           >
-            <FileText size={16} color="white" />
-            <Text style={styles.adoptButtonText}>Apply to Adopt</Text>
+            <MapPin size={16} color="white" />
+            <Text style={styles.locationButtonText}>Track Location</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity 
-            style={styles.trackerButton}
-            onPress={(e) => {
-              e.stopPropagation();
-              router.push('/adoption/tracker');
-            }}
-          >
-            <Calendar size={16} color={COLORS.primary} />
-            <Text style={styles.trackerButtonText}>Track Applications</Text>
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.actionButtons}>
           <TouchableOpacity 
             style={styles.messageButton}
             onPress={(e) => {
@@ -322,15 +197,6 @@ export default function SavedScreen() {
             <MessageCircle size={16} color="white" />
             <Text style={styles.messageButtonText}>Message</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.shareButton}
-            onPress={(e) => {
-              e.stopPropagation();
-              handleShare(item.id);
-            }}
-          >
-            <Share2 size={16} color={COLORS.primary} />
-          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
@@ -340,68 +206,35 @@ export default function SavedScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <View style={styles.tabContainer}>
-            <TouchableOpacity 
-              style={[styles.tab, activeTab === 'saved' && styles.activeTab]}
-              onPress={() => setActiveTab('saved')}
-            >
-              <Text style={[styles.tabText, activeTab === 'saved' && styles.activeTabText]}>
-                Saved Pets
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.tab, activeTab === 'requests' && styles.activeTab]}
-              onPress={() => setActiveTab('requests')}
-            >
-              <Text style={[styles.tabText, activeTab === 'requests' && styles.activeTabText]}>
-                Adoption Requests
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.headerTitle}>Saved Pets</Text>
+          <Text style={styles.headerSubtitle}>Your favorite companions</Text>
         </View>
         <TouchableOpacity 
           style={styles.profileButton}
-          onPress={() => router.push('/profile')}
+          onPress={() => router.push('/(tabs)/profile')}
         >
           <User size={24} color={COLORS.secondary} />
         </TouchableOpacity>
       </View>
 
-{isLoading ? (
+      {isLoading ? (
         <LoadingState 
           variant="inline"
           message="Loading your saved pets..."
           size="large"
         />
-      ) : activeTab === 'saved' ? (
-        savedPets.length === 0 ? (
-          <NoSavedPetsEmptyState 
-            onDiscoverPets={() => router.push('/(tabs)')}
-          />
-        ) : (
-          <FlatList
-            data={savedPets}
-            renderItem={renderPetItem}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContainer}
-            showsVerticalScrollIndicator={false}
-          />
-        )
+      ) : savedPets.length === 0 ? (
+        <NoSavedPetsEmptyState 
+          onDiscoverPets={() => router.push('/(tabs)')}
+        />
       ) : (
-        mockAdoptionRequests.length === 0 ? (
-          <EmptyState
-            variant="noApplications"
-            onAction={() => router.push('/(tabs)')}
-          />
-        ) : (
-          <FlatList
-            data={mockAdoptionRequests}
-            renderItem={renderAdoptionRequest}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContainer}
-            showsVerticalScrollIndicator={false}
-          />
-        )
+        <FlatList
+          data={savedPets}
+          renderItem={renderPetItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
       )}
     </SafeAreaView>
   );
@@ -425,6 +258,17 @@ const styles = StyleSheet.create({
   headerContent: {
     flex: 1,
   },
+  headerTitle: {
+    fontSize: 24,
+    fontFamily: 'Poppins-Bold',
+    color: '#333',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
+    color: '#666',
+    marginTop: 2,
+  },
   profileButton: {
     minWidth: SPACING.minTouchTarget,
     minHeight: SPACING.minTouchTarget,
@@ -434,29 +278,6 @@ const styles = StyleSheet.create({
     marginLeft: SPACING.sm,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#F0F0F0',
-    borderRadius: 12,
-    padding: 4,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  activeTab: {
-    backgroundColor: COLORS.primary,
-  },
-  tabText: {
-    fontSize: 14,
-    fontFamily: 'Nunito-SemiBold',
-    color: '#666',
-  },
-  activeTabText: {
-    color: 'white',
   },
   listContainer: {
     padding: 20,
@@ -528,169 +349,38 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: 8,
   },
-  messageButton: {
+  locationButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    flex: 1,
     justifyContent: 'center',
-    marginRight: 8,
+    backgroundColor: COLORS.secondary,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    gap: 6,
+  },
+  locationButtonText: {
+    color: 'white',
+    fontSize: 13,
+    fontFamily: 'Nunito-SemiBold',
+  },
+  messageButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#25D366',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    gap: 6,
   },
   messageButtonText: {
     color: 'white',
-    fontSize: 12,
-    fontFamily: 'Nunito-SemiBold',
-    marginLeft: 4,
-  },
-  shareButton: {
-    padding: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-  },
-  // Adoption Request Styles
-  requestCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  requestPetImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 16,
-  },
-  requestInfo: {
-    flex: 1,
-  },
-  requestHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  requestPetName: {
-    fontSize: 16,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#333',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8F8F8',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    fontFamily: 'Nunito-SemiBold',
-    marginLeft: 4,
-  },
-  shelterName: {
-    fontSize: 14,
-    fontFamily: 'Nunito-SemiBold',
-    color: '#666',
-    marginBottom: 4,
-  },
-  requestDate: {
-    fontSize: 12,
-    fontFamily: 'Nunito-Regular',
-    color: '#999',
-    marginBottom: 2,
-  },
-  responseDate: {
-    fontSize: 12,
-    fontFamily: 'Nunito-Regular',
-    color: '#999',
-    marginBottom: 8,
-  },
-  contactButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: `${COLORS.primary}10`,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    alignSelf: 'flex-start',
-  },
-  contactButtonText: {
-    fontSize: 12,
-    fontFamily: 'Nunito-SemiBold',
-    color: COLORS.primary,
-    marginLeft: 4,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    fontFamily: 'Nunito-Regular',
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  // ADOPTION FLOW STYLES
-  adoptionSection: {
-    flexDirection: 'row',
-    gap: 8,
-    marginVertical: 8,
-  },
-  adoptButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.primary,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    gap: 4,
-  },
-  adoptButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontFamily: 'Nunito-SemiBold',
-  },
-  trackerButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: `${COLORS.primary}10`,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    gap: 4,
-  },
-  trackerButtonText: {
-    color: COLORS.primary,
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'Nunito-SemiBold',
   },
 });
