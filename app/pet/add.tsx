@@ -132,7 +132,7 @@ export default function AddPetScreen() {
       // Upload images
       const { urls, error: uploadError } = await uploadPetImages(pet.id, images);
 
-      if (!uploadError && urls.length > 0) {
+      if (!uploadError && urls.length > 0 && supabase) {
         // Update pet with image URLs
         await supabase
           .from('pets')
@@ -160,18 +160,16 @@ export default function AddPetScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <LinearGradient
-        colors={[COLORS.primary, COLORS.primaryLight]}
-        style={styles.header}
-      >
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+          <X size={24} color="#333" />
+        </TouchableOpacity>
         <View style={styles.headerContent}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-            <X size={24} color="white" />
-          </TouchableOpacity>
           <Text style={styles.headerTitle}>Add Your Pet</Text>
-          <View style={{ width: 40 }} />
+          <Text style={styles.headerSubtitle}>Share your companion with others</Text>
         </View>
-      </LinearGradient>
+        <View style={{ width: 40 }} />
+      </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Images Section */}
@@ -262,18 +260,46 @@ export default function AddPetScreen() {
             <TouchableOpacity
               style={[styles.optionButton, gender === 'male' && styles.optionButtonActive]}
               onPress={() => setGender('male')}
+              activeOpacity={0.7}
             >
-              <Text style={[styles.optionText, gender === 'male' && styles.optionTextActive]}>
-                Male
-              </Text>
+              {gender === 'male' ? (
+                <LinearGradient
+                  colors={COLORS.gradients.primary}
+                  style={styles.optionGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={[styles.optionText, styles.optionTextActive]}>
+                    Male
+                  </Text>
+                </LinearGradient>
+              ) : (
+                <View style={styles.optionButtonInner}>
+                  <Text style={styles.optionText}>Male</Text>
+                </View>
+              )}
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.optionButton, gender === 'female' && styles.optionButtonActive]}
               onPress={() => setGender('female')}
+              activeOpacity={0.7}
             >
-              <Text style={[styles.optionText, gender === 'female' && styles.optionTextActive]}>
-                Female
-              </Text>
+              {gender === 'female' ? (
+                <LinearGradient
+                  colors={COLORS.gradients.primary}
+                  style={styles.optionGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={[styles.optionText, styles.optionTextActive]}>
+                    Female
+                  </Text>
+                </LinearGradient>
+              ) : (
+                <View style={styles.optionButtonInner}>
+                  <Text style={styles.optionText}>Female</Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
 
@@ -282,26 +308,68 @@ export default function AddPetScreen() {
             <TouchableOpacity
               style={[styles.optionButton, size === 'small' && styles.optionButtonActive]}
               onPress={() => setSize('small')}
+              activeOpacity={0.7}
             >
-              <Text style={[styles.optionText, size === 'small' && styles.optionTextActive]}>
-                Small
-              </Text>
+              {size === 'small' ? (
+                <LinearGradient
+                  colors={COLORS.gradients.primary}
+                  style={styles.optionGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={[styles.optionText, styles.optionTextActive]}>
+                    Small
+                  </Text>
+                </LinearGradient>
+              ) : (
+                <View style={styles.optionButtonInner}>
+                  <Text style={styles.optionText}>Small</Text>
+                </View>
+              )}
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.optionButton, size === 'medium' && styles.optionButtonActive]}
               onPress={() => setSize('medium')}
+              activeOpacity={0.7}
             >
-              <Text style={[styles.optionText, size === 'medium' && styles.optionTextActive]}>
-                Medium
-              </Text>
+              {size === 'medium' ? (
+                <LinearGradient
+                  colors={COLORS.gradients.primary}
+                  style={styles.optionGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={[styles.optionText, styles.optionTextActive]}>
+                    Medium
+                  </Text>
+                </LinearGradient>
+              ) : (
+                <View style={styles.optionButtonInner}>
+                  <Text style={styles.optionText}>Medium</Text>
+                </View>
+              )}
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.optionButton, size === 'large' && styles.optionButtonActive]}
               onPress={() => setSize('large')}
+              activeOpacity={0.7}
             >
-              <Text style={[styles.optionText, size === 'large' && styles.optionTextActive]}>
-                Large
-              </Text>
+              {size === 'large' ? (
+                <LinearGradient
+                  colors={COLORS.gradients.primary}
+                  style={styles.optionGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={[styles.optionText, styles.optionTextActive]}>
+                    Large
+                  </Text>
+                </LinearGradient>
+              ) : (
+                <View style={styles.optionButtonInner}>
+                  <Text style={styles.optionText}>Large</Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -365,7 +433,10 @@ export default function AddPetScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone Number</Text>
+            <Text style={styles.label}>WhatsApp Number *</Text>
+            <Text style={styles.helperText}>
+              📱 This will be used for WhatsApp contact button
+            </Text>
             <TextInput
               style={styles.input}
               value={phone}
@@ -380,18 +451,24 @@ export default function AddPetScreen() {
         {/* Submit Button */}
         <View style={styles.section}>
           <TouchableOpacity
-            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
             onPress={handleSubmit}
             disabled={loading}
+            style={[styles.submitButtonWrapper, loading && styles.submitButtonDisabled]}
+            activeOpacity={0.8}
           >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <>
-                <Plus size={20} color="white" />
-                <Text style={styles.submitButtonText}>Add Pet to Discover</Text>
-              </>
-            )}
+            <View style={styles.submitButtonIconCircle}>
+              {loading ? (
+                <ActivityIndicator color={COLORS.primary} />
+              ) : (
+                <Plus size={20} color={COLORS.primary} strokeWidth={2.5} />
+              )}
+            </View>
+            <View style={styles.submitButtonTextContainer}>
+              <Text style={styles.submitButtonText}>
+                {loading ? 'Adding Pet...' : 'Add Pet to Discover'}
+              </Text>
+              <Text style={styles.submitButtonSubtext}>Share your companion with others</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -407,26 +484,36 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   closeButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: '#F8F8F8',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerContent: {
+    flex: 1,
+    marginLeft: 16,
+  },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontFamily: 'Poppins-Bold',
-    color: 'white',
+    color: '#333',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
+    color: '#888',
+    marginTop: 2,
   },
   scrollView: {
     flex: 1,
@@ -497,8 +584,14 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 8,
   },
+  helperText: {
+    fontSize: 12,
+    fontFamily: 'Nunito-Regular',
+    color: '#25D366',
+    marginBottom: 8,
+  },
   input: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#E0E0E0',
     borderRadius: 12,
     paddingHorizontal: 16,
@@ -506,33 +599,60 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Nunito-Regular',
     color: '#333',
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   row: {
     flexDirection: 'row',
   },
   optionsRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 12,
   },
   optionButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    alignItems: 'center',
+    borderRadius: 30,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   optionButtonActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  optionButtonInner: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 30,
   },
   optionText: {
-    fontSize: 14,
-    fontFamily: 'Nunito-SemiBold',
-    color: '#666',
+    fontSize: 15,
+    fontFamily: 'Nunito-Bold',
+    color: '#888',
   },
   optionTextActive: {
     color: 'white',
+    fontFamily: 'Poppins-SemiBold',
+  },
+  optionGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   personalityGrid: {
     flexDirection: 'row',
@@ -540,26 +660,38 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   personalityChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    borderRadius: 30,
+    borderWidth: 0,
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   personalityChipActive: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.primary + '15',
+    borderWidth: 2.5,
     borderColor: COLORS.primary,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
   },
   personalityText: {
     fontSize: 14,
-    fontFamily: 'Nunito-Regular',
-    color: '#666',
+    fontFamily: 'Nunito-SemiBold',
+    color: '#888',
   },
   personalityTextActive: {
-    color: 'white',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-SemiBold',
   },
   textArea: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#E0E0E0',
     borderRadius: 12,
     paddingHorizontal: 16,
@@ -568,22 +700,52 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito-Regular',
     color: '#333',
     minHeight: 100,
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  submitButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
+  submitButtonWrapper: {
     flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  submitButtonIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFF0F0',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    marginRight: 14,
   },
-  submitButtonDisabled: {
-    opacity: 0.6,
+  submitButtonTextContainer: {
+    flex: 1,
   },
   submitButtonText: {
     fontSize: 16,
+    color: '#333',
     fontFamily: 'Poppins-SemiBold',
-    color: 'white',
+    marginBottom: 2,
+  },
+  submitButtonSubtext: {
+    fontSize: 13,
+    color: '#999',
+    fontFamily: 'Nunito-Regular',
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
   },
 });

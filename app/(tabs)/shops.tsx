@@ -1,18 +1,13 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, Linking, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, Linking, Modal, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { MapPin, Star, Phone, User, Stethoscope, Scissors, GraduationCap, Store, Hotel, X, MessageCircle, Globe, Clock, Navigation } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
-import { 
-  dhakaVeterinaryServices, 
-  dhakaGroomingServices, 
-  dhakaTrainingServices, 
-  dhakaPetStores, 
-  dhakaBoardingServices,
-  PetServiceProvider 
-} from '../../data/bangladeshContent';
+import * as petServicesService from '@/lib/services/petServicesService';
+import { getPetServiceImage } from '@/lib/utils/petServiceImages';
+import type { PetService } from '@/lib/services/petServicesService';
 
 // Shop categories
 const shopCategories = [
@@ -24,54 +19,28 @@ const shopCategories = [
   { id: 'boarding', name: 'Boarding', icon: Hotel, color: COLORS.categories.boarding },
 ];
 
-// Combine all Bangladesh pet services
-const getAllPetServices = (): PetServiceProvider[] => {
-  return [
-    ...dhakaVeterinaryServices,
-    ...dhakaGroomingServices,
-    ...dhakaTrainingServices,
-    ...dhakaPetStores,
-    ...dhakaBoardingServices
-  ];
-};
-
-// Transform service data to match the UI format
-const transformServiceData = (service: PetServiceProvider) => {
-  const getCategoryDisplayName = (category: string) => {
-    switch (category) {
-      case 'veterinary': return 'Veterinary';
-      case 'grooming': return 'Grooming';
-      case 'training': return 'Training';
-      case 'pet-store': return 'Pet Store';
-      case 'boarding': return 'Boarding';
-      default: return 'Service';
-    }
-  };
-
+// Transform database service to UI format
+const transformServiceData = (service: PetService) => {
   const getHoursText = () => {
-    if (service.timings.emergency) {
+    if (service.emergency_available) {
       return 'Open • 24 Hours Emergency';
     }
-    return `${service.timings.weekdays}`;
+    return `${service.weekday_hours}`;
   };
 
-  // Get category-specific images for Bangladesh services
+  // Get category-specific images (with priority: Featured > Facebook > Unsplash)
   const getCategoryImage = () => {
-    switch (service.category) {
-      case 'veterinary':
-        return 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?auto=format&fit=crop&w=400&h=300';
-      case 'grooming':
-        return 'https://images.unsplash.com/photo-1559190394-90caa8fc893c?auto=format&fit=crop&w=400&h=300';
-      case 'training':
-        return 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=400&h=300';
-      case 'pet-store':
-        return 'https://images.unsplash.com/photo-1560807707-8cc77767d783?auto=format&fit=crop&w=400&h=300';
-      case 'boarding':
-        return 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=400&h=300';
-      default:
-        return service.featuredImage;
-    }
+    return getPetServiceImage(
+      service.name,
+      service.category,
+      service.featured_image,
+      service.contact_facebook
+    );
   };
+
+  const phones = Array.isArray(service.contact_phone) ? service.contact_phone : [service.contact_phone];
+  const services = Array.isArray(service.services) ? service.services : [];
+  const specialties = Array.isArray(service.specialties) ? service.specialties : [];
 
   return {
     id: service.id,
@@ -79,27 +48,50 @@ const transformServiceData = (service: PetServiceProvider) => {
     category: service.category,
     rating: service.rating,
     reviews: service.reviews,
-    address: `${service.location.area}, ${service.location.district}`,
-    fullAddress: service.location.address,
-    landmarks: service.location.landmarks,
-    phone: service.contact.phone[0],
-    allPhones: service.contact.phone,
-    email: service.contact.email,
-    facebook: service.contact.facebook,
-    website: service.contact.website,
-    whatsapp: service.contact.whatsapp,
+    address: `${service.location_area}, ${service.location_district}`,
+    fullAddress: service.location_address,
+    landmarks: service.location_landmarks,
+    phone: phones[0] || '',
+    allPhones: phones,
+    email: service.contact_email,
+    facebook: service.contact_facebook,
+    website: service.contact_website,
+    whatsapp: service.contact_whatsapp,
     image: getCategoryImage(),
     description: service.description,
     openHours: getHoursText(),
-    weekdays: service.timings.weekdays,
-    weekends: service.timings.weekends,
-    emergency: service.timings.emergency,
-    services: service.services.slice(0, 4),
-    allServices: service.services,
-    specialties: service.specialties,
-    priceRange: service.priceRange,
-    established: service.established
+    weekdays: service.weekday_hours,
+    weekends: service.weekend_hours,
+    emergency: service.emergency_available,
+    services: services.slice(0, 4),
+    allServices: services,
+    specialties: specialties,
+    priceRange: service.price_range,
+    established: service.established_year
   };
+};
+
+// Helper functions
+const getCategoryDisplayName = (category: string) => {
+  switch (category) {
+    case 'veterinary': return 'Veterinary';
+    case 'grooming': return 'Grooming';
+    case 'training': return 'Training';
+    case 'pet-store': return 'Pet Store';
+    case 'boarding': return 'Boarding';
+    default: return 'Service';
+  }
+};
+
+const getCategoryColor = (category: string) => {
+  switch (category) {
+    case 'veterinary': return COLORS.categories.veterinary;
+    case 'grooming': return COLORS.categories.grooming;
+    case 'training': return COLORS.categories.training;
+    case 'pet-store': return COLORS.categories.petStore;
+    case 'boarding': return COLORS.categories.boarding;
+    default: return COLORS.primary;
+  }
 };
 
 
@@ -109,18 +101,69 @@ export default function ShopsScreen() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedShop, setSelectedShop] = useState<any>(null);
   const [showContactModal, setShowContactModal] = useState(false);
-  
-  // Get all services and transform them for UI
-  const allServices = getAllPetServices();
-  const transformedServices = allServices.map(transformServiceData);
-  const [filteredShops, setFilteredShops] = useState(transformedServices);
+  const [filteredShops, setFilteredShops] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [imageErrors, setImageErrors] = useState<{[key: string]: boolean}>({});
 
-  const filterShopsByCategory = (categoryId: string) => {
+  useEffect(() => {
+    loadPetServices();
+  }, []);
+
+  // Refresh data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log('🔄 [Shops] Screen focused, refreshing pet services...');
+      loadPetServices();
+    }, [])
+  );
+
+  const loadPetServices = async () => {
+    try {
+      console.log('🏪 [Shops] Loading pet services from database...');
+      const { data, error } = await petServicesService.getAllPetServices();
+      
+      if (data && data.length > 0) {
+        console.log(`✅ [Shops] Loaded ${data.length} pet services`);
+        const transformed = data.map(transformServiceData);
+        setFilteredShops(transformed);
+        setImageErrors({});
+      } else {
+        console.log('⚠️ [Shops] No pet services found in database');
+        setFilteredShops([]);
+      }
+    } catch (err) {
+      console.error('❌ [Shops] Error loading services:', err);
+      setFilteredShops([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadPetServices();
+    setRefreshing(false);
+  }, []);
+
+  const filterShopsByCategory = async (categoryId: string) => {
     setSelectedCategory(categoryId);
-    if (categoryId === 'all') {
-      setFilteredShops(transformedServices);
-    } else {
-      setFilteredShops(transformedServices.filter(shop => shop.category === categoryId));
+    try {
+      if (categoryId === 'all') {
+        const { data } = await petServicesService.getAllPetServices();
+        if (data) {
+          const transformed = data.map(transformServiceData);
+          setFilteredShops(transformed);
+        }
+      } else {
+        const { data } = await petServicesService.getPetServicesByCategory(categoryId);
+        if (data) {
+          const transformed = data.map(transformServiceData);
+          setFilteredShops(transformed);
+        }
+      }
+    } catch (err) {
+      console.error('❌ [Shops] Error filtering services:', err);
     }
   };
 
@@ -158,20 +201,30 @@ export default function ShopsScreen() {
     Linking.openURL(`https://maps.google.com/?q=${encodedAddress}`);
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'veterinary': return COLORS.categories.veterinary;
-      case 'grooming': return COLORS.categories.grooming;
-      case 'training': return COLORS.categories.training;
-      case 'pet-store': return COLORS.categories.petStore;
-      case 'boarding': return COLORS.categories.boarding;
-      default: return COLORS.primary;
+  const getImageSource = (item: any) => {
+    const hasError = imageErrors[item.id];
+    if (hasError) {
+      return {
+        uri: `https://source.unsplash.com/400x300?${encodeURIComponent(item.name)},${encodeURIComponent(item.category)},pet,bangladesh`
+      };
     }
+    return { uri: item.image };
+  };
+
+  const handleImageError = (shopId: string) => {
+    setImageErrors(prev => ({
+      ...prev,
+      [shopId]: true
+    }));
   };
 
   const renderShopItem = ({ item }: { item: ReturnType<typeof transformServiceData> }) => (
     <TouchableOpacity style={styles.shopCard} onPress={() => handleShopPress(item)}>
-      <Image source={{ uri: item.image }} style={styles.shopImage} />
+      <Image 
+        source={getImageSource(item)} 
+        style={styles.shopImage}
+        onError={() => handleImageError(item.id)}
+      />
       
       <View style={styles.shopInfo}>
         <View style={styles.shopHeader}>
@@ -224,18 +277,37 @@ export default function ShopsScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header with Profile Button */}
       <View style={styles.header}>
-        <Text style={styles.title}>Pet Services - Dhaka</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Pet Services</Text>
+          <Text style={styles.headerSubtitle}>Find trusted pet shops & vets</Text>
+        </View>
         <TouchableOpacity 
           style={styles.profileButton}
-          onPress={() => router.push('/profile')}
+          onPress={() => router.push('/(tabs)/profile')}
         >
           <User size={24} color={COLORS.secondary} />
         </TouchableOpacity>
       </View>
 
-      {/* Content */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.subtitle}>Find trusted pet stores, vets, groomers & hotels in Dhaka</Text>
+      {/* Loading State */}
+      {isLoading && !refreshing ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Loading pet services...</Text>
+        </View>
+      ) : (
+        <ScrollView 
+          style={styles.content} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS.primary]}
+              tintColor={COLORS.primary}
+            />
+          }
+        >
         
         {/* Categories */}
         <View style={styles.categoriesSection}>
@@ -292,6 +364,7 @@ export default function ShopsScreen() {
           />
         </View>
       </ScrollView>
+      )}
 
       {/* Contact Info Modal */}
       <Modal
@@ -321,7 +394,11 @@ export default function ShopsScreen() {
 
               <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
                 {/* Shop Image */}
-                <Image source={{ uri: selectedShop.image }} style={styles.modalImage} />
+                <Image 
+                  source={getImageSource(selectedShop)} 
+                  style={styles.modalImage}
+                  onError={() => handleImageError(selectedShop.id)}
+                />
 
                 {/* Shop Info */}
                 <View style={styles.modalInfo}>
@@ -467,35 +544,50 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 16,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.05)',
   },
-  title: {
-    fontSize: 28,
+  headerContent: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 24,
     fontFamily: 'Poppins-Bold',
-    color: COLORS.primary,
-    letterSpacing: -0.5,
+    color: '#333',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
+    color: '#666',
+    marginTop: 2,
+  },
+  title: {
+    fontSize: 24,
+    fontFamily: 'Poppins-Bold',
+    color: '#333',
+  },
+  subtitle: {
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
+    color: '#666',
+    marginTop: 2,
   },
   profileButton: {
-    padding: 10,
+    minWidth: SPACING.minTouchTarget,
+    minHeight: SPACING.minTouchTarget,
+    padding: SPACING.sm,
     backgroundColor: `${COLORS.secondary}15`,
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS.lg,
+    marginLeft: SPACING.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontFamily: 'Nunito-Regular',
-    color: '#666',
-    textAlign: 'center',
-    marginVertical: 20,
-    paddingHorizontal: 20,
   },
   categoriesSection: {
     marginBottom: 20,
@@ -885,6 +977,18 @@ const styles = StyleSheet.create({
   },
   establishedText: {
     fontSize: 14,
+    fontFamily: 'Nunito-Regular',
+    color: '#666',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
     fontFamily: 'Nunito-Regular',
     color: '#666',
   },

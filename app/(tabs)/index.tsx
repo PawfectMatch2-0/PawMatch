@@ -109,7 +109,7 @@ export default function HomeScreen() {
       
       // Load pets from database
       if (supabase && user) {
-        console.log('🗄️ [Discover] Loading pets from database for logged-in user...');
+        console.log('🗄️ [Discover] Loading pets from database for infinite feed (logged-in user)...');
         const petsData = await databaseService.getPetsExcludingInteracted(user.id);
         
         console.log(`📊 [Discover] Received ${petsData?.length || 0} pets from database`);
@@ -117,7 +117,7 @@ export default function HomeScreen() {
         if (petsData && petsData.length > 0) {
           setPets(petsData);
           setFilteredPets(petsData);
-          console.log('✅ [Discover] Using database pets');
+          console.log('✅ [Discover] Using database pets (infinite loop - pets will repeat)');
         } else {
           console.log('⚠️ [Discover] No database pets found - showing mock data for demo');
           console.log('💡 [Discover] Add real pets to database to enable saving likes');
@@ -203,20 +203,21 @@ export default function HomeScreen() {
     // Apply age filter
     if (newFilters.age !== 'All Ages') {
       filtered = filtered.filter(pet => {
-        const petAge = pet.age;
+        // Pet age is a number (in years)
+        const petAgeValue = pet.age;
         const filterAge = newFilters.age.toLowerCase();
         
-        if (filterAge.includes('puppy') || filterAge.includes('kitten')) {
-          return petAge < 1;
+        if (filterAge.includes('puppy') || filterAge.includes('0-1')) {
+          return petAgeValue <= 1;
         }
-        if (filterAge.includes('young')) {
-          return petAge >= 1 && petAge <= 3;
+        if (filterAge.includes('young') || filterAge.includes('1-3')) {
+          return petAgeValue > 1 && petAgeValue <= 3;
         }
-        if (filterAge.includes('adult')) {
-          return petAge >= 4 && petAge <= 7;
+        if (filterAge.includes('adult') || filterAge.includes('3-7')) {
+          return petAgeValue > 3 && petAgeValue <= 7;
         }
-        if (filterAge.includes('senior')) {
-          return petAge >= 8;
+        if (filterAge.includes('senior') || filterAge.includes('7+')) {
+          return petAgeValue > 7;
         }
         return true;
       });
@@ -228,6 +229,9 @@ export default function HomeScreen() {
         pet.size.toLowerCase() === newFilters.size.toLowerCase()
       );
     }
+    
+    console.log('🔍 [Discover] Applied filters:', newFilters);
+    console.log('📊 [Discover] Filtered pets count:', filtered.length, '/', pets.length);
     
     setFilteredPets(filtered);
     
@@ -295,7 +299,7 @@ export default function HomeScreen() {
     if (currentPet && !isAnimating) {
       // Navigate to pet details page with liked status
       router.push({
-        pathname: '/pet-details/[id]',
+        pathname: '/pet/[id]',
         params: { 
           id: currentPet.id,
           isLiked: likedPets.includes(currentPet.id).toString()
@@ -561,38 +565,24 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Enhanced Header with Logo */}
-      <LinearGradient
-        colors={['#FFFFFF', '#FEFEFE', '#FAFAFA']}
-        style={styles.headerGradient}
-      >
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <View style={styles.logoIconWrapper}>
-              <Image 
-                source={require('@/assets/images/icon.png')} 
-                style={styles.logoIcon}
-                resizeMode="contain"
-              />
-            </View>
-            <View style={styles.titleContainer}>
-              <Text style={styles.appName}>Pawfect Match</Text>
-              <Text style={styles.subtitle}>Find Your Perfect Pet</Text>
-            </View>
-          </View>
-          <View style={styles.headerButtons}>
-            <TouchableOpacity style={styles.headerButton} onPress={() => setShowFilterModal(true)}>
-              <Filter size={22} color={COLORS.primary} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/notifications')}>
-              <Bell size={22} color={COLORS.secondary} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerButtonProfile} onPress={() => router.push('/profile')}>
-              <User size={20} color="white" />
-            </TouchableOpacity>
-          </View>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Discover Pets</Text>
+          <Text style={styles.headerSubtitle}>Find your perfect companion</Text>
         </View>
-      </LinearGradient>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity style={styles.headerButton} onPress={() => setShowFilterModal(true)}>
+            <Filter size={22} color={COLORS.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/notifications')}>
+            <Bell size={22} color={COLORS.secondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerButtonProfile} onPress={() => router.push('/(tabs)/profile')}>
+            <User size={20} color="white" />
+          </TouchableOpacity>
+        </View>
+      </View>
 
       {isLoading ? (
         <LoadingState 
@@ -710,11 +700,26 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: 'transparent',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  headerContent: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontFamily: 'Poppins-Bold',
+    color: '#333',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
+    color: '#666',
+    marginTop: 2,
   },
   logoContainer: {
     flexDirection: 'row',

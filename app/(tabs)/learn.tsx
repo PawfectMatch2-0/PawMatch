@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { 
   Search, 
@@ -43,10 +43,18 @@ export default function LearnScreen() {
   const [featuredArticles, setFeaturedArticles] = useState<LearningArticle[]>([]);
   const [categories, setCategories] = useState(learningCategoriesWithCounts);
   const [useDatabase, setUseDatabase] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     loadArticlesData();
+  }, []);
+
+  // Pull to refresh handler
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadArticlesData();
+    setRefreshing(false);
   }, []);
 
   const loadArticlesData = async () => {
@@ -191,7 +199,13 @@ export default function LearnScreen() {
       style={[styles.articleCard, isLarge && styles.largeArticleCard]}
       onPress={() => handleArticlePress(article.id)}
     >
-      <Image source={{ uri: article.featuredImage }} style={[styles.articleImage, isLarge && styles.largeArticleImage]} />
+      <Image 
+        source={{ uri: article.featuredImage || 'https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=400&h=300&fit=crop' }} 
+        style={[styles.articleImage, isLarge && styles.largeArticleImage]}
+        onError={(error) => {
+          console.log('❌ [Learn] Image failed to load:', article.featuredImage);
+        }}
+      />
       
       {article.videoUrl && (
         <View style={styles.videoIndicator}>
@@ -241,16 +255,26 @@ export default function LearnScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[COLORS.primary]}
+            tintColor={COLORS.primary}
+          />
+        }
+      >
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
-            <Text style={styles.title}>Learning Center</Text>
-            <Text style={styles.subtitle}>Become the best pet parent</Text>
+            <Text style={styles.headerTitle}>Learning Center</Text>
+            <Text style={styles.headerSubtitle}>Become the best pet parent</Text>
           </View>
           <TouchableOpacity 
             style={styles.profileButton}
-            onPress={() => router.push('/profile')}
+            onPress={() => router.push('/(tabs)/profile')}
           >
             <User size={24} color={COLORS.secondary} />
           </TouchableOpacity>
@@ -288,7 +312,11 @@ export default function LearnScreen() {
                   style={styles.searchResultItem}
                   onPress={() => handleArticlePress(article.id)}
                 >
-                  <Image source={{ uri: article.featuredImage }} style={styles.searchResultImage} />
+                  <Image 
+                    source={{ uri: article.featuredImage || 'https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=400&h=300&fit=crop' }} 
+                    style={styles.searchResultImage}
+                    onError={() => console.log('❌ [Learn] Search result image failed:', article.id)}
+                  />
                   <View style={styles.searchResultContent}>
                     <Text style={styles.searchResultTitle} numberOfLines={2}>
                       {article.title}
@@ -360,7 +388,11 @@ export default function LearnScreen() {
                   style={styles.recentArticle}
                   onPress={() => handleArticlePress(article.id)}
                 >
-                  <Image source={{ uri: article.featuredImage }} style={styles.recentArticleImage} />
+                  <Image 
+                    source={{ uri: article.featuredImage || 'https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=400&h=300&fit=crop' }} 
+                    style={styles.recentArticleImage}
+                    onError={() => console.log('❌ [Learn] Recent article image failed:', article.id)}
+                  />
                   <View style={styles.recentArticleContent}>
                     <Text style={styles.recentArticleTitle} numberOfLines={2}>
                       {article.title}
@@ -400,7 +432,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 16,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.05)',
@@ -412,6 +444,17 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: `${COLORS.secondary}15`,
     borderRadius: 12,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontFamily: 'Poppins-Bold',
+    color: '#333',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
+    color: '#666',
+    marginTop: 2,
   },
   title: {
     fontSize: 28,
@@ -426,7 +469,7 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     paddingHorizontal: 20,
-    marginBottom: 20,
+    paddingVertical: 16,
   },
   searchBar: {
     flexDirection: 'row',
@@ -527,9 +570,10 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 140,
     resizeMode: 'cover',
+    backgroundColor: '#F0F0F0',
   },
   largeArticleImage: {
-    height: 200,
+    height: 220,
   },
   videoIndicator: {
     position: 'absolute',
@@ -613,6 +657,8 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 8,
     marginRight: 12,
+    backgroundColor: '#F0F0F0',
+    resizeMode: 'cover',
   },
   recentArticleContent: {
     flex: 1,
@@ -666,6 +712,8 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 8,
     marginRight: 12,
+    backgroundColor: '#F0F0F0',
+    resizeMode: 'cover',
   },
   searchResultContent: {
     flex: 1,

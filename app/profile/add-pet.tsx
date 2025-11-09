@@ -116,16 +116,16 @@ export default function AddPetScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <LinearGradient
-        colors={['#FF6F61', '#D32F2F']}
-        style={styles.header}
-      >
+      <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <ArrowLeft size={24} color="white" />
+          <ArrowLeft size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add New Pet</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Add Your Pet</Text>
+          <Text style={styles.headerSubtitle}>Share your companion with others</Text>
+        </View>
         <View style={styles.headerSpacer} />
-      </LinearGradient>
+      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Photo Section */}
@@ -210,13 +210,24 @@ export default function AddPetScreen() {
                       petGender === gender && styles.selectedGenderOption
                     ]}
                     onPress={() => setPetGender(gender)}
+                    activeOpacity={0.7}
                   >
-                    <Text style={[
-                      styles.genderText,
-                      petGender === gender && styles.selectedGenderText
-                    ]}>
-                      {gender}
-                    </Text>
+                    {petGender === gender ? (
+                      <LinearGradient
+                        colors={['#FF6F61', '#D32F2F']}
+                        style={styles.genderGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                      >
+                        <Text style={[styles.genderText, styles.selectedGenderText]}>
+                          {gender}
+                        </Text>
+                      </LinearGradient>
+                    ) : (
+                      <View style={styles.genderOptionInner}>
+                        <Text style={styles.genderText}>{gender}</Text>
+                      </View>
+                    )}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -260,10 +271,17 @@ export default function AddPetScreen() {
             style={[styles.saveButton, loading && styles.saveButtonDisabled]} 
             onPress={handleSavePet}
             disabled={loading}
+            activeOpacity={0.8}
           >
-            <Text style={styles.saveButtonText}>
-              {loading ? 'Saving Pet...' : 'Save Pet'}
-            </Text>
+            <View style={styles.saveButtonIconCircle}>
+              <Plus size={20} color="#FF6F61" strokeWidth={2.5} />
+            </View>
+            <View style={styles.saveButtonTextContainer}>
+              <Text style={styles.saveButtonText}>
+                {loading ? 'Saving Pet...' : 'Add Pet to Discover'}
+              </Text>
+              <Text style={styles.saveButtonSubtext}>Share your companion with others</Text>
+            </View>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -289,21 +307,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: '#F8F8F8',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: {
+  headerContent: {
     flex: 1,
-    fontSize: 20,
-    fontFamily: 'Poppins-SemiBold',
-    color: 'white',
-    textAlign: 'center',
+    marginLeft: 16,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontFamily: 'Poppins-Bold',
+    color: '#333',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Nunito-Regular',
+    color: '#888',
+    marginTop: 2,
   },
   headerSpacer: {
     width: 40,
@@ -327,19 +356,19 @@ const styles = StyleSheet.create({
   addPhotoButton: {
     width: 120,
     height: 120,
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#E5E5E5',
+    borderColor: '#FF6F61',
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8F8F8',
+    backgroundColor: '#FFF5F5',
     marginRight: 12,
   },
   addPhotoText: {
     fontSize: 14,
-    fontFamily: 'Nunito-SemiBold',
-    color: '#666',
+    fontFamily: 'Nunito-Bold',
+    color: '#FF6F61',
     marginTop: 8,
   },
   photoItem: {
@@ -369,13 +398,13 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     backgroundColor: 'white',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
   inputGroup: {
     marginBottom: 20,
@@ -389,12 +418,11 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: 'white',
+    borderWidth: 0,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
   textInput: {
     flex: 1,
@@ -406,12 +434,11 @@ const styles = StyleSheet.create({
   textAreaContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: 'white',
+    borderWidth: 0,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
   textArea: {
     height: 100,
@@ -419,29 +446,48 @@ const styles = StyleSheet.create({
   },
   genderContainer: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 16,
   },
   genderOption: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    alignItems: 'center',
-    backgroundColor: 'white',
+    borderRadius: 30,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   selectedGenderOption: {
-    backgroundColor: '#FF6F61',
-    borderColor: '#FF6F61',
+    shadowColor: '#FF6F61',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  genderOptionInner: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 30,
+  },
+  genderGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   genderText: {
     fontSize: 16,
-    fontFamily: 'Nunito-SemiBold',
-    color: '#666',
+    fontFamily: 'Nunito-Bold',
+    color: '#888',
   },
   selectedGenderText: {
     color: 'white',
+    fontFamily: 'Poppins-SemiBold',
   },
   actionContainer: {
     marginTop: 32,
@@ -449,36 +495,64 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   saveButton: {
-    backgroundColor: '#FF6F61',
-    borderRadius: 12,
-    paddingVertical: 16,
+    flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#FF6F61',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    backgroundColor: 'white',
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  saveButtonIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFF0F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  saveButtonTextContainer: {
+    flex: 1,
   },
   saveButtonText: {
-    fontSize: 18,
+    fontSize: 16,
+    color: '#333',
     fontFamily: 'Poppins-SemiBold',
-    color: 'white',
+    marginBottom: 2,
+  },
+  saveButtonSubtext: {
+    fontSize: 13,
+    color: '#999',
+    fontFamily: 'Nunito-Regular',
   },
   saveButtonDisabled: {
-    backgroundColor: '#999',
     opacity: 0.6,
   },
   cancelButton: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#E5E5E5',
-    borderRadius: 12,
-    paddingVertical: 16,
+    borderRadius: 10,
+    paddingVertical: 15,
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: '#FFFFFF',
+    shadowColor: 'rgba(213, 217, 217, 0.5)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 2,
   },
   cancelButtonText: {
-    fontSize: 16,
-    fontFamily: 'Nunito-SemiBold',
-    color: '#666',
+    fontSize: 15,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#555',
+    letterSpacing: 0.3,
+    lineHeight: 20,
   },
 });
