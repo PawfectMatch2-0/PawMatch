@@ -19,7 +19,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { User, Mail, Phone, MapPin, Edit2, LogOut, Save, Plus, Trash2, Heart, Bookmark, PawPrint } from 'lucide-react-native';
+import { User, Mail, Phone, MapPin, Edit2, LogOut, Save, Plus, Trash2, Heart, Bookmark, PawPrint, Camera } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { COLORS } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { getUserProfile, updateUserProfile, UserProfile } from '@/lib/services/profileService';
@@ -76,22 +77,47 @@ export default function ProfileScreen() {
 
     try {
       setLoading(true);
+      console.log('🔍 [Profile] Loading profile for user:', user.id, user.email);
+      
       const { data, error } = await getUserProfile(user.id);
 
       if (error) {
-        console.error('Failed to load profile:', error);
+        console.error('❌ [Profile] Failed to load profile:', error);
         Alert.alert('Error', 'Failed to load profile');
         return;
       }
 
       if (data) {
+        console.log('✅ [Profile] Profile loaded successfully');
         setProfile(data);
         setFullName(data.full_name || '');
         setPhone(data.phone || '');
         setLocation(data.location || '');
+      } else {
+        // Profile doesn't exist - create it automatically
+        console.log('⚠️ [Profile] Profile not found, creating new profile...');
+        const { createUserProfile } = await import('@/lib/services/profileService');
+        const { data: newProfile, error: createError } = await createUserProfile(
+          user.id,
+          user.email || '',
+          user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+          user.user_metadata?.phone || ''
+        );
+
+        if (createError) {
+          console.error('❌ [Profile] Failed to create profile:', createError);
+          Alert.alert('Profile Setup Required', 'Please complete your profile setup.');
+        } else if (newProfile) {
+          console.log('✅ [Profile] Profile created successfully');
+          setProfile(newProfile);
+          setFullName(newProfile.full_name || '');
+          setPhone(newProfile.phone || '');
+          setLocation(newProfile.location || '');
+        }
       }
     } catch (error) {
-      console.error('Load profile error:', error);
+      console.error('❌ [Profile] Load profile error:', error);
+      Alert.alert('Error', 'An error occurred while loading your profile.');
     } finally {
       setLoading(false);
     }
@@ -207,6 +233,89 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleUploadPhoto = async () => {
+    try {
+      // Request permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please allow access to your photo library to upload a profile picture.');
+        return;
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      // Upload to Supabase Storage
+      const imageUri = result.assets[0].uri;
+      const fileName = `${user?.id}-${Date.now()}.jpg`;
+      
+      if (!supabase) {
+        Alert.alert('Error', 'Database connection not available');
+        return;
+      }
+
+      // Different handling for web vs mobile
+      let fileData: any;
+      
+      if (Platform.OS === 'web') {
+        // For web, use blob
+        const response = await fetch(imageUri);
+        fileData = await response.blob();
+      } else {
+        // For mobile, use ArrayBuffer
+        const response = await fetch(imageUri);
+        fileData = await response.arrayBuffer();
+      }
+
+      // Upload to Supabase storage (using user-avatars bucket)
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('user-avatars')
+        .upload(fileName, fileData, {
+          contentType: 'image/jpeg',
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        Alert.alert('Upload Failed', `Could not upload image: ${uploadError.message}`);
+        return;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-avatars')
+        .getPublicUrl(fileName);
+
+      // Update profile with new avatar URL
+      const { data, error } = await updateUserProfile(user!.id, {
+        avatar_url: publicUrl,
+      });
+
+      if (error) {
+        Alert.alert('Error', 'Failed to update profile picture');
+        return;
+      }
+
+      if (data) {
+        setProfile(data);
+        Alert.alert('Success', 'Profile picture updated!');
+      }
+    } catch (error) {
+      console.error('Photo upload error:', error);
+      Alert.alert('Error', 'Something went wrong while uploading the photo');
+    }
+  };
+
   const handleSave = async () => {
     if (!user) return;
 
@@ -243,9 +352,22 @@ export default function ProfileScreen() {
       if (confirmed) {
         try {
           console.log('🚪 [Profile] Signing out...');
-          await signOut();
-          console.log('✅ [Profile] Sign out successful, redirecting to welcome screen');
-          router.replace('/');
+          const result = await signOut();
+          
+          if (result.success) {
+            console.log('✅ [Profile] Sign out successful, redirecting to welcome screen');
+            // Navigate to welcome screen (resets navigation stack)
+            if (Platform.OS === 'web') {
+              // For web, use window.location to force a full page reload to the root
+              window.location.href = '/';
+            } else {
+              // For mobile, use router.push to navigate to welcome screen
+              router.push('/');
+            }
+          } else {
+            console.error('❌ [Profile] Sign out failed:', result.error);
+            window.alert(result.error || 'Failed to sign out. Please try again.');
+          }
         } catch (error) {
           console.error('❌ [Profile] Sign out error:', error);
           window.alert('Failed to sign out. Please try again.');
@@ -264,9 +386,22 @@ export default function ProfileScreen() {
             onPress: async () => {
               try {
                 console.log('🚪 [Profile] Signing out...');
-                await signOut();
-                console.log('✅ [Profile] Sign out successful, redirecting to welcome screen');
-                router.replace('/');
+                const result = await signOut();
+                
+                if (result.success) {
+                  console.log('✅ [Profile] Sign out successful, redirecting to welcome screen');
+                  // Navigate to welcome screen (resets navigation stack)
+                  if (Platform.OS === 'web') {
+                    // For web, use window.location to force a full page reload to the root
+                    window.location.href = '/';
+                  } else {
+                    // For mobile, use router.push to navigate to welcome screen
+                    router.push('/');
+                  }
+                } else {
+                  console.error('❌ [Profile] Sign out failed:', result.error);
+                  Alert.alert('Error', result.error || 'Failed to sign out. Please try again.');
+                }
               } catch (error) {
                 console.error('❌ [Profile] Sign out error:', error);
                 Alert.alert('Error', 'Failed to sign out. Please try again.');
@@ -291,84 +426,95 @@ export default function ProfileScreen() {
   if (!user) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
+        {/* Modern Header */}
         <LinearGradient
-          colors={[COLORS.primary, COLORS.primaryLight]}
-          style={styles.header}
+          colors={['#FFFFFF', COLORS.secondary + '05', '#F8FAFB']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerWhite}
         >
           <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>Profile</Text>
+            <Text style={styles.headerTitleDark}>Profile</Text>
           </View>
         </LinearGradient>
 
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.guestContainer}>
-          {/* Guest Avatar */}
-          <View style={styles.avatarSection}>
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {/* Guest Avatar Section with Modern Gradient */}
+          <LinearGradient
+            colors={['#FFFFFF', COLORS.primary + '08', COLORS.secondary + '05', '#F8FAFB']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.avatarSectionGradient}
+          >
             <View style={styles.avatarContainer}>
-              <View style={styles.avatarPlaceholder}>
-                <User size={60} color={COLORS.primary} />
+              <View style={styles.guestAvatarCircle}>
+                <User size={48} color={COLORS.primary} />
               </View>
             </View>
-            <Text style={styles.guestTitle}>Welcome, Guest!</Text>
-            <Text style={styles.guestSubtitle}>Sign in to access your profile and features</Text>
-          </View>
+            <Text style={styles.guestNameText}>Welcome, Guest!</Text>
+            <Text style={styles.guestEmailText}>Sign in to unlock all features</Text>
+          </LinearGradient>
 
-          {/* Guest Features List */}
+          {/* Features Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Sign in to unlock:</Text>
+            <Text style={styles.sectionTitleModern}>Sign in to unlock</Text>
             
-            <View style={styles.featureItem}>
-              <View style={[styles.featureIcon, { backgroundColor: '#FFE8E8' }]}>
-                <User size={20} color={COLORS.primary} />
+            {/* Feature Cards with Modern Design */}
+            <View style={styles.guestFeatureCard}>
+              <View style={styles.guestFeatureIconCircle}>
+                <User size={20} color="white" />
               </View>
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>Manage Your Profile</Text>
-                <Text style={styles.featureDescription}>Edit your personal information and preferences</Text>
-              </View>
-            </View>
-
-            <View style={styles.featureItem}>
-              <View style={[styles.featureIcon, { backgroundColor: '#FFE8E8' }]}>
-                <Plus size={20} color={COLORS.primary} />
-              </View>
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>Add Pets for Adoption</Text>
-                <Text style={styles.featureDescription}>List your pets to find them loving homes</Text>
+              <View style={styles.guestFeatureContent}>
+                <Text style={styles.guestFeatureTitle}>Manage Your Profile</Text>
+                <Text style={styles.guestFeatureDescription}>Edit your personal information and preferences</Text>
               </View>
             </View>
 
-            <View style={styles.featureItem}>
-              <View style={[styles.featureIcon, { backgroundColor: '#FFE8E8' }]}>
-                <Text style={styles.featureIconText}>❤️</Text>
+            <View style={styles.guestFeatureCard}>
+              <View style={styles.guestFeatureIconCircle}>
+                <Plus size={20} color="white" />
               </View>
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>Save Favorite Pets</Text>
-                <Text style={styles.featureDescription}>Keep track of pets you're interested in</Text>
+              <View style={styles.guestFeatureContent}>
+                <Text style={styles.guestFeatureTitle}>Add Pets for Adoption</Text>
+                <Text style={styles.guestFeatureDescription}>List your pets to find them loving homes</Text>
               </View>
             </View>
 
-            <View style={styles.featureItem}>
-              <View style={[styles.featureIcon, { backgroundColor: '#FFE8E8' }]}>
-                <Text style={styles.featureIconText}>🐾</Text>
+            <View style={styles.guestFeatureCard}>
+              <View style={styles.guestFeatureIconCircle}>
+                <Heart size={20} color="white" />
               </View>
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>Track Your Interactions</Text>
-                <Text style={styles.featureDescription}>See your swipe history and matches</Text>
+              <View style={styles.guestFeatureContent}>
+                <Text style={styles.guestFeatureTitle}>Save Favorite Pets</Text>
+                <Text style={styles.guestFeatureDescription}>Keep track of pets you're interested in</Text>
+              </View>
+            </View>
+
+            <View style={styles.guestFeatureCard}>
+              <View style={styles.guestFeatureIconCircle}>
+                <User size={20} color="white" />
+              </View>
+              <View style={styles.guestFeatureContent}>
+                <Text style={styles.guestFeatureTitle}>Track Your Activity</Text>
+                <Text style={styles.guestFeatureDescription}>See your swipe history and interactions</Text>
               </View>
             </View>
           </View>
 
-          {/* Sign In Button */}
+          {/* Modern Sign In Button */}
           <View style={styles.section}>
             <TouchableOpacity
-              style={styles.signInButton}
+              style={styles.modernSignInButton}
               onPress={() => router.push('/auth-enhanced')}
+              activeOpacity={0.8}
             >
-              <LinearGradient
-                colors={[COLORS.primary, COLORS.primaryLight]}
-                style={styles.signInGradient}
-              >
-                <Text style={styles.signInButtonText}>Sign In to Continue</Text>
-              </LinearGradient>
+              <View style={styles.modernSignInIconCircle}>
+                <User size={20} color="white" />
+              </View>
+              <View style={styles.modernSignInTextContainer}>
+                <Text style={styles.modernSignInText}>Sign In</Text>
+                <Text style={styles.modernSignInSubtext}>Access your full profile</Text>
+              </View>
             </TouchableOpacity>
           </View>
 
@@ -426,7 +572,7 @@ export default function ProfileScreen() {
       </LinearGradient>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Avatar Section with Modern Gradient */}
+        {/* Avatar Section with Modern Gradient - Compact */}
         <LinearGradient
           colors={['#FFFFFF', COLORS.primary + '08', COLORS.secondary + '05', '#F8FAFB']}
           start={{ x: 0, y: 0 }}
@@ -448,56 +594,60 @@ export default function ProfileScreen() {
                     colors={[COLORS.primary, COLORS.secondary]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    style={{ borderRadius: 56, padding: 1 }}
+                    style={{ borderRadius: 46, padding: 1 }}
                   >
-                    <View style={{ backgroundColor: '#F8FAFB', borderRadius: 55, padding: 20 }}>
-                      <User size={50} color={COLORS.secondary} />
+                    <View style={{ backgroundColor: '#F8FAFB', borderRadius: 45, padding: 16 }}>
+                      <User size={40} color={COLORS.secondary} />
                     </View>
                   </LinearGradient>
                 </View>
               </LinearGradient>
             )}
+            {/* Upload Profile Picture Button */}
+            <TouchableOpacity 
+              style={styles.uploadAvatarButton}
+              onPress={handleUploadPhoto}
+            >
+              <Camera size={16} color="white" />
+            </TouchableOpacity>
           </View>
           <Text style={styles.fullNameText}>{fullName || 'User'}</Text>
-          <Text style={styles.emailText}>{profile.email}</Text>
+          {(user?.email || profile?.email) && (
+            <Text style={styles.emailText}>{user?.email || profile?.email}</Text>
+          )}
           <Text style={styles.memberSince}>
             Member since {new Date(profile.created_at || '').toLocaleDateString()}
           </Text>
         </LinearGradient>
 
-        {/* Statistics Section - Primary & Secondary Colors */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <LinearGradient
-              colors={[COLORS.secondary + '20', COLORS.secondary + '10']}
-              style={styles.statIconCircle}
-            >
-              <PawPrint size={20} color={COLORS.secondary} />
-            </LinearGradient>
-            <Text style={styles.statNumber}>{userPets.length}</Text>
-            <Text style={styles.statLabel}>My Pets</Text>
+        {/* Statistics Section - Compact Single Card */}
+        <View style={styles.statsContainerCompact}>
+          <View style={styles.statItemCompact}>
+            <View style={styles.statIconCompact}>
+              <PawPrint size={18} color={COLORS.secondary} />
+            </View>
+            <Text style={styles.statNumberCompact}>{userPets.length}</Text>
+            <Text style={styles.statLabelCompact}>My Pets</Text>
           </View>
 
-          <View style={styles.statCard}>
-            <LinearGradient
-              colors={[COLORS.primary + '20', COLORS.primary + '10']}
-              style={styles.statIconCircle}
-            >
-              <Heart size={20} color={COLORS.primary} />
-            </LinearGradient>
-            <Text style={styles.statNumber}>{savedPetsCount}</Text>
-            <Text style={styles.statLabel}>Liked</Text>
+          <View style={styles.statDivider} />
+
+          <View style={styles.statItemCompact}>
+            <View style={styles.statIconCompact}>
+              <Heart size={18} color={COLORS.primary} />
+            </View>
+            <Text style={styles.statNumberCompact}>{savedPetsCount}</Text>
+            <Text style={styles.statLabelCompact}>Liked</Text>
           </View>
 
-          <View style={styles.statCard}>
-            <LinearGradient
-              colors={[COLORS.secondary + '20', COLORS.secondary + '10']}
-              style={styles.statIconCircle}
-            >
-              <MapPin size={20} color={COLORS.secondary} />
-            </LinearGradient>
-            <Text style={styles.statNumber}>{nearbyPetsCount}</Text>
-            <Text style={styles.statLabel}>Nearby</Text>
+          <View style={styles.statDivider} />
+
+          <View style={styles.statItemCompact}>
+            <View style={styles.statIconCompact}>
+              <MapPin size={18} color={COLORS.secondary} />
+            </View>
+            <Text style={styles.statNumberCompact}>{nearbyPetsCount}</Text>
+            <Text style={styles.statLabelCompact}>Nearby</Text>
           </View>
         </View>
 
@@ -539,7 +689,7 @@ export default function ProfileScreen() {
             </LinearGradient>
             <View style={styles.inputContent}>
               <Text style={styles.inputLabel}>Email</Text>
-              <Text style={styles.inputValue}>{profile.email}</Text>
+              <Text style={styles.inputValue}>{user?.email || profile.email}</Text>
             </View>
           </View>
 
@@ -598,12 +748,18 @@ export default function ProfileScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>My Pets</Text>
             <TouchableOpacity
-              style={styles.addPetButtonCompact}
+              style={styles.addPetButtonWrapper}
               onPress={() => {
                 router.push('/pet/add');
               }}
+              activeOpacity={0.8}
             >
-              <Plus size={18} color={COLORS.secondary} />
+              <LinearGradient
+                colors={[COLORS.secondary, COLORS.secondaryLight || COLORS.secondary]}
+                style={styles.addPetButtonGradient}
+              >
+                <Plus size={18} color="white" />
+              </LinearGradient>
             </TouchableOpacity>
           </View>
           
@@ -803,10 +959,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emailText: {
-    fontSize: 16,
-    color: '#666',
-    fontFamily: 'Nunito-Regular',
-    marginBottom: 4,
+    fontSize: 15,
+    color: '#555',
+    fontFamily: 'Nunito-SemiBold',
+    marginBottom: 6,
   },
   memberSince: {
     fontSize: 14,
@@ -816,30 +972,30 @@ const styles = StyleSheet.create({
   section: {
     backgroundColor: 'white',
     paddingHorizontal: 20,
-    paddingVertical: 24,
-    marginBottom: 16,
+    paddingVertical: 18,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontFamily: 'Poppins-SemiBold',
     color: '#333',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   inputGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    paddingBottom: 16,
+    marginBottom: 16,
+    paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
   inputIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 14,
   },
   inputContent: {
     flex: 1,
@@ -1092,57 +1248,80 @@ const styles = StyleSheet.create({
   },
   avatarSectionGradient: {
     alignItems: 'center',
-    paddingVertical: 30,
-    marginBottom: 16,
+    paddingVertical: 20,
+    marginBottom: 12,
+  },
+  uploadAvatarButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
   fullNameText: {
-    fontSize: 22,
+    fontSize: 20,
     fontFamily: 'Poppins-Bold',
     color: '#333',
-    marginBottom: 4,
-    marginTop: 16,
+    marginBottom: 3,
+    marginTop: 12,
   },
-  statsContainer: {
+  statsContainerCompact: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    gap: 10,
-    backgroundColor: 'white',
+    marginHorizontal: 20,
     marginBottom: 16,
-    justifyContent: 'space-between',
-  },
-  statCard: {
-    flex: 1,
     backgroundColor: 'white',
     borderRadius: 16,
     paddingVertical: 18,
-    paddingHorizontal: 10,
-    alignItems: 'center',
+    paddingHorizontal: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
-  statIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: COLORS.primary + '15',
+  statItemCompact: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statIconCompact: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.primary + '12',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
-  statNumber: {
-    fontSize: 26,
+  statNumberCompact: {
+    fontSize: 20,
     fontFamily: 'Poppins-Bold',
     color: '#333',
     marginBottom: 2,
   },
-  statLabel: {
+  statLabelCompact: {
     fontSize: 12,
     fontFamily: 'Nunito-SemiBold',
     color: '#666',
+  },
+  statDivider: {
+    width: 1,
+    height: '100%',
+    backgroundColor: '#E8E8E8',
+    marginHorizontal: 4,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -1155,6 +1334,24 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     backgroundColor: COLORS.secondary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addPetButtonWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    overflow: 'hidden',
+    shadowColor: COLORS.secondary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  addPetButtonGradient: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1221,5 +1418,118 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
+  },
+  // Modern Guest Profile Styles
+  guestAvatarCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: COLORS.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: 'white',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  guestNameText: {
+    fontSize: 24,
+    fontFamily: 'Poppins-Bold',
+    color: '#333',
+    marginTop: 16,
+    marginBottom: 4,
+  },
+  guestEmailText: {
+    fontSize: 15,
+    fontFamily: 'Nunito-Regular',
+    color: '#666',
+    marginBottom: 16,
+  },
+  sectionTitleModern: {
+    fontSize: 18,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#333',
+    marginBottom: 16,
+  },
+  guestFeatureCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  guestFeatureIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  guestFeatureContent: {
+    flex: 1,
+  },
+  guestFeatureTitle: {
+    fontSize: 16,
+    color: '#333',
+    fontFamily: 'Poppins-SemiBold',
+    marginBottom: 3,
+  },
+  guestFeatureDescription: {
+    fontSize: 13,
+    color: '#999',
+    fontFamily: 'Nunito-Regular',
+    lineHeight: 18,
+  },
+  modernSignInButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  modernSignInIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  modernSignInTextContainer: {
+    flex: 1,
+  },
+  modernSignInText: {
+    fontSize: 16,
+    color: '#333',
+    fontFamily: 'Poppins-SemiBold',
+    marginBottom: 2,
+  },
+  modernSignInSubtext: {
+    fontSize: 13,
+    color: '#999',
+    fontFamily: 'Nunito-Regular',
   },
 });

@@ -50,13 +50,27 @@ export default function EmailConfirm() {
         }
 
         console.log('✅ Email confirmed successfully')
+        
+        // Auto-create profile if it doesn't exist
+        if (data.user) {
+          console.log('📝 [Confirm] Checking/creating profile for user:', data.user.id)
+          const { createUserProfile } = await import('@/lib/services/profileService')
+          await createUserProfile(
+            data.user.id,
+            data.user.email || '',
+            data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User',
+            data.user.user_metadata?.phone || ''
+          )
+          console.log('✅ [Confirm] Profile setup complete')
+        }
+        
         setStatus('success')
         setMessage('Your email has been confirmed! Welcome to PawfectMatch 2.0.')
 
-        // Redirect to app after a delay
+        // Redirect to discover page (index) immediately after confirmation
         setTimeout(() => {
           router.replace('/(tabs)')
-        }, 2000)
+        }, 1500)
 
       } catch (error) {
         console.error('Email confirmation failed:', error)
@@ -76,9 +90,16 @@ export default function EmailConfirm() {
             <View style={styles.iconContainer}>
               <CheckCircle size={80} color="#4CAF50" />
             </View>
-            <Text style={styles.title}>Email Confirmed!</Text>
+            <Text style={styles.title}>Email Confirmed! 🎉</Text>
             <Text style={styles.message}>{message}</Text>
-            <Text style={styles.subtitle}>Redirecting to app...</Text>
+            <Text style={styles.subtitle}>Opening app now...</Text>
+            
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => router.replace('/(tabs)')}
+            >
+              <Text style={styles.buttonText}>Open App</Text>
+            </TouchableOpacity>
           </>
         )
 
