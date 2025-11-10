@@ -155,7 +155,13 @@ class AuthService {
       const { data: { session }, error } = await supabase!.auth.getSession()
       
       if (error) {
-        console.error('🔐 [Auth] Session initialization error:', error)
+        console.error('🔐 [Auth] Session initialization error:', error.message)
+        // Clear invalid session from storage
+        if (error.message?.includes('Invalid Refresh Token') || error.message?.includes('Refresh Token Not Found')) {
+          console.log('🔐 [Auth] Clearing invalid refresh token from storage')
+          await AsyncStorage.removeItem('supabase.auth.token')
+          await supabase!.auth.signOut()
+        }
         this.updateAuthState({ user: null, session: null, loading: false, initialized: true })
         return
       }
@@ -271,12 +277,23 @@ class AuthService {
         console.error('🔐 [Auth] Sign up error:', error)
         this.setLoading(false)
         
-        // Production-friendly error message
-        if (!isDevelopment) {
-          return { success: false, error: 'Unable to create account. Please try again later.' }
+        // Provide user-friendly error messages
+        let userMessage = error.message
+        
+        if (error.message.includes('User already registered')) {
+          userMessage = 'An account with this email already exists. Please sign in or use a different email.'
+        } else if (error.message.includes('Password should be at least')) {
+          userMessage = 'Password is too weak. Please use at least 6 characters with a mix of letters and numbers.'
+        } else if (error.message.includes('Invalid email')) {
+          userMessage = 'Invalid email address. Please enter a valid email.'
+        } else if (error.message.includes('email rate limit exceeded')) {
+          userMessage = 'Too many sign-up attempts. Please wait a few minutes and try again.'
+        } else if (!isDevelopment) {
+          // Production-friendly generic error message
+          userMessage = 'Unable to create account. Please try again later.'
         }
         
-        return { success: false, error: error.message }
+        return { success: false, error: userMessage }
       }
 
       console.log('🔐 [Auth] Sign up successful:', authData.user?.email)
@@ -328,7 +345,21 @@ class AuthService {
       if (error) {
         console.error('🔐 [Auth] Sign in error:', error)
         this.setLoading(false)
-        return { success: false, error: error.message }
+        
+        // Provide user-friendly error messages
+        let userMessage = error.message
+        
+        if (error.message.includes('Invalid login credentials') || error.message.includes('Invalid email or password')) {
+          userMessage = 'Invalid email or password. Please check your credentials and try again.'
+        } else if (error.message.includes('Email not confirmed')) {
+          userMessage = 'Please verify your email address before signing in. Check your inbox for the verification link.'
+        } else if (error.message.includes('User not found')) {
+          userMessage = 'No account found with this email. Please check your email or sign up.'
+        } else if (error.message.includes('Too many requests')) {
+          userMessage = 'Too many login attempts. Please wait a few minutes and try again.'
+        }
+        
+        return { success: false, error: userMessage }
       }
 
       console.log('🔐 [Auth] Sign in successful:', authData.user?.email)
@@ -339,6 +370,56 @@ class AuthService {
       console.error('🔐 [Auth] Sign in failed:', error)
       this.setLoading(false)
       return { success: false, error: 'Sign in failed. Please try again.' }
+    }
+  }
+
+  // Sign in with Google
+  async signInWithGoogle() {
+    try {
+      this.setLoading(true)
+      
+      if (!isSupabaseConfigured()) {
+        this.setLoading(false)
+        return { success: false, error: 'Authentication service not configured. Please check environment variables.' }
+      }
+
+      const redirectUrl = Platform.OS === 'web' 
+        ? getEmailRedirectUrl('/auth/callback')
+        : 'pawmatch://oauth/callback'
+      
+      console.log('🔐 [Auth] Google sign in with redirect:', redirectUrl)
+      
+      const { data, error } = await supabase!.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: Platform.OS !== 'web'
+        },
+      })
+
+      if (error) {
+        console.error('🔐 [Auth] Google sign in error:', error)
+        this.setLoading(false)
+        return { success: false, error: error.message }
+      }
+
+      // For mobile, open the auth URL in a browser
+      if (Platform.OS !== 'web' && data?.url) {
+        console.log('🔐 [Auth] Opening Google auth URL:', data.url)
+        // The auth-enhanced screen will handle opening the browser
+        this.setLoading(false)
+        return { success: true, url: data.url, needsBrowser: true }
+      }
+
+      // For web, Supabase handles the redirect automatically
+      console.log('🔐 [Auth] Google sign in initiated (web)')
+      this.setLoading(false)
+      return { success: true }
+
+    } catch (error) {
+      console.error('🔐 [Auth] Google sign in failed:', error)
+      this.setLoading(false)
+      return { success: false, error: 'Google sign in failed. Please try again.' }
     }
   }
 
@@ -439,16 +520,36 @@ class AuthService {
         return { success: false, error: 'Authentication service not configured. Please check environment variables.' }
       }
       
-      const { error } = await supabase!.auth.signOut()
+      // Clear local storage first
+      await AsyncStorage.removeItem('supabase.auth.token')
+      await AsyncStorage.removeItem('user_session')
       
-      if (error) {
-        console.error('🔐 [Auth] Sign out error:', error)
-        this.setLoading(false)
-        return { success: false, error: error.message }
+      // Try to sign out from Supabase, but don't fail if session is missing
+      try {
+        const { error } = await supabase!.auth.signOut()
+        
+        if (error && error.message !== 'Auth session missing!') {
+          console.error('🔐 [Auth] Sign out error:', error)
+          this.setLoading(false)
+          return { success: false, error: error.message }
+        }
+      } catch (signOutError: any) {
+        // If session is missing, that's okay - we just want to clear local state
+        if (signOutError.message !== 'Auth session missing!') {
+          throw signOutError
+        }
+        console.log('🔐 [Auth] No active session, clearing local state')
       }
 
+      // Clear auth state using updateAuthState method
+      this.updateAuthState({ 
+        user: null, 
+        session: null, 
+        loading: false, 
+        initialized: true 
+      })
+
       console.log('🔐 [Auth] Sign out successful')
-      this.setLoading(false)
       return { success: true }
 
     } catch (error) {

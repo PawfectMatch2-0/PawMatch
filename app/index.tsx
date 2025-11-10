@@ -16,6 +16,7 @@ export default function SplashScreen() {
   const { isSignedIn, isLoading, isReady, user } = useAuthStatus();
   const { signOut } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -24,13 +25,14 @@ export default function SplashScreen() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Handle auth state - but don't auto-redirect if we're signing out
+  // Handle auth state - but don't auto-redirect if we're signing out or already redirected
   useEffect(() => {
-    if (isReady && isSignedIn && !signingOut) {
+    if (isReady && isSignedIn && !signingOut && !hasRedirected) {
       console.log('🔍 [Splash] User already signed in:', user?.email);
+      setHasRedirected(true);
       router.replace('/(tabs)');
     }
-  }, [isReady, isSignedIn, user, router, signingOut]);
+  }, [isReady, isSignedIn, user, router, signingOut, hasRedirected]);
 
   const handleGetStarted = () => {
     // Skip auth - go straight to browsing

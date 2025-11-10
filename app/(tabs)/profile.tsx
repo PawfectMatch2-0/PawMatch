@@ -822,12 +822,22 @@ export default function ProfileScreen() {
                     </View>
                   </View>
                   
-                  <TouchableOpacity
-                    style={styles.editPetButton}
-                    onPress={() => router.push(`/pet/edit/${pet.id}`)}
-                  >
-                    <Edit2 size={18} color={COLORS.secondary} />
-                  </TouchableOpacity>
+                  <View style={styles.petActionButtons}>
+                    <TouchableOpacity
+                      style={styles.editPetButton}
+                      onPress={() => router.push(`/pet/edit/${pet.id}`)}
+                      activeOpacity={0.8}
+                    >
+                      <Edit2 size={18} color={COLORS.secondary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.deletePetButton}
+                      onPress={() => handleDeletePet(pet.id, pet.name)}
+                      activeOpacity={0.8}
+                    >
+                      <Trash2 size={18} color="#FF6B6B" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               ))}
             </>
@@ -1132,6 +1142,29 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito-SemiBold',
     color: '#333',
   },
+  petActionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'absolute',
+    right: 16,
+    top: '50%',
+    transform: [{ translateY: -20 }],
+    zIndex: 2,
+  },
+  editPetButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F0F4FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
+  },
   deletePetButton: {
     width: 40,
     height: 40,
@@ -1139,7 +1172,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFEBEE',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
   },
   noPetsText: {
     fontSize: 14,

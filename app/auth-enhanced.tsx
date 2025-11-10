@@ -16,10 +16,12 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  Linking,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
+import * as WebBrowser from 'expo-web-browser'
 import {
   Mail,
   Lock,
@@ -27,13 +29,15 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
-  Heart,
   ArrowLeft,
   CheckCircle,
   AlertCircle,
 } from 'lucide-react-native'
 import { authService, SignUpData, SignInData } from '../lib/enhanced-auth'
 import { COLORS } from '../constants/theme'
+
+// Initialize WebBrowser for mobile auth
+WebBrowser.maybeCompleteAuthSession()
 
 type AuthMode = 'signin' | 'signup' | 'forgot' | 'reset' | 'email-sent' | 'email-confirm'
 
@@ -248,15 +252,21 @@ export default function EnhancedAuth() {
                 style={styles.primaryButton}
                 onPress={handleSignUp}
                 disabled={loading}
+                activeOpacity={0.8}
               >
                 {loading ? (
-                  <ActivityIndicator color="white" />
+                  <View style={styles.primaryButtonIconCircle}>
+                    <ActivityIndicator color="white" />
+                  </View>
                 ) : (
-                  <>
-                    <Text style={styles.primaryButtonText}>Create Account</Text>
+                  <View style={styles.primaryButtonIconCircle}>
                     <ArrowRight size={20} color="white" />
-                  </>
+                  </View>
                 )}
+                <View style={styles.primaryButtonTextContainer}>
+                  <Text style={styles.primaryButtonText}>Create Account</Text>
+                  <Text style={styles.primaryButtonSubtext}>Join PawMatch today!</Text>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -445,15 +455,21 @@ export default function EnhancedAuth() {
                 style={styles.primaryButton}
                 onPress={handleSignIn}
                 disabled={loading}
+                activeOpacity={0.8}
               >
                 {loading ? (
-                  <ActivityIndicator color="white" />
+                  <View style={styles.primaryButtonIconCircle}>
+                    <ActivityIndicator color="white" />
+                  </View>
                 ) : (
-                  <>
-                    <Text style={styles.primaryButtonText}>Sign In</Text>
+                  <View style={styles.primaryButtonIconCircle}>
                     <ArrowRight size={20} color="white" />
-                  </>
+                  </View>
                 )}
+                <View style={styles.primaryButtonTextContainer}>
+                  <Text style={styles.primaryButtonText}>Sign In</Text>
+                  <Text style={styles.primaryButtonSubtext}>Welcome back!</Text>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -656,17 +672,41 @@ const styles = StyleSheet.create({
   primaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    gap: 8,
+    backgroundColor: 'white',
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
     marginTop: 8,
+  },
+  primaryButtonIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  primaryButtonTextContainer: {
+    flex: 1,
   },
   primaryButtonText: {
     fontSize: 16,
+    color: '#333',
     fontFamily: 'Poppins-SemiBold',
-    color: 'white',
+    marginBottom: 2,
+  },
+  primaryButtonSubtext: {
+    fontSize: 13,
+    color: '#999',
+    fontFamily: 'Nunito-Regular',
   },
   secondaryButton: {
     alignItems: 'center',

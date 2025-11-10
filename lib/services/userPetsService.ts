@@ -170,28 +170,65 @@ export async function uploadPetImages(
 
     for (let i = 0; i < imageUris.length; i++) {
       const uri = imageUris[i];
-      const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
+      
+      // Extract file extension more reliably
+      // Handle URIs like: /path/to/image.jpg, file:///path/to/image.jpg, or complex URIs
+      let fileExt = 'jpeg';
+      try {
+        const urlParts = uri.split('?')[0]; // Remove query params
+        const pathParts = urlParts.split('/');
+        const lastPart = pathParts[pathParts.length - 1];
+        const matches = lastPart.match(/\.(\w+)$/);
+        if (matches && matches[1]) {
+          fileExt = matches[1].toLowerCase();
+          // Normalize common formats
+          if (fileExt === 'jpg') fileExt = 'jpeg';
+        }
+      } catch (e) {
+        console.warn('❌ [UserPets] Could not extract file extension, defaulting to jpeg');
+        fileExt = 'jpeg';
+      }
+
       const fileName = `${petId}-${Date.now()}-${i}.${fileExt}`;
       const filePath = `pet-images/${fileName}`;
 
+      console.log(`📤 [UserPets] Uploading image ${i + 1}/${imageUris.length} - URI: ${uri.substring(0, 50)}... - Extension: ${fileExt}`);
+
       // For React Native, fetch and convert to ArrayBuffer
       const response = await fetch(uri);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+      }
       const arrayBuffer = await response.arrayBuffer();
       
       // Convert ArrayBuffer to Uint8Array for Supabase
       const fileData = new Uint8Array(arrayBuffer);
 
+      // Map file extension to proper MIME type
+      const mimeTypeMap: { [key: string]: string } = {
+        'jpeg': 'image/jpeg',
+        'jpg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp',
+      };
+      const contentType = mimeTypeMap[fileExt] || `image/${fileExt}`;
+
+      console.log(`📤 [UserPets] Uploading with MIME type: ${contentType}`);
+
       // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('pet-images')
         .upload(filePath, fileData, {
-          contentType: `image/${fileExt}`,
+          contentType,
           upsert: true,
         });
 
       if (uploadError) {
         console.error('❌ [UserPets] Error uploading image:', uploadError);
         console.error('❌ [UserPets] Upload error details:', uploadError.message);
+        console.error('❌ [UserPets] Error status:', (uploadError as any).status);
+        console.error('❌ [UserPets] Error statusCode:', (uploadError as any).statusCode);
         continue;
       }
 
@@ -201,10 +238,13 @@ export async function uploadPetImages(
         .getPublicUrl(filePath);
 
       uploadedUrls.push(urlData.publicUrl);
-      console.log(`✅ [UserPets] Image ${i + 1}/${imageUris.length} uploaded`);
+      console.log(`✅ [UserPets] Image ${i + 1}/${imageUris.length} uploaded: ${urlData.publicUrl}`);
     }
 
     console.log(`✅ [UserPets] Uploaded ${uploadedUrls.length}/${imageUris.length} images successfully`);
+    if (uploadedUrls.length === 0) {
+      return { urls: [], error: 'Failed to upload any images' };
+    }
     return { urls: uploadedUrls, error: null };
   } catch (error) {
     console.error('❌ [UserPets] Upload images failed:', error);

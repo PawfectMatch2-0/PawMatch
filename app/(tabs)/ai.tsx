@@ -1,19 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Send, Heart, Zap, Stethoscope, User } from 'lucide-react-native';
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
+import Constants from 'expo-constants';
 
-// Mock AI responses for different pet topics
-const aiResponses: Record<string, string> = {
-  'feeding': "🍽️ Great question about feeding! For puppies, feed them 3-4 times daily with high-quality puppy food. Adult dogs should eat twice daily. Always provide fresh water and avoid giving chocolate, grapes, or onions!",
-  'training': "🎾 Training tip: Start with basic commands like 'sit' and 'stay'. Use positive reinforcement with treats and praise. Keep sessions short (5-10 minutes) and be consistent. Remember, patience is key!",
-  'health': "🏥 If you notice any unusual symptoms like loss of appetite, lethargy, or vomiting, it's best to consult your veterinarian. Regular check-ups every 6-12 months help maintain your pet's health!",
-  'behavior': "🐕 Pet behavior issues often stem from boredom or anxiety. Ensure your pet gets enough exercise and mental stimulation. If problems persist, consider consulting a professional pet behaviorist.",
-  'emergency': "🚨 For emergencies like choking, bleeding, or difficulty breathing, contact your nearest veterinary emergency clinic immediately. Keep their number handy and stay calm while helping your pet.",
-  'default': "🐾 Hi there! I'm Dr. Pawsome, your friendly AI veterinary assistant! I'm here to help with basic pet care questions. What would you like to know about your furry friend today? Remember, for serious health concerns, always consult with a licensed veterinarian! 💕"
-};
+// OpenAI API Configuration
+const OPENAI_API_KEY = Constants.expoConfig?.extra?.EXPO_PUBLIC_OPENAI_API_KEY;
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 interface Message {
   id: string;
@@ -22,12 +17,25 @@ interface Message {
   timestamp: Date;
 }
 
+const SYSTEM_PROMPT = `You are Pawfect AI, a friendly and knowledgeable AI pet assistant. Your personality is warm, caring, and professional yet casual. 
+
+Key characteristics:
+- Use emojis naturally to make responses engaging (🐾 🐕 🐱 💕 etc.)
+- Keep responses concise but informative (2-4 sentences usually)
+- Be encouraging and supportive
+- Always remind users to consult a licensed veterinarian for serious health concerns
+- Focus on general pet care, nutrition, training, and behavior
+- Be empathetic and understanding of pet owners' concerns
+
+Remember: You provide helpful guidance but are NOT a replacement for professional veterinary care. Always encourage users to see a vet for emergencies or serious medical issues.`;
+
 export default function AIVetScreen() {
   const router = useRouter();
+  const scrollViewRef = useRef<ScrollView>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: aiResponses.default,
+      text: "🐾 Hi there! I'm Pawfect AI, your friendly AI pet assistant! I'm here to help with basic pet care questions. What would you like to know about your furry friend today? Remember, for serious health concerns, always consult with a licensed veterinarian! 💕",
       isUser: false,
       timestamp: new Date()
     }
@@ -35,25 +43,73 @@ export default function AIVetScreen() {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
-  const getAIResponse = (userMessage: string): string => {
-    const message = userMessage.toLowerCase();
-    
-    if (message.includes('feed') || message.includes('food') || message.includes('eat')) {
-      return aiResponses.feeding;
-    } else if (message.includes('train') || message.includes('command') || message.includes('behavior')) {
-      return aiResponses.training;
-    } else if (message.includes('sick') || message.includes('health') || message.includes('vet') || message.includes('symptom')) {
-      return aiResponses.health;
-    } else if (message.includes('aggressive') || message.includes('bark') || message.includes('bite')) {
-      return aiResponses.behavior;
-    } else if (message.includes('emergency') || message.includes('urgent') || message.includes('help')) {
-      return aiResponses.emergency;
-    } else {
-      return "🤔 That's an interesting question! While I'd love to help with everything, I specialize in basic pet care guidance. For specific medical concerns or detailed advice, I recommend consulting with your veterinarian. Is there anything else about general pet care I can help you with? 🐾";
+  const getAIResponse = async (userMessage: string): Promise<string> => {
+    try {
+      // Check if API key is loaded
+      if (!OPENAI_API_KEY || OPENAI_API_KEY.includes('your-openai-api-key')) {
+        console.error('OpenAI API Key not configured properly');
+        return "🐾 Oops! The OpenAI API key is not configured. Please add your API key to the .env file and restart the dev server.";
+      }
+
+      console.log('API Key loaded (first 10 chars):', OPENAI_API_KEY.substring(0, 10));
+
+      // Build conversation history for context
+      const conversationHistory = messages.map(msg => ({
+        role: msg.isUser ? 'user' : 'assistant',
+        content: msg.text
+      }));
+
+      // Add the new user message
+      conversationHistory.push({
+        role: 'user',
+        content: userMessage
+      });
+
+      // Call OpenAI ChatGPT API using fetch
+      const response = await fetch(OPENAI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            ...conversationHistory.slice(-10) // Keep last 10 messages for context
+          ],
+          max_tokens: 250,
+          temperature: 0.8,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error Response:', response.status, errorData);
+        throw { status: response.status, data: errorData };
+      }
+
+      const data = await response.json();
+      console.log('API Response received successfully');
+      return data.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response. Please try again! 🐾";
+    } catch (error: any) {
+      console.error('ChatGPT API Error:', error);
+      
+      // Handle specific error cases
+      if (error?.status === 429) {
+        return "🐾 I'm getting too many requests right now! Please wait a moment and try again.";
+      } else if (error?.status === 401) {
+        console.error('401 Error - API Key issue. Error details:', error.data);
+        return "🐾 Authentication failed! Please restart the Expo dev server with 'npx expo start --clear' to load the API key from .env file.";
+      } else if (Platform.OS === 'web' && typeof navigator !== 'undefined' && !navigator.onLine) {
+        return "🐾 It seems you're offline! Please check your internet connection and try again.";
+      }
+      
+      return "🐾 I'm having trouble connecting right now. Please try again in a moment! If the issue persists, consult your veterinarian directly.";
     }
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (inputText.trim() === '') return;
 
     const userMessage: Message = {
@@ -67,18 +123,33 @@ export default function AIVetScreen() {
     setInputText('');
     setIsTyping(true);
 
-    // Simulate AI thinking time
+    // Scroll to bottom after user message
     setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+
+    try {
+      const aiResponse = await getAIResponse(userMessage.text);
+      
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: getAIResponse(userMessage.text),
+        text: aiResponse,
         isUser: false,
         timestamp: new Date()
       };
       
       setMessages(prev => [...prev, aiMessage]);
       setIsTyping(false);
-    }, 1500);
+
+      // Scroll to bottom after AI response
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    } catch (error) {
+      console.error('Error in handleSend:', error);
+      setIsTyping(false);
+      Alert.alert('Error', 'Failed to get response. Please try again.');
+    }
   };
 
   const renderMessage = (message: Message) => (
@@ -131,8 +202,8 @@ export default function AIVetScreen() {
       {/* Header with Profile Button */}
       <View style={styles.header}>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>Dr. Pawsome</Text>
-          <Text style={styles.headerSubtitle}>AI Veterinary Assistant</Text>
+          <Text style={styles.headerTitle}>Pawfect AI</Text>
+          <Text style={styles.headerSubtitle}>AI Pet Assistant</Text>
         </View>
         <View style={styles.headerRight}>
           <View style={styles.onlineIndicator}>
@@ -140,7 +211,7 @@ export default function AIVetScreen() {
           </View>
           <TouchableOpacity 
             style={styles.profileButton}
-            onPress={() => router.push('/profile')}
+            onPress={() => router.push('/(tabs)/profile')}
           >
             <User size={24} color={COLORS.secondary} />
           </TouchableOpacity>
@@ -152,6 +223,7 @@ export default function AIVetScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView 
+          ref={scrollViewRef}
           style={styles.messagesContainer}
           contentContainerStyle={styles.messagesContent}
           showsVerticalScrollIndicator={false}
@@ -198,7 +270,7 @@ export default function AIVetScreen() {
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.textInput}
-            placeholder="Ask Dr. Pawsome anything about your pet..."
+            placeholder="Ask Pawfect AI anything about your pet..."
             value={inputText}
             onChangeText={setInputText}
             multiline
@@ -215,8 +287,11 @@ export default function AIVetScreen() {
       </KeyboardAvoidingView>
 
       <View style={styles.disclaimer}>
+        <View style={styles.disclaimerIcon}>
+          <Text style={styles.disclaimerEmoji}>💡</Text>
+        </View>
         <Text style={styles.disclaimerText}>
-          💡 Dr. Pawsome provides general pet care guidance. For medical emergencies or specific health concerns, please consult a licensed veterinarian.
+          Pawfect AI provides general pet care guidance. For emergencies, consult a licensed veterinarian.
         </Text>
       </View>
     </SafeAreaView>
@@ -379,7 +454,8 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: 'white',
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
@@ -389,7 +465,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F8F8',
     borderRadius: 20,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 10,
     fontSize: 14,
     fontFamily: 'Nunito-Regular',
     color: '#333',
@@ -408,16 +484,31 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   disclaimer: {
-    backgroundColor: `${COLORS.primary}08`,
-    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: `${COLORS.primary}20`,
+    borderTopColor: '#F0F0F0',
+    gap: 10,
+  },
+  disclaimerIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: `${COLORS.primary}15`,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  disclaimerEmoji: {
+    fontSize: 14,
   },
   disclaimerText: {
-    fontSize: 12,
+    flex: 1,
+    fontSize: 11,
     fontFamily: 'Nunito-Regular',
-    color: COLORS.primary,
-    textAlign: 'center',
-    lineHeight: 16,
+    color: '#666',
+    lineHeight: 15,
   },
 });

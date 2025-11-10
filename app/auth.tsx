@@ -23,50 +23,6 @@ export default function AuthScreen() {
     }
   }, [params]);
 
-  const handleGoogleSignIn = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      let result: any;
-      
-      console.log('🔐 [Auth] Using authService for', Platform.OS, 'platform');
-      result = await authService.signInWithGoogle();
-      
-      if (result && 'success' in result && result.success && result.user) {
-        console.log('🔐 [Auth] Authentication successful!', result.user.email);
-        router.replace('/(tabs)');
-      } else if (result && 'type' in result && result.type === 'success') {
-        console.log('🔐 [Auth] Web authentication successful!');
-        router.replace('/(tabs)');
-      } else {
-        const errorMessage = (result && 'error' in result) ? result.error : 'Authentication failed';
-        throw new Error(errorMessage);
-      }
-    } catch (error: any) {
-      console.error('🔐 [Auth] Sign in error:', error);
-      
-      // More specific error messages based on error type
-      let errorMessage = 'Failed to sign in with Google. Please try again.';
-      
-      if (error.message) {
-        if (error.message.includes('cancelled')) {
-          errorMessage = 'Sign in was cancelled. Please try again.';
-        } else if (error.message.includes('no session')) {
-          errorMessage = 'Authentication completed but session setup failed. Please try again.';
-        } else if (error.message.includes('network')) {
-          errorMessage = 'Network error. Please check your connection and try again.';
-        } else {
-          errorMessage = error.message;
-        }
-      }
-      
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleGuestMode = async () => {
     try {
       setLoading(true);
@@ -143,30 +99,6 @@ export default function AuthScreen() {
 
           {/* Authentication Options */}
           <View style={styles.authOptions}>
-            {/* Google Sign In Button */}
-            <Button
-              title="Continue with Google"
-              onPress={handleGoogleSignIn}
-              disabled={loading}
-              loading={loading}
-              variant="primary"
-              icon={
-                !loading && (
-                  <View style={styles.googleIcon}>
-                    <Text style={styles.googleIconText}>G</Text>
-                  </View>
-                )
-              }
-              style={styles.googleButton}
-            />
-
-            {/* Or Divider */}
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
             {/* Guest Mode Button */}
             <Button
               title="Continue as Guest"
@@ -286,22 +218,6 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
     marginBottom: SPACING.xl,
   },
-  googleButton: {
-    backgroundColor: COLORS.white,
-  },
-  googleIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: BORDER_RADIUS.lg,
-    backgroundColor: '#4285F4',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  googleIconText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontFamily: TYPOGRAPHY.fontPrimaryBold,
-  },
   guestButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderWidth: 1,
@@ -309,23 +225,6 @@ const styles = StyleSheet.create({
   },
   guestButtonText: {
     color: COLORS.white,
-  },
-  
-  // Divider
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: SPACING.sm,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  dividerText: {
-    ...TYPOGRAPHY.labelMedium,
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginHorizontal: SPACING.md,
   },
   
   // Disclaimer

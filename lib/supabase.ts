@@ -95,6 +95,12 @@ export interface Pet {
   contact_info: any
   adoption_status: 'available' | 'pending' | 'adopted'
   owner_id?: string
+  owner?: {
+    id: string
+    email: string
+    full_name?: string
+    avatar_url?: string
+  }
   created_at: string
   updated_at: string
 }
@@ -484,7 +490,15 @@ export const databaseService = {
     
     const { data, error } = await supabase
       .from('pets')
-      .select('*')
+      .select(`
+        *,
+        owner:owner_id (
+          id,
+          email,
+          full_name,
+          avatar_url
+        )
+      `)
       .eq('id', id)
       .single()
     
@@ -501,7 +515,15 @@ export const databaseService = {
     
     const { data, error } = await supabase
       .from('pets')
-      .select('*')
+      .select(`
+        *,
+        owner:owner_id (
+          id,
+          email,
+          full_name,
+          avatar_url
+        )
+      `)
       .eq('owner_id', userId)
       .order('created_at', { ascending: false })
     
@@ -537,7 +559,15 @@ export const databaseService = {
       .from('pet_favorites')
       .select(`
         *,
-        pet:pet_id (*)
+        pet:pet_id (
+          *,
+          owner:owner_id (
+            id,
+            email,
+            full_name,
+            avatar_url
+          )
+        )
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
@@ -626,6 +656,7 @@ export const databaseService = {
    * - Does NOT exclude interacted pets (allows infinite swiping)
    * - Includes user-uploaded pets for all users
    * - Pets will reappear after you swipe through all of them
+   * - NOW INCLUDES OWNER DETAILS (name, email, avatar)
    * 
    * @param userId - Current user's ID (for logging)
    * @param limit - Maximum number of pets to return
@@ -640,7 +671,6 @@ export const databaseService = {
       console.log('🔍 [Database] Fetching ALL pets (including adopted) for infinite feed (user:', userId, ')')
       
       // Get ALL pets regardless of adoption status
-      // This allows users to see adopted pets and their status
       const { data: allPets, error: petsError } = await supabase
         .from('pets')
         .select('*')
@@ -652,6 +682,29 @@ export const databaseService = {
         return []
       }
       
+      // Now fetch owner details for each pet
+      if (allPets && allPets.length > 0) {
+        const petsWithOwners = await Promise.all(
+          allPets.map(async (pet) => {
+            if (pet.owner_id) {
+              const { data: owner, error: ownerError } = await supabase
+                .from('user_profiles')
+                .select('id, email, full_name, avatar_url')
+                .eq('id', pet.owner_id)
+                .single()
+              
+              if (!ownerError && owner) {
+                return { ...pet, owner }
+              }
+            }
+            return pet
+          })
+        )
+        
+        console.log('📊 [Database] Successfully enriched pets with owner data')
+        return petsWithOwners as unknown as Pet[]
+      }
+      
       // Get interaction count for logging purposes
       const { data: interactions, error: interactionError } = await supabase
         .from('pet_interactions')
@@ -660,7 +713,7 @@ export const databaseService = {
       
       const interactionCount = interactions?.length || 0
       console.log(`📊 [Database] User has interacted with ${interactionCount} pets (but showing all anyway)`)
-      console.log(`✅ [Database] Fetched ${allPets?.length || 0} pets for infinite feed`)
+      console.log(`✅ [Database] Fetched ${allPets?.length || 0} pets for infinite feed with owner details`)
       
       return (allPets as unknown as Pet[]) || []
     } catch (err) {

@@ -214,7 +214,7 @@ export default function SearchScreen() {
 
   const handlePetPress = (petId: string) => {
     router.push({
-      pathname: '/pet-details/[id]' as any,
+      pathname: '/pet/[id]' as any,
       params: { id: petId }
     });
   };

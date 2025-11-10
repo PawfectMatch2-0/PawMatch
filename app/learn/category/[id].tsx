@@ -1,20 +1,52 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Clock, Eye, Heart, BookOpen } from 'lucide-react-native';
-import { mockLearningArticles, learningCategories } from '@/data/learningContent';
+import { learningCategories } from '@/data/learningContent';
+import * as learningService from '@/lib/services/learningService';
+import type { LearningArticle } from '@/lib/services/learningService';
 
 export default function CategoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [likedArticles, setLikedArticles] = useState<string[]>([]);
+  const [categoryArticles, setCategoryArticles] = useState<LearningArticle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Find the category
   const category = learningCategories.find(cat => cat.id === id);
-  
-  // Filter articles by category
-  const categoryArticles = mockLearningArticles.filter(article => article.category === id);
+
+  useEffect(() => {
+    loadCategoryArticles();
+  }, [id]);
+
+  const loadCategoryArticles = async () => {
+    try {
+      console.log(`📚 [Category] Loading articles for category: ${id}`);
+      const { data, error } = await learningService.getArticlesByCategory(id as string);
+      
+      if (data && data.length > 0) {
+        console.log(`✅ [Category] Loaded ${data.length} articles`);
+        setCategoryArticles(data);
+      } else {
+        console.log(`⚠️ [Category] No articles found for category ${id}`);
+        setCategoryArticles([]);
+      }
+    } catch (error) {
+      console.error('❌ [Category] Error loading articles:', error);
+      setCategoryArticles([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadCategoryArticles();
+    setRefreshing(false);
+  }, [id]);
 
   if (!category) {
     return (
@@ -48,7 +80,7 @@ export default function CategoryScreen() {
     );
   };
 
-  const renderArticleItem = ({ item }: { item: typeof mockLearningArticles[0] }) => (
+  const renderArticleItem = ({ item }: { item: LearningArticle }) => (
     <TouchableOpacity style={styles.articleCard} onPress={() => handleArticlePress(item.id)}>
       <Image source={{ uri: item.featuredImage }} style={styles.articleImage} />
       <View style={styles.articleContent}>
@@ -81,7 +113,7 @@ export default function CategoryScreen() {
         </View>
         
         <View style={styles.tagsContainer}>
-          {item.tags.slice(0, 2).map((tag, index) => (
+          {item.tags.slice(0, 2).map((tag: string, index: number) => (
             <View key={index} style={styles.tag}>
               <Text style={styles.tagText}>{tag}</Text>
             </View>
@@ -111,22 +143,36 @@ export default function CategoryScreen() {
         </Text>
       </View>
 
-      <FlatList
-        data={categoryArticles}
-        renderItem={renderArticleItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <BookOpen size={48} color="#CCC" />
-            <Text style={styles.emptyTitle}>No articles yet</Text>
-            <Text style={styles.emptyMessage}>
-              Articles for this category will be added soon!
-            </Text>
-          </View>
-        }
-      />
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF6B6B" />
+        </View>
+      ) : (
+        <FlatList
+          data={categoryArticles}
+          renderItem={renderArticleItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#FF6B6B']}
+              tintColor="#FF6B6B"
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <BookOpen size={48} color="#CCC" />
+              <Text style={styles.emptyTitle}>No articles yet</Text>
+              <Text style={styles.emptyMessage}>
+                Articles for this category will be added soon!
+              </Text>
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -284,5 +330,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 40,
     lineHeight: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
   },
 });

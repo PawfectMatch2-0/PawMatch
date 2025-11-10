@@ -142,7 +142,7 @@ export default function NotificationsScreen() {
     // Navigate based on notification type
     if (notification.type.includes('adoption') && notification.petId) {
       router.push({
-        pathname: '/pet-details/[id]',
+        pathname: '/pet/[id]',
         params: { id: notification.petId }
       });
     } else if (notification.type === 'message') {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MapPin, Heart, Calendar, Info } from 'lucide-react-native';
+import { MapPin, Heart, Calendar, Info, MessageCircle, CheckCircle } from 'lucide-react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -31,6 +31,17 @@ export interface Pet {
   description: string;
   gender: 'Male' | 'Female';
   size: 'Small' | 'Medium' | 'Large';
+  adoption_status?: 'available' | 'pending' | 'adopted';
+  contact_info?: {
+    phone?: string;
+    whatsapp?: string;
+  };
+  owner?: {
+    id: string;
+    email: string;
+    full_name?: string;
+    avatar_url?: string;
+  };
 }
 
 interface PetCardProps {
@@ -52,13 +63,24 @@ export default function PetCard({ pet, onSwipeLeft, onSwipeRight, onPress }: Pet
   const imageUri = Array.isArray(pet.image) ? pet.image[0] : pet.image;
 
   // Debug logging  
-  console.log('PetCard rendering:', {
-    id: pet.id,
-    name: pet.name,
-    imageUri: imageUri,
-    imageLoaded,
-    imageError
-  });
+  console.log('🐾 [PetCard] === FULL PET DATA ===');
+  console.log('🐾 [PetCard] Pet Name:', pet.name);
+  console.log('🐾 [PetCard] Pet ID:', pet.id);
+  console.log('🐾 [PetCard] Has owner property?', 'owner' in pet);
+  console.log('🐾 [PetCard] Owner value:', pet.owner);
+  console.log('🐾 [PetCard] Owner type:', typeof pet.owner);
+  console.log('🐾 [PetCard] Owner is truthy?', !!pet.owner);
+  
+  if (pet.owner) {
+    console.log('✅ [PetCard] OWNER DATA EXISTS:');
+    console.log('   - Email:', pet.owner.email);
+    console.log('   - Name:', pet.owner.full_name);
+    console.log('   - Avatar:', pet.owner.avatar_url);
+    console.log('   - ID:', pet.owner.id);
+  } else {
+    console.log('❌ [PetCard] NO OWNER DATA for', pet.name);
+    console.log('❌ [PetCard] Full pet object keys:', Object.keys(pet));
+  }
 
   // Start shimmer animation
   React.useEffect(() => {
@@ -227,6 +249,54 @@ export default function PetCard({ pet, onSwipeLeft, onSwipeRight, onPress }: Pet
             <Text style={styles.passText}>PASS</Text>
           </Animated.View>
           
+          {/* Owner Info Header - Top of Card */}
+          {pet.owner && (
+            <View style={styles.ownerHeader}>
+              {pet.owner.avatar_url ? (
+                <Image 
+                  source={{ uri: pet.owner.avatar_url }} 
+                  style={styles.ownerHeaderAvatar}
+                />
+              ) : (
+                <View style={[styles.ownerHeaderAvatar, styles.ownerHeaderAvatarPlaceholder]}>
+                  <Text style={styles.ownerHeaderAvatarText}>
+                    {(pet.owner.full_name || pet.owner.email || 'U').charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.ownerHeaderInfo}>
+                <Text style={styles.ownerHeaderName}>
+                  {pet.owner.full_name || pet.owner.email.split('@')[0]}
+                </Text>
+                <Text style={styles.ownerHeaderEmail}>{pet.owner.email}</Text>
+              </View>
+            </View>
+          )}
+
+          {/* Status Badge - Top Right */}
+          {pet.adoption_status && (
+            <View style={[
+              styles.statusBadgeCard,
+              pet.adoption_status === 'available' && styles.statusAvailableCard,
+              pet.adoption_status === 'pending' && styles.statusPendingCard,
+              pet.adoption_status === 'adopted' && styles.statusAdoptedCard,
+            ]}>
+              {pet.adoption_status === 'adopted' && <CheckCircle size={12} color="#4CAF50" />}
+              <Text style={styles.statusTextCard}>
+                {pet.adoption_status === 'available' ? 'Available' : 
+                 pet.adoption_status === 'pending' ? 'Pending' : 
+                 'Adopted'}
+              </Text>
+            </View>
+          )}
+
+          {/* WhatsApp Icon - Top Left (moved down to not overlap with owner) */}
+          {(pet.contact_info?.phone || pet.contact_info?.whatsapp) && (
+            <View style={styles.whatsappBadgeCard}>
+              <MessageCircle size={20} color="white" fill="#25D366" />
+            </View>
+          )}
+
           <LinearGradient
             colors={['transparent', 'rgba(0,0,0,0.8)']}
             style={styles.gradient}
@@ -328,6 +398,54 @@ const styles = StyleSheet.create({
   },
   petInfo: {
     marginBottom: 20,
+  },
+  ownerHeader: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  ownerHeaderAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  ownerHeaderAvatarPlaceholder: {
+    backgroundColor: '#FF6B6B',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ownerHeaderAvatarText: {
+    fontSize: 18,
+    fontFamily: 'Poppins-Bold',
+    color: 'white',
+  },
+  ownerHeaderInfo: {
+    flex: 1,
+  },
+  ownerHeaderName: {
+    fontSize: 15,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#333',
+    marginBottom: 2,
+  },
+  ownerHeaderEmail: {
+    fontSize: 12,
+    fontFamily: 'Nunito-Regular',
+    color: '#666',
   },
   nameRow: {
     flexDirection: 'row',
@@ -464,5 +582,48 @@ const styles = StyleSheet.create({
     color: '#d32f2f',
     textAlign: 'center',
     marginTop: 4,
+  },
+  statusBadgeCard: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 4,
+    zIndex: 10,
+  },
+  statusAvailableCard: {
+    backgroundColor: 'rgba(47, 165, 199, 0.95)',
+  },
+  statusPendingCard: {
+    backgroundColor: 'rgba(255, 167, 38, 0.95)',
+  },
+  statusAdoptedCard: {
+    backgroundColor: 'rgba(76, 175, 80, 0.95)',
+  },
+  statusTextCard: {
+    fontSize: 11,
+    fontFamily: 'Nunito-Bold',
+    color: 'white',
+  },
+  whatsappBadgeCard: {
+    position: 'absolute',
+    top: 80,
+    left: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#25D366',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
 });

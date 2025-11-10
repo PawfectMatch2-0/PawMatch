@@ -106,6 +106,7 @@ module.exports = {
       EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
       EXPO_PUBLIC_ADMIN_EMAIL: process.env.EXPO_PUBLIC_ADMIN_EMAIL,
       EXPO_PUBLIC_DEBUG_AUTH: process.env.EXPO_PUBLIC_DEBUG_AUTH,
+      EXPO_PUBLIC_OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
       APP_ENV: process.env.APP_ENV
     },
     runtimeVersion: {

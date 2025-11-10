@@ -105,7 +105,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
+          title: 'Profile',
           href: null, // Hide from tab bar, accessible via upper right button
+          tabBarIcon: ({ size, color }) => (
+            <User size={size * 0.9} color={color} />
+          ),
         }}
       />
     </Tabs>

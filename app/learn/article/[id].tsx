@@ -1,19 +1,78 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Share } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Share, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Clock, Eye, Heart, Share2, Bookmark, User, MessageCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { mockLearningArticles, learningCategories } from '@/data/learningContent';
+import { learningCategories } from '@/data/learningContent';
+import * as learningService from '@/lib/services/learningService';
+import { supabase } from '@/lib/supabase';
+import type { LearningArticle } from '@/lib/services/learningService';
 
 export default function ArticleDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [article, setArticle] = useState<LearningArticle | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [relatedArticles, setRelatedArticles] = useState<LearningArticle[]>([]);
+  const [likeCount, setLikeCount] = useState(0);
 
-  // Find the article by ID
-  const article = mockLearningArticles.find(a => a.id === id);
+  useEffect(() => {
+    loadArticle();
+  }, [id]);
+
+  const loadArticle = async () => {
+    try {
+      console.log(`📖 [Article] Loading article: ${id}`);
+      const { data, error } = await learningService.getArticleById(id as string);
+      
+      if (data) {
+        console.log(`✅ [Article] Loaded: ${data.title}`);
+        setArticle(data);
+        
+        // Parse the like count from the formatted string (e.g., "10" or "1.2k")
+        const likesStr = data.likes;
+        let parsedCount = 0;
+        if (likesStr) {
+          if (likesStr.includes('k')) {
+            parsedCount = Math.floor(parseFloat(likesStr) * 1000);
+          } else if (likesStr.includes('M')) {
+            parsedCount = Math.floor(parseFloat(likesStr) * 1000000);
+          } else {
+            parsedCount = parseInt(likesStr, 10);
+          }
+        }
+        setLikeCount(parsedCount);
+        
+        // Track the view
+        await learningService.recordArticleView(data.id);
+        
+        // Load related articles
+        const { data: relatedData } = await learningService.getArticlesByCategory(data.category);
+        if (relatedData) {
+          setRelatedArticles(relatedData.filter((a: LearningArticle) => a.id !== data.id).slice(0, 3));
+        }
+      } else {
+        console.log(`❌ [Article] Not found: ${id}`);
+      }
+    } catch (error) {
+      console.error('❌ [Article] Error loading:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF6B6B" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!article) {
     return (
@@ -46,9 +105,35 @@ export default function ArticleDetailScreen() {
     // TODO: Implement bookmark functionality
   };
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    // TODO: Implement like functionality
+  const handleLike = async () => {
+    try {
+      if (!supabase) {
+        console.log('⚠️ [Article] Supabase not initialized');
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('⚠️ [Article] User not authenticated');
+        return;
+      }
+
+      const newIsLiked = !isLiked;
+      setIsLiked(newIsLiked);
+      
+      if (newIsLiked) {
+        await learningService.likeArticle(article!.id, user.id);
+        setLikeCount(likeCount + 1);
+        console.log(`❤️ [Article] Liked: ${article!.title} - Count: ${likeCount + 1}`);
+      } else {
+        await learningService.unlikeArticle(article!.id, user.id);
+        setLikeCount(Math.max(0, likeCount - 1));
+        console.log(`💔 [Article] Unliked: ${article!.title} - Count: ${Math.max(0, likeCount - 1)}`);
+      }
+    } catch (error) {
+      console.error('❌ [Article] Error updating like:', error);
+      setIsLiked(!isLiked); // Revert on error
+    }
   };
 
   const renderContent = () => {
@@ -204,7 +289,7 @@ export default function ArticleDetailScreen() {
                 fill={isLiked ? "#FF6B6B" : "transparent"}
               />
               <Text style={[styles.engagementText, isLiked && styles.likeText]}>
-                {article.likes + (isLiked ? 1 : 0)} likes
+                {likeCount} likes
               </Text>
             </TouchableOpacity>
             
@@ -225,24 +310,21 @@ export default function ArticleDetailScreen() {
             <Text style={styles.relatedSubtitle}>More articles you might enjoy</Text>
             
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {mockLearningArticles
-                .filter(a => a.id !== article.id && a.category === article.category)
-                .slice(0, 3)
-                .map((relatedArticle) => (
-                  <TouchableOpacity
-                    key={relatedArticle.id}
-                    style={styles.relatedCard}
-                    onPress={() => router.push(`/learn/article/${relatedArticle.id}` as any)}
-                  >
-                    <Image source={{ uri: relatedArticle.featuredImage }} style={styles.relatedImage} />
-                    <Text style={styles.relatedCardTitle} numberOfLines={2}>
-                      {relatedArticle.title}
-                    </Text>
-                    <Text style={styles.relatedCardMeta}>
-                      {relatedArticle.estimatedReadTime} min • {relatedArticle.views} views
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+              {relatedArticles.map((relatedArticle: LearningArticle) => (
+                <TouchableOpacity
+                  key={relatedArticle.id}
+                  style={styles.relatedCard}
+                  onPress={() => router.push(`/learn/article/${relatedArticle.id}` as any)}
+                >
+                  <Image source={{ uri: relatedArticle.featuredImage }} style={styles.relatedImage} />
+                  <Text style={styles.relatedCardTitle} numberOfLines={2}>
+                    {relatedArticle.title}
+                  </Text>
+                  <Text style={styles.relatedCardMeta}>
+                    {relatedArticle.estimatedReadTime} min • {relatedArticle.views} views
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </ScrollView>
           </View>
         </View>
@@ -255,6 +337,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FAFAFA',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   errorContainer: {
     flex: 1,
