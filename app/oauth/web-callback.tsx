@@ -18,7 +18,7 @@ export default function WebOAuthCallback() {
         
         if (!supabase) {
           console.error('🌐 [Web OAuth] Supabase not available');
-          router.push('/auth?error=config_error');
+          router.push('/');
           return;
         }
         
@@ -27,7 +27,7 @@ export default function WebOAuthCallback() {
         
         if (error) {
           console.error('🌐 [Web OAuth] Session error:', error);
-          router.push(`/auth?error=${encodeURIComponent(error.message)}`);
+          router.push('/');
           return;
         }
         
@@ -36,12 +36,12 @@ export default function WebOAuthCallback() {
           router.push('/(tabs)');
         } else {
           console.log('🌐 [Web OAuth] No session found, redirecting to auth');
-          router.push('/auth');
+          router.push('/');
         }
         
       } catch (error: any) {
         console.error('🌐 [Web OAuth] Callback error:', error);
-        router.push(`/auth?error=${encodeURIComponent(error.message)}`);
+        router.push('/');
       }
     };
     

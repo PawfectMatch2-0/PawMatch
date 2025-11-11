@@ -25,61 +25,195 @@ export default function EmailConfirm() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
+    let isMounted = true
+    let timeoutId: NodeJS.Timeout | null = null
+
     const confirmEmail = async () => {
       try {
-        // Extract tokens from URL params
-        const { access_token, refresh_token, type } = params
+        console.log('📧 [Email Confirm] Received params:', params)
+        
+        // Set a timeout to prevent infinite loading (10 seconds)
+        timeoutId = setTimeout(() => {
+          if (isMounted) {
+            console.warn('⏱️ [Email Confirm] Timeout - checking if user is already signed in')
+            // Check if user is already signed in (fallback)
+            checkIfAlreadySignedIn()
+          }
+        }, 10000)
+        
+        // Check for tokens in URL hash (web) or query params (mobile)
+        let access_token: string | null = null
+        let refresh_token: string | null = null
+        let type: string | null = null
+        let token: string | null = null
 
-        if (type !== 'signup' || !access_token || !refresh_token) {
-          setStatus('error')
-          setMessage('Invalid confirmation link')
-          return
+        // Try query params first (mobile/Expo deep links)
+        if (params.access_token) {
+          access_token = params.access_token as string
+          refresh_token = params.refresh_token as string
+          type = params.type as string
+        }
+        
+        // Try hash params (web)
+        if (typeof window !== 'undefined' && window.location.hash) {
+          const hashParams = new URLSearchParams(window.location.hash.substring(1))
+          access_token = hashParams.get('access_token') || access_token
+          refresh_token = hashParams.get('refresh_token') || refresh_token
+          type = hashParams.get('type') || type
+        }
+        
+        // Try token parameter (Supabase email confirmation format)
+        if (params.token) {
+          token = params.token as string
+          type = params.type as string || 'signup'
         }
 
-        // Set the session with the tokens
-        const { data, error } = await supabase.auth.setSession({
-          access_token: access_token as string,
-          refresh_token: refresh_token as string,
+        console.log('📧 [Email Confirm] Extracted:', { 
+          hasAccessToken: !!access_token, 
+          hasRefreshToken: !!refresh_token,
+          hasToken: !!token,
+          type 
         })
 
-        if (error) {
-          console.error('Email confirmation error:', error)
-          setStatus('error')
-          setMessage(error.message || 'Email confirmation failed')
-          return
+        // Method 1: If we have access_token and refresh_token, use setSession
+        if (access_token && refresh_token) {
+          console.log('📧 [Email Confirm] Using setSession method')
+          const { data, error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          })
+
+          if (error) {
+            console.error('❌ [Email Confirm] setSession error:', error)
+            if (isMounted) {
+              setStatus('error')
+              setMessage(error.message || 'Email confirmation failed')
+            }
+            return
+          }
+
+          if (data.user && isMounted) {
+            console.log('✅ [Email Confirm] Email confirmed successfully via setSession')
+            if (timeoutId) clearTimeout(timeoutId)
+            await handleSuccessfulConfirmation(data.user)
+            return
+          }
         }
 
-        console.log('✅ Email confirmed successfully')
+        // Method 2: If we have token parameter, use verifyOtp (proper Supabase method)
+        if (token && type) {
+          console.log('📧 [Email Confirm] Using verifyOtp method')
+          
+          // Extract email from token or params
+          const email = params.email as string
+          
+          if (!email) {
+            console.error('❌ [Email Confirm] No email found for verifyOtp')
+            if (isMounted) {
+              setStatus('error')
+              setMessage('Email address not found in confirmation link')
+            }
+            return
+          }
+
+          const { data, error } = await supabase.auth.verifyOtp({
+            email,
+            token,
+            type: type as 'signup' | 'email',
+          })
+
+          if (error) {
+            console.error('❌ [Email Confirm] verifyOtp error:', error)
+            if (isMounted) {
+              setStatus('error')
+              setMessage(error.message || 'Email confirmation failed. The link may have expired.')
+            }
+            return
+          }
+
+          if (data.user && isMounted) {
+            console.log('✅ [Email Confirm] Email confirmed successfully via verifyOtp')
+            if (timeoutId) clearTimeout(timeoutId)
+            await handleSuccessfulConfirmation(data.user)
+            return
+          }
+        }
+
+        // Method 3: Check if user is already signed in (mobile deep link might have already processed)
+        await checkIfAlreadySignedIn()
+
+      } catch (error: any) {
+        console.error('❌ [Email Confirm] Exception:', error)
+        if (isMounted) {
+          setStatus('error')
+          setMessage(error?.message || 'Email confirmation failed. Please try again.')
+        }
+      }
+    }
+
+    const checkIfAlreadySignedIn = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
         
-        // Auto-create profile if it doesn't exist
-        if (data.user) {
-          console.log('📝 [Confirm] Checking/creating profile for user:', data.user.id)
-          const { createUserProfile } = await import('@/lib/services/profileService')
-          await createUserProfile(
-            data.user.id,
-            data.user.email || '',
-            data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User',
-            data.user.user_metadata?.phone || ''
-          )
-          console.log('✅ [Confirm] Profile setup complete')
+        if (session?.user && isMounted) {
+          console.log('✅ [Email Confirm] User already signed in:', session.user.email)
+          if (timeoutId) clearTimeout(timeoutId)
+          await handleSuccessfulConfirmation(session.user)
+          return
         }
         
+        // If no tokens found and no session, show error
+        if (isMounted && !params.access_token && !params.token && !session) {
+          console.warn('⚠️ [Email Confirm] No valid tokens found in URL')
+          setStatus('error')
+          setMessage('The confirmation link format was invalid. Your email may still be confirmed. Please try signing in. If sign-in fails, request a new confirmation email.')
+        }
+      } catch (error) {
+        console.error('❌ [Email Confirm] Error checking session:', error)
+      }
+    }
+
+    const handleSuccessfulConfirmation = async (user: any) => {
+      if (!isMounted) return
+      
+      // Auto-create profile if it doesn't exist
+      console.log('📝 [Confirm] Checking/creating profile for user:', user.id)
+      try {
+        const { createUserProfile } = await import('@/lib/services/profileService')
+        await createUserProfile(
+          user.id,
+          user.email || '',
+          user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+          user.user_metadata?.phone || ''
+        )
+        console.log('✅ [Confirm] Profile setup complete')
+      } catch (profileError) {
+        console.warn('⚠️ [Confirm] Profile creation error (non-critical):', profileError)
+      }
+      
+      if (isMounted) {
         setStatus('success')
         setMessage('Your email has been confirmed! Welcome to PawfectMatch 2.0.')
 
-        // Redirect to discover page (index) immediately after confirmation
-        setTimeout(() => {
-          router.replace('/(tabs)')
-        }, 1500)
-
-      } catch (error) {
-        console.error('Email confirmation failed:', error)
-        setStatus('error')
-        setMessage('Email confirmation failed. Please try again.')
+        // Redirect to discover page immediately (no delay needed)
+        // Use requestAnimationFrame to ensure UI updates first
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            if (isMounted) {
+              router.replace('/(tabs)')
+            }
+          }, 800) // Reduced from 1500ms to 800ms for faster redirect
+        })
       }
     }
 
     confirmEmail()
+
+    // Cleanup
+    return () => {
+      isMounted = false
+      if (timeoutId) clearTimeout(timeoutId)
+    }
   }, [params, router])
 
   const renderContent = () => {
@@ -92,13 +226,13 @@ export default function EmailConfirm() {
             </View>
             <Text style={styles.title}>Email Confirmed! 🎉</Text>
             <Text style={styles.message}>{message}</Text>
-            <Text style={styles.subtitle}>Opening app now...</Text>
+            <Text style={styles.subtitle}>Redirecting to app...</Text>
             
             <TouchableOpacity
               style={styles.button}
               onPress={() => router.replace('/(tabs)')}
             >
-              <Text style={styles.buttonText}>Open App</Text>
+              <Text style={styles.buttonText}>Continue</Text>
             </TouchableOpacity>
           </>
         )

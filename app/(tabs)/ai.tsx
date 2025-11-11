@@ -5,10 +5,38 @@ import { useRouter } from 'expo-router';
 import { Send, Heart, Zap, Stethoscope, User } from 'lucide-react-native';
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
 import Constants from 'expo-constants';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 
 // OpenAI API Configuration
-const OPENAI_API_KEY = Constants.expoConfig?.extra?.EXPO_PUBLIC_OPENAI_API_KEY;
+// Try multiple sources for API key (works in both dev and production builds)
+const getOpenAIApiKey = () => {
+  // Priority 1: From expo config (works in all builds including APK)
+  const fromConfig = Constants.expoConfig?.extra?.EXPO_PUBLIC_OPENAI_API_KEY;
+  if (fromConfig && fromConfig.trim() !== '' && !fromConfig.includes('your-openai-api-key')) {
+    return fromConfig;
+  }
+  
+  // Priority 2: From process.env (works in dev)
+  const fromEnv = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
+  if (fromEnv && fromEnv.trim() !== '' && !fromEnv.includes('your-openai-api-key')) {
+    return fromEnv;
+  }
+  
+  return null;
+};
+
+const OPENAI_API_KEY = getOpenAIApiKey();
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+
+// Debug: Log API key status (always log for debugging)
+console.log('🔑 [AI] API Key Status:', {
+  hasKey: !!OPENAI_API_KEY,
+  keyPreview: OPENAI_API_KEY ? `${OPENAI_API_KEY.substring(0, 10)}...` : 'NOT FOUND',
+  fromConfig: !!Constants.expoConfig?.extra?.EXPO_PUBLIC_OPENAI_API_KEY,
+  fromEnv: !!process.env.EXPO_PUBLIC_OPENAI_API_KEY,
+  isDev: __DEV__
+});
 
 interface Message {
   id: string;
@@ -17,25 +45,64 @@ interface Message {
   timestamp: Date;
 }
 
-const SYSTEM_PROMPT = `You are Pawfect AI, a friendly and knowledgeable AI pet assistant. Your personality is warm, caring, and professional yet casual. 
+const SYSTEM_PROMPT = `You are Mewi, a friendly and knowledgeable AI cat assistant integrated into the PawfectMatch mobile application, specifically designed for users in Bangladesh. Your personality is warm, caring, playful, and professional yet casual - like a wise cat who loves helping pet owners in the Bangladeshi context.
+
+ABOUT PAWFECTMATCH APP:
+- PawfectMatch is a comprehensive pet adoption and care platform operating in Bangladesh
+- Developed by CoreWe5 - a talented development team
+- Users can discover pets, save favorites, learn about pet care, shop for pet supplies, and chat with you (Mewi)
+- The app helps connect pet lovers with their perfect furry companions across Bangladesh
+- Users can browse pet profiles, apply for adoptions, and access educational resources
+- You are part of the "AI Vet" feature within the app's main navigation
+- When users ask about the app or developers, you can mention that PawfectMatch is developed by CoreWe5
+
+BANGLADESH-SPECIFIC CONTEXT:
+- You are operating in Bangladesh, so provide advice relevant to the local environment
+- Climate: Tropical monsoon climate with hot, humid summers and mild winters
+- Common pets in Bangladesh: Cats, dogs, birds (parrots, mynahs), rabbits, fish
+- Local currency: Bangladeshi Taka (BDT/৳)
+- Common pet food brands available: Local and international brands
+- Veterinary services: Available in major cities (Dhaka, Chittagong, Sylhet, etc.)
+- Pet adoption: Growing trend, especially in urban areas
+- Local pet care practices: Mix of traditional and modern approaches
+- Seasonal considerations: Monsoon season (June-October), hot summer (March-May), mild winter (November-February)
+- Common health issues: Heat-related issues in summer, skin problems during monsoon, respiratory issues in winter
+- Pet supplies: Available in pet shops in major cities, online platforms, and local markets
+- Language: You can use Bangla terms when appropriate (like "বিড়াল" for cat, "কুকুর" for dog) but primarily communicate in English
 
 Key characteristics:
-- Use emojis naturally to make responses engaging (🐾 🐕 🐱 💕 etc.)
+- Your name is Mewi - introduce yourself as Mewi
+- Use emojis naturally to make responses engaging (🐾 🐱 🐈 💕 😸 etc.)
 - Keep responses concise but informative (2-4 sentences usually)
 - Be encouraging and supportive
+- Add a playful cat-like personality when appropriate
+- Always consider Bangladesh's climate, local availability of resources, and cultural context
+- Provide practical advice that works in the Bangladeshi environment
+- Mention local veterinary clinics or pet shops when relevant
+- Consider local pet food availability and pricing in BDT when discussing nutrition
+- Be aware of seasonal pet care needs (monsoon, summer heat, etc.)
 - Always remind users to consult a licensed veterinarian for serious health concerns
-- Focus on general pet care, nutrition, training, and behavior
+- Focus on general pet care, nutrition, training, and behavior relevant to Bangladesh
 - Be empathetic and understanding of pet owners' concerns
+- When relevant, you can mention that users can browse pets, save favorites, or access learning resources within the PawfectMatch app
+- If users ask about adopting pets, you can guide them to use the Discover tab in the app
+- Understand that pet ownership culture is growing in Bangladesh, especially in urban areas
 
-Remember: You provide helpful guidance but are NOT a replacement for professional veterinary care. Always encourage users to see a vet for emergencies or serious medical issues.`;
+Remember: You provide helpful guidance but are NOT a replacement for professional veterinary care. Always encourage users to see a vet for emergencies or serious medical issues. Provide advice that is practical and relevant to the Bangladeshi context.`;
+
+// AI Avatar Configuration - Using local Mewi image
+const MEWI_AVATAR = require('../../assets/images/Mewi.jpg');
 
 export default function AIVetScreen() {
   const router = useRouter();
   const scrollViewRef = useRef<ScrollView>(null);
+  const { user } = useAuth();
+  const { profile } = useProfile();
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "🐾 Hi there! I'm Pawfect AI, your friendly AI pet assistant! I'm here to help with basic pet care questions. What would you like to know about your furry friend today? Remember, for serious health concerns, always consult with a licensed veterinarian! 💕",
+      text: "🐱 Meow! Hi there! I'm Mewi, your friendly AI cat assistant! I'm here to help with basic pet care questions. What would you like to know about your furry friend today? Remember, for serious health concerns, always consult with a licensed veterinarian! 💕",
       isUser: false,
       timestamp: new Date()
     }
@@ -46,9 +113,16 @@ export default function AIVetScreen() {
   const getAIResponse = async (userMessage: string): Promise<string> => {
     try {
       // Check if API key is loaded
-      if (!OPENAI_API_KEY || OPENAI_API_KEY.includes('your-openai-api-key')) {
-        console.error('OpenAI API Key not configured properly');
-        return "🐾 Oops! The OpenAI API key is not configured. Please add your API key to the .env file and restart the dev server.";
+      if (!OPENAI_API_KEY || OPENAI_API_KEY.includes('your-openai-api-key') || OPENAI_API_KEY.trim() === '') {
+        console.error('❌ [AI] OpenAI API Key not configured properly');
+        console.error('❌ [AI] Key value:', OPENAI_API_KEY ? 'Present but invalid' : 'Missing');
+        
+        // Provide different messages for dev vs production
+        if (__DEV__) {
+          return "🐾 Oops! The OpenAI API key is not configured. Please add your API key to the .env file and restart the dev server with 'npx expo start --clear'.";
+        } else {
+          return "🐾 Sorry! Mewi is temporarily unavailable. The AI service needs to be configured. Please contact support or try again later.";
+        }
       }
 
       console.log('API Key loaded (first 10 chars):', OPENAI_API_KEY.substring(0, 10));
@@ -99,8 +173,12 @@ export default function AIVetScreen() {
       if (error?.status === 429) {
         return "🐾 I'm getting too many requests right now! Please wait a moment and try again.";
       } else if (error?.status === 401) {
-        console.error('401 Error - API Key issue. Error details:', error.data);
-        return "🐾 Authentication failed! Please restart the Expo dev server with 'npx expo start --clear' to load the API key from .env file.";
+        console.error('❌ [AI] 401 Error - API Key authentication failed. Error details:', error.data);
+        if (__DEV__) {
+          return "🐾 Authentication failed! Please check your OpenAI API key in the .env file and restart the dev server with 'npx expo start --clear'.";
+        } else {
+          return "🐾 Sorry! Mewi couldn't authenticate with the AI service. This might be a configuration issue. Please try again later or contact support.";
+        }
       } else if (Platform.OS === 'web' && typeof navigator !== 'undefined' && !navigator.onLine) {
         return "🐾 It seems you're offline! Please check your internet connection and try again.";
       }
@@ -152,39 +230,71 @@ export default function AIVetScreen() {
     }
   };
 
-  const renderMessage = (message: Message) => (
-    <View key={message.id} style={[
-      styles.messageContainer,
-      message.isUser ? styles.userMessage : styles.aiMessage
-    ]}>
-      {!message.isUser && (
-        <View style={styles.aiAvatar}>
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=100&h=100' }}
-            style={styles.avatarImage}
-          />
-          <View style={styles.stethoscopeIcon}>
-            <Stethoscope size={12} color={COLORS.primary} />
+  const renderMessage = (message: Message) => {
+    const timeString = message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    return (
+      <View key={message.id} style={[
+        styles.messageContainer,
+        message.isUser ? styles.userMessage : styles.aiMessage
+      ]}>
+        {!message.isUser && (
+          <View style={styles.aiAvatar}>
+            <View style={styles.aiAvatarContainer}>
+              <Image 
+                source={MEWI_AVATAR}
+                style={styles.aiAvatarImage}
+                resizeMode="cover"
+              />
+            </View>
+            <View style={styles.stethoscopeIcon}>
+              <Stethoscope size={12} color={COLORS.primary} />
+            </View>
+          </View>
+        )}
+        
+        <View style={[
+          styles.messageBubble,
+          message.isUser ? styles.userBubble : styles.aiBubble
+        ]}>
+          <Text 
+            style={[
+              styles.messageText,
+              message.isUser ? styles.userText : styles.aiText
+            ]}
+            allowFontScaling={true}
+            selectable={true}
+          >
+            {message.text}
+          </Text>
+          <View style={[
+            styles.timestampContainer,
+            message.isUser ? styles.userTimestampContainer : styles.aiTimestampContainer
+          ]}>
+            <Text style={[
+              styles.timestamp,
+              message.isUser ? styles.userTimestamp : styles.aiTimestamp
+            ]}>
+              {timeString}
+            </Text>
           </View>
         </View>
-      )}
-      
-      <View style={[
-        styles.messageBubble,
-        message.isUser ? styles.userBubble : styles.aiBubble
-      ]}>
-        <Text style={[
-          styles.messageText,
-          message.isUser ? styles.userText : styles.aiText
-        ]}>
-          {message.text}
-        </Text>
-        <Text style={styles.timestamp}>
-          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </Text>
+        
+        {message.isUser && (
+          <View style={styles.userAvatar}>
+            {profile?.avatar_url ? (
+              <Image 
+                source={{ uri: profile.avatar_url }}
+                style={styles.userAvatarImage}
+              />
+            ) : (
+              <User size={16} color="white" />
+            )}
+          </View>
+        )}
       </View>
-    </View>
-  );
+    );
+  };
 
   const quickQuestions = [
     "How often should I feed my puppy?",
@@ -202,8 +312,8 @@ export default function AIVetScreen() {
       {/* Header with Profile Button */}
       <View style={styles.header}>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>Pawfect AI</Text>
-          <Text style={styles.headerSubtitle}>AI Pet Assistant</Text>
+          <Text style={styles.headerTitle}>Mewi</Text>
+          <Text style={styles.headerSubtitle}>AI Cat Assistant</Text>
         </View>
         <View style={styles.headerRight}>
           <View style={styles.onlineIndicator}>
@@ -233,10 +343,13 @@ export default function AIVetScreen() {
           {isTyping && (
             <View style={[styles.messageContainer, styles.aiMessage]}>
               <View style={styles.aiAvatar}>
-                <Image 
-                  source={{ uri: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=100&h=100' }}
-                  style={styles.avatarImage}
-                />
+                <View style={styles.aiAvatarContainer}>
+                  <Image 
+                    source={MEWI_AVATAR}
+                    style={styles.aiAvatarImage}
+                    resizeMode="cover"
+                  />
+                </View>
                 <View style={styles.stethoscopeIcon}>
                   <Stethoscope size={12} color={COLORS.primary} />
                 </View>
@@ -270,7 +383,7 @@ export default function AIVetScreen() {
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.textInput}
-            placeholder="Ask Pawfect AI anything about your pet..."
+            placeholder="Ask Mewi anything about your pet..."
             value={inputText}
             onChangeText={setInputText}
             multiline
@@ -291,7 +404,7 @@ export default function AIVetScreen() {
           <Text style={styles.disclaimerEmoji}>💡</Text>
         </View>
         <Text style={styles.disclaimerText}>
-          Pawfect AI provides general pet care guidance. For emergencies, consult a licensed veterinarian.
+          Mewi provides general pet care guidance. For emergencies, consult a licensed veterinarian.
         </Text>
       </View>
     </SafeAreaView>
@@ -354,22 +467,38 @@ const styles = StyleSheet.create({
   },
   messageContainer: {
     flexDirection: 'row',
-    marginBottom: 16,
+    marginBottom: 20,
+    alignItems: 'flex-end',
   },
   userMessage: {
     justifyContent: 'flex-end',
+    paddingLeft: 50, // Add space on left for user messages
   },
   aiMessage: {
     justifyContent: 'flex-start',
+    paddingRight: 50, // Add space on right for AI messages
   },
   aiAvatar: {
     width: 36,
     height: 36,
-    borderRadius: 18,
     marginRight: 12,
     position: 'relative',
+    alignSelf: 'flex-end',
   },
-  avatarImage: {
+  aiAvatarContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFF5E6',
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  catEmoji: {
+    fontSize: 20,
+  },
+  aiAvatarImage: {
     width: 36,
     height: 36,
     borderRadius: 18,
@@ -384,37 +513,79 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.primary,
   },
+  userAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.primary,
+    marginLeft: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    overflow: 'hidden',
+  },
+  userAvatarImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
   messageBubble: {
     maxWidth: '75%',
+    minWidth: 60,
     borderRadius: 16,
-    padding: 12,
+    padding: 14,
+    paddingBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   userBubble: {
     backgroundColor: COLORS.primary,
     marginLeft: 'auto',
+    borderBottomRightRadius: 4,
   },
   aiBubble: {
-    backgroundColor: 'white',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#F0F0F0',
+    borderBottomLeftRadius: 4,
   },
   messageText: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'Nunito-Regular',
-    lineHeight: 20,
+    lineHeight: 22,
+    marginBottom: 6,
+    flexShrink: 1,
+    // Default color - will be overridden by userText or aiText
   },
   userText: {
-    color: 'white',
+    color: '#FFFFFF',
   },
   aiText: {
-    color: '#333',
+    color: '#000000', // Pure black for maximum contrast on white background
+    fontWeight: '400' as const,
+  },
+  timestampContainer: {
+    marginTop: 4,
+    alignSelf: 'flex-end',
+  },
+  userTimestampContainer: {
+    alignSelf: 'flex-end',
+  },
+  aiTimestampContainer: {
+    alignSelf: 'flex-start',
   },
   timestamp: {
-    fontSize: 10,
-    fontFamily: 'Nunito-Regular',
+    fontSize: 11,
+    fontFamily: 'Nunito-Medium',
+  },
+  userTimestamp: {
+    color: 'rgba(255, 255, 255, 0.85)',
+  },
+  aiTimestamp: {
     color: '#999',
-    marginTop: 4,
-    textAlign: 'right',
   },
   typingIndicator: {
     flexDirection: 'row',

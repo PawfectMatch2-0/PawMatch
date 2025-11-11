@@ -5,7 +5,12 @@
   "private": true,
   "scripts": {
     "dev": "expo start --tunnel",
+    "dev:lan": "expo start --lan",
+    "dev:localhost": "expo start --localhost",
+    "dev:verbose": "cross-env EXPO_DEBUG=1 expo start --lan",
     "dev:no-telemetry": "cross-env EXPO_NO_TELEMETRY=1 expo start --tunnel",
+    "logs:android": "echo Install Android SDK Platform Tools first, then run: adb logcat | findstr ReactNativeJS",
+    "devtools": "start http://localhost:19002",
     "build:web": "expo export --platform web",
     "lint": "expo lint"
   },

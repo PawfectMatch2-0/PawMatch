@@ -53,6 +53,17 @@ export default function EnhancedAuth() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [resetEmail, setResetEmail] = useState('')
+  
+  // Field errors
+  const [errors, setErrors] = useState<{
+    email?: string
+    password?: string
+    confirmPassword?: string
+    fullName?: string
+  }>({})
+  
+  // General error message (for deleted users, etc.)
+  const [generalError, setGeneralError] = useState<string | null>(null)
 
   // Listen to auth state changes
   useEffect(() => {
@@ -66,29 +77,109 @@ export default function EnhancedAuth() {
     return unsubscribe
   }, [router])
 
-  // Validation
+  // Validation functions
   const validateEmail = (email: string) => {
+    if (!email.trim()) {
+      return 'Email is required'
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
+    if (!emailRegex.test(email)) {
+      return 'Please enter a valid email address'
+    }
+    // Check if user put name in email field (contains spaces or no @)
+    if (email.includes(' ') && !email.includes('@')) {
+      return 'This looks like a name. Please enter your email address'
+    }
+    return null
   }
 
   const validatePassword = (password: string) => {
-    return password.length >= 6
+    if (!password) {
+      return 'Password is required'
+    }
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters'
+    }
+    return null
+  }
+
+  const validateFullName = (name: string) => {
+    if (!name.trim()) {
+      return 'Full name is required'
+    }
+    // Check if user put email in name field
+    if (name.includes('@')) {
+      return 'This looks like an email. Please enter your full name'
+    }
+    // Check if user put phone number in name field (contains only digits)
+    if (/^\d+$/.test(name.trim().replace(/[\s-()]/g, ''))) {
+      return 'This looks like a phone number. Please enter your full name'
+    }
+    // Check if name is too short
+    if (name.trim().length < 2) {
+      return 'Please enter your full name (at least 2 characters)'
+    }
+    // Check if name contains invalid characters (only numbers/symbols)
+    if (!/^[a-zA-Z\s'-]+$/.test(name.trim())) {
+      return 'Name should only contain letters, spaces, hyphens, and apostrophes'
+    }
+    return null
+  }
+
+  const validateConfirmPassword = (confirm: string, original: string) => {
+    if (!confirm) {
+      return 'Please confirm your password'
+    }
+    if (confirm !== original) {
+      return 'Passwords do not match'
+    }
+    return null
+  }
+
+  // Clear error for a specific field
+  const clearError = (field: keyof typeof errors) => {
+    setErrors(prev => {
+      const newErrors = { ...prev }
+      delete newErrors[field]
+      return newErrors
+    })
+  }
+
+  // Validate all fields
+  const validateAllFields = () => {
+    const newErrors: typeof errors = {}
+    
+    const emailError = validateEmail(email)
+    if (emailError) newErrors.email = emailError
+    
+    const passwordError = validatePassword(password)
+    if (passwordError) newErrors.password = passwordError
+    
+    const confirmPasswordError = validateConfirmPassword(confirmPassword, password)
+    if (confirmPasswordError) newErrors.confirmPassword = confirmPasswordError
+    
+    const fullNameError = validateFullName(fullName)
+    if (fullNameError) newErrors.fullName = fullNameError
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
   // Handle sign in
   const handleSignIn = async () => {
-    if (!validateEmail(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address')
-      return
-    }
-
-    if (!validatePassword(password)) {
-      Alert.alert('Invalid Password', 'Password must be at least 6 characters')
+    const emailError = validateEmail(email)
+    const passwordError = validatePassword(password)
+    
+    if (emailError || passwordError) {
+      const newErrors: { email?: string; password?: string } = {}
+      if (emailError) newErrors.email = emailError
+      if (passwordError) newErrors.password = passwordError
+      setErrors(newErrors)
       return
     }
 
     setLoading(true)
+    setGeneralError(null) // Clear previous errors
     
     const signInData: SignInData = { email, password }
     const result = await authService.signIn(signInData)
@@ -97,37 +188,64 @@ export default function EnhancedAuth() {
 
     if (result.success) {
       console.log('✅ Sign in successful')
+      setGeneralError(null)
       // Navigation handled by auth state listener
     } else {
-      Alert.alert('Sign In Failed', result.error || 'Please try again')
+      // Set general error message to show in UI
+      setGeneralError(result.error || 'Sign in failed. Please try again.')
+      
+      // Check if error suggests signing up (deleted user)
+      if (result.suggestSignUp || result.error?.toLowerCase().includes('deleted') || result.error?.toLowerCase().includes('create a new account')) {
+        // Show alert AND visual error
+        Alert.alert(
+          'Account Not Available', 
+          result.error || 'This account may have been deleted. Please create a new account.',
+          [
+            { 
+              text: 'Sign Up', 
+              onPress: () => {
+                setMode('signup')
+                setEmail(email) // Keep the email they entered
+                setPassword('')
+                setErrors({})
+                setGeneralError(null)
+              },
+              style: 'default' 
+            },
+            { text: 'Cancel', style: 'cancel' }
+          ]
+        )
+      } else if (result.error?.toLowerCase().includes('email') && 
+          (result.error?.toLowerCase().includes('confirm') || 
+           result.error?.toLowerCase().includes('verify') ||
+           result.requiresEmailConfirmation)) {
+        // Show email confirmation screen
+        setMode('email-confirm')
+        Alert.alert(
+          'Email Not Confirmed', 
+          result.error || 'Please check your email and click the confirmation link before signing in.',
+          [
+            { text: 'OK', style: 'default' }
+          ]
+        )
+      } else {
+        // Show alert for other errors
+        Alert.alert('Sign In Failed', result.error || 'Please try again')
+      }
     }
   }
 
   // Handle sign up
   const handleSignUp = async () => {
-    if (!validateEmail(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address')
-      return
-    }
-
-    if (!validatePassword(password)) {
-      Alert.alert('Invalid Password', 'Password must be at least 6 characters')
-      return
-    }
-
-    if (password !== confirmPassword) {
-      Alert.alert('Password Mismatch', 'Passwords do not match')
-      return
-    }
-
-    if (!fullName.trim()) {
-      Alert.alert('Name Required', 'Please enter your full name')
+    // Validate all fields
+    if (!validateAllFields()) {
+      // Scroll to first error if needed
       return
     }
 
     setLoading(true)
     
-    const signUpData: SignUpData = { email, password, fullName }
+    const signUpData: SignUpData = { email: email.trim(), password, fullName: fullName.trim() }
     const result = await authService.signUp(signUpData)
     
     setLoading(false)
@@ -140,7 +258,21 @@ export default function EnhancedAuth() {
         // Navigation handled by auth state listener
       }
     } else {
-      Alert.alert('Sign Up Failed', result.error || 'Please try again')
+      // Handle specific error messages
+      let errorMessage = result.error || 'Please try again'
+      
+      // Check for common Supabase errors
+      if (errorMessage.toLowerCase().includes('user already registered')) {
+        errorMessage = 'This email is already registered. Please sign in instead.'
+      } else if (errorMessage.toLowerCase().includes('invalid email')) {
+        setErrors(prev => ({ ...prev, email: 'Invalid email address' }))
+        return
+      } else if (errorMessage.toLowerCase().includes('password')) {
+        setErrors(prev => ({ ...prev, password: 'Password is too weak or invalid' }))
+        return
+      }
+      
+      Alert.alert('Sign Up Failed', errorMessage)
     }
   }
 
@@ -189,63 +321,136 @@ export default function EnhancedAuth() {
             <Text style={styles.subtitle}>Join PawMatch to find your perfect companion</Text>
 
             <View style={styles.form}>
-              <View style={styles.inputContainer}>
-                <User size={20} color="#666" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Full Name"
-                  value={fullName}
-                  onChangeText={setFullName}
-                  autoCapitalize="words"
-                  placeholderTextColor="#999"
-                />
+              <View>
+                <View style={[
+                  styles.inputContainer,
+                  errors.fullName && styles.inputContainerError
+                ]}>
+                  <User size={20} color={errors.fullName ? "#F44336" : "#666"} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Full Name"
+                    value={fullName}
+                    onChangeText={(text) => {
+                      setFullName(text)
+                      clearError('fullName')
+                    }}
+                    onBlur={() => {
+                      const error = validateFullName(fullName)
+                      if (error) {
+                        setErrors(prev => ({ ...prev, fullName: error }))
+                      }
+                    }}
+                    autoCapitalize="words"
+                    placeholderTextColor="#999"
+                  />
+                </View>
+                {errors.fullName && (
+                  <Text style={styles.errorText}>{errors.fullName}</Text>
+                )}
               </View>
 
-              <View style={styles.inputContainer}>
-                <Mail size={20} color="#666" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email Address"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  placeholderTextColor="#999"
-                />
+              <View>
+                <View style={[
+                  styles.inputContainer,
+                  errors.email && styles.inputContainerError
+                ]}>
+                  <Mail size={20} color={errors.email ? "#F44336" : "#666"} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email Address"
+                    value={email}
+                    onChangeText={(text) => {
+                      setEmail(text)
+                      clearError('email')
+                    }}
+                    onBlur={() => {
+                      const error = validateEmail(email)
+                      if (error) {
+                        setErrors(prev => ({ ...prev, email: error }))
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    placeholderTextColor="#999"
+                  />
+                </View>
+                {errors.email && (
+                  <Text style={styles.errorText}>{errors.email}</Text>
+                )}
               </View>
 
-              <View style={styles.inputContainer}>
-                <Lock size={20} color="#666" />
-                <TextInput
-                  style={[styles.input, styles.passwordInput]}
-                  placeholder="Password"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  placeholderTextColor="#999"
-                />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeButton}
-                >
-                  {showPassword ? (
-                    <EyeOff size={20} color="#666" />
-                  ) : (
-                    <Eye size={20} color="#666" />
-                  )}
-                </TouchableOpacity>
+              <View>
+                <View style={[
+                  styles.inputContainer,
+                  errors.password && styles.inputContainerError
+                ]}>
+                  <Lock size={20} color={errors.password ? "#F44336" : "#666"} />
+                  <TextInput
+                    style={[styles.input, styles.passwordInput]}
+                    placeholder="Password"
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text)
+                      clearError('password')
+                      // Also clear confirm password error if passwords now match
+                      if (confirmPassword && text === confirmPassword) {
+                        clearError('confirmPassword')
+                      }
+                    }}
+                    onBlur={() => {
+                      const error = validatePassword(password)
+                      if (error) {
+                        setErrors(prev => ({ ...prev, password: error }))
+                      }
+                    }}
+                    secureTextEntry={!showPassword}
+                    placeholderTextColor="#999"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeButton}
+                  >
+                    {showPassword ? (
+                      <EyeOff size={20} color="#666" />
+                    ) : (
+                      <Eye size={20} color="#666" />
+                    )}
+                  </TouchableOpacity>
+                </View>
+                {errors.password && (
+                  <Text style={styles.errorText}>{errors.password}</Text>
+                )}
               </View>
 
-              <View style={styles.inputContainer}>
-                <Lock size={20} color="#666" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry={true}
-                  placeholderTextColor="#999"
-                />
+              <View>
+                <View style={[
+                  styles.inputContainer,
+                  errors.confirmPassword && styles.inputContainerError
+                ]}>
+                  <Lock size={20} color={errors.confirmPassword ? "#F44336" : "#666"} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Confirm Password"
+                    value={confirmPassword}
+                    onChangeText={(text) => {
+                      setConfirmPassword(text)
+                      clearError('confirmPassword')
+                    }}
+                    onBlur={() => {
+                      const error = validateConfirmPassword(confirmPassword, password)
+                      if (error) {
+                        setErrors(prev => ({ ...prev, confirmPassword: error }))
+                      }
+                    }}
+                    secureTextEntry={true}
+                    placeholderTextColor="#999"
+                  />
+                </View>
+                {errors.confirmPassword && (
+                  <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+                )}
               </View>
 
               <TouchableOpacity
@@ -271,7 +476,10 @@ export default function EnhancedAuth() {
 
               <TouchableOpacity
                 style={styles.secondaryButton}
-                onPress={() => setMode('signin')}
+                onPress={() => {
+                  setMode('signin')
+                  setErrors({})
+                }}
               >
                 <Text style={styles.secondaryButtonText}>
                   Already have an account? Sign In
@@ -369,14 +577,20 @@ export default function EnhancedAuth() {
         return (
           <>
             <View style={styles.iconContainer}>
-              <AlertCircle size={60} color="#FF9800" />
+              <Mail size={60} color="#FF9800" />
             </View>
-            <Text style={styles.title}>Confirm Your Email</Text>
+            <Text style={styles.title}>Check Your Email</Text>
             <Text style={styles.subtitle}>
-              We've sent a confirmation link to {email}
+              We've sent a confirmation email to {email}
             </Text>
+            <View style={styles.warningBox}>
+              <AlertCircle size={20} color="#FF9800" />
+              <Text style={styles.warningText}>
+                You must confirm your email before you can sign in. Please check your inbox and click the confirmation link.
+              </Text>
+            </View>
             <Text style={styles.helpText}>
-              Please check your email and click the confirmation link to activate your account
+              Didn't receive the email? Check your spam folder or click "Resend Confirmation" below.
             </Text>
 
             <View style={styles.form}>
@@ -388,7 +602,10 @@ export default function EnhancedAuth() {
                 {loading ? (
                   <ActivityIndicator color="white" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Resend Confirmation</Text>
+                  <>
+                    <Mail size={20} color="white" />
+                    <Text style={styles.primaryButtonText}>Resend Confirmation Email</Text>
+                  </>
                 )}
               </TouchableOpacity>
 
@@ -408,40 +625,103 @@ export default function EnhancedAuth() {
             <Text style={styles.title}>Welcome Back</Text>
             <Text style={styles.subtitle}>Sign in to continue to PawMatch</Text>
 
+            {/* General Error Message */}
+            {generalError && (
+              <View style={styles.generalErrorContainer}>
+                <AlertCircle size={16} color="#F44336" />
+                <Text style={styles.generalErrorText}>
+                  {generalError.toLowerCase().includes('deleted') 
+                    ? 'This account has been deleted. Please create a new account.'
+                    : generalError}
+                </Text>
+                {generalError.toLowerCase().includes('deleted') && (
+                  <TouchableOpacity
+                    style={styles.signUpLink}
+                    onPress={() => {
+                      setMode('signup')
+                      setEmail(email)
+                      setPassword('')
+                      setErrors({})
+                      setGeneralError(null)
+                    }}
+                  >
+                    <Text style={styles.signUpLinkText}>Sign Up</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
             <View style={styles.form}>
-              <View style={styles.inputContainer}>
-                <Mail size={20} color="#666" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email Address"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  placeholderTextColor="#999"
-                />
+              <View>
+                <View style={[
+                  styles.inputContainer,
+                  errors.email && styles.inputContainerError
+                ]}>
+                  <Mail size={20} color={errors.email ? "#F44336" : "#666"} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email Address"
+                    value={email}
+                    onChangeText={(text) => {
+                      setEmail(text)
+                      clearError('email')
+                      setGeneralError(null) // Clear general error when user types
+                    }}
+                    onBlur={() => {
+                      const error = validateEmail(email)
+                      if (error) {
+                        setErrors(prev => ({ ...prev, email: error }))
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    placeholderTextColor="#999"
+                  />
+                </View>
+                {errors.email && (
+                  <Text style={styles.errorText}>{errors.email}</Text>
+                )}
               </View>
 
-              <View style={styles.inputContainer}>
-                <Lock size={20} color="#666" />
-                <TextInput
-                  style={[styles.input, styles.passwordInput]}
-                  placeholder="Password"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  placeholderTextColor="#999"
-                />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeButton}
-                >
-                  {showPassword ? (
-                    <EyeOff size={20} color="#666" />
-                  ) : (
-                    <Eye size={20} color="#666" />
-                  )}
-                </TouchableOpacity>
+              <View>
+                <View style={[
+                  styles.inputContainer,
+                  errors.password && styles.inputContainerError
+                ]}>
+                  <Lock size={20} color={errors.password ? "#F44336" : "#666"} />
+                  <TextInput
+                    style={[styles.input, styles.passwordInput]}
+                    placeholder="Password"
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text)
+                      clearError('password')
+                      setGeneralError(null) // Clear general error when user types
+                    }}
+                    onBlur={() => {
+                      const error = validatePassword(password)
+                      if (error) {
+                        setErrors(prev => ({ ...prev, password: error }))
+                      }
+                    }}
+                    secureTextEntry={!showPassword}
+                    placeholderTextColor="#999"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeButton}
+                  >
+                    {showPassword ? (
+                      <EyeOff size={20} color="#666" />
+                    ) : (
+                      <Eye size={20} color="#666" />
+                    )}
+                  </TouchableOpacity>
+                </View>
+                {errors.password && (
+                  <Text style={styles.errorText}>{errors.password}</Text>
+                )}
               </View>
 
               <TouchableOpacity
@@ -474,7 +754,11 @@ export default function EnhancedAuth() {
 
               <TouchableOpacity
                 style={styles.secondaryButton}
-                onPress={() => setMode('signup')}
+                onPress={() => {
+                  setMode('signup')
+                  setErrors({})
+                  setGeneralError(null)
+                }}
               >
                 <Text style={styles.secondaryButtonText}>
                   Don't have an account? Sign Up
@@ -631,6 +915,25 @@ const styles = StyleSheet.create({
     marginTop: 10,
     lineHeight: 16,
   },
+  warningBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FFF3E0',
+    borderWidth: 1,
+    borderColor: '#FFB74D',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    marginBottom: 16,
+    gap: 12,
+  },
+  warningText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'Nunito-SemiBold',
+    color: '#E65100',
+    lineHeight: 20,
+  },
   iconContainer: {
     alignItems: 'center',
     marginBottom: 20,
@@ -732,5 +1035,44 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Nunito-Medium',
     color: 'white',
+  },
+  inputContainerError: {
+    borderWidth: 1,
+    borderColor: '#F44336',
+    backgroundColor: '#FFF5F5',
+  },
+  errorText: {
+    fontSize: 12,
+    fontFamily: 'Nunito-Regular',
+    color: '#F44336',
+    marginTop: 4,
+    marginLeft: 4,
+  },
+  generalErrorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF5F5',
+    borderLeftWidth: 3,
+    borderLeftColor: '#F44336',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    gap: 10,
+  },
+  generalErrorText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: 'Nunito-Regular',
+    color: '#C62828',
+    lineHeight: 18,
+  },
+  signUpLink: {
+    marginLeft: 4,
+  },
+  signUpLinkText: {
+    fontSize: 13,
+    fontFamily: 'Nunito-SemiBold',
+    color: '#F44336',
+    textDecorationLine: 'underline',
   },
 })

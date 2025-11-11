@@ -31,7 +31,8 @@
         "EXPO_PUBLIC_ADMIN_EMAIL": "pawfect.mew@gmail.com",
         "DEBUG_MODE": "false",
         "EXPO_PUBLIC_DEBUG_AUTH": "false",
-        "ENABLE_REAL_DATABASE": "true"
+        "ENABLE_REAL_DATABASE": "true",
+        "EXPO_PUBLIC_OPENAI_API_KEY": "${EXPO_PUBLIC_OPENAI_API_KEY}"
       }
     },
     "apk": {
@@ -52,7 +53,8 @@
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "784287108471-n4ntobip5umh4hs6f375ritsr1d2nfce.apps.googleusercontent.com",
         "EXPO_PUBLIC_ADMIN_EMAIL": "pawfect.mew@gmail.com",
         "DEBUG_MODE": "false",
-        "EXPO_PUBLIC_DEBUG_AUTH": "false"
+        "EXPO_PUBLIC_DEBUG_AUTH": "false",
+        "EXPO_PUBLIC_OPENAI_API_KEY": "${EXPO_PUBLIC_OPENAI_API_KEY}"
       }
     }
   },

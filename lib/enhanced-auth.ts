@@ -57,22 +57,51 @@ if (isDevelopment && isDebugMode) {
 
 // Get proper redirect URLs for email links
 const getEmailRedirectUrl = (path: string) => {
+  // FORCE localhost for development to avoid "No worker deployment" errors
+  if (isDevelopment) {
+    // For mobile in development, use Expo deep link
+    if (Platform.OS !== 'web') {
+      // Use exp:// scheme for Expo Go, or custom scheme for standalone
+      const mobileScheme = process.env.EXPO_PUBLIC_AUTH_MOBILE_REDIRECT_URL || 'exp://localhost:8081'
+      const mobilePath = path.startsWith('/') ? path : '/' + path
+      const mobileUrl = `${mobileScheme}${mobilePath}`
+      console.log('🔐 [Auth] Using mobile development redirect URL:', mobileUrl)
+      return mobileUrl
+    }
+    
+    // For web in development, use localhost
+    const port = typeof window !== 'undefined' 
+      ? window.location.port || '8081'
+      : '8081'
+    const localhostUrl = `http://localhost:${port}${path}`
+    console.log('🔐 [Auth] Using web development redirect URL:', localhostUrl)
+    return localhostUrl
+  }
+  
+  // Check environment variable for production
+  const envRedirectUrl = process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL
+  
+  if (envRedirectUrl) {
+    // If path is provided, append it (but check if it's already in the URL)
+    if (path && !envRedirectUrl.includes(path)) {
+      return `${envRedirectUrl}${path.startsWith('/') ? path : '/' + path}`
+    }
+    return envRedirectUrl
+  }
+  
+  // For web platform in production
   if (Platform.OS === 'web') {
     if (typeof window !== 'undefined') {
       const origin = window.location.origin
       return `${origin}${path}`
     }
-    // Development fallback
-    if (isDevelopment) {
-      return `http://localhost:8082${path}`
-    }
-    // Production web URL
-    return `${process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL || 'https://yourdomain.com'}${path}`
+    // Production fallback - use Supabase callback
+    return `https://afxkliyukojjymvfwiyp.supabase.co/auth/v1/callback`
   }
   
-  // For mobile, use custom scheme
-  const scheme = process.env.EXPO_PUBLIC_AUTH_MOBILE_REDIRECT_URL || 'pawmatch://auth-callback'
-  return scheme.replace('auth-callback', path.replace('/', ''))
+  // For mobile: Use custom scheme that opens the app
+  const mobileRedirect = process.env.EXPO_PUBLIC_AUTH_MOBILE_REDIRECT_URL || 'pawmatch://auth/confirm'
+  return mobileRedirect
 }
 
 // Auth types
@@ -168,28 +197,78 @@ class AuthService {
 
       if (session) {
         console.log('🔐 [Auth] Found existing session for:', session.user.email)
-        this.updateAuthState({
-          user: session.user as User,
-          session: session as AuthSession,
-          loading: false,
-          initialized: true
-        })
+        
+        // Validate that user still exists in database (user might have been deleted)
+        try {
+          const { data: { user: currentUser }, error: userError } = await supabase!.auth.getUser()
+          
+          if (userError || !currentUser) {
+            console.warn('⚠️ [Auth] User no longer exists in database, clearing session')
+            await supabase!.auth.signOut()
+            this.updateAuthState({ user: null, session: null, loading: false, initialized: true })
+            return
+          }
+          
+          // Also check if user profile exists (double validation)
+          const { data: profile, error: profileError } = await supabase!
+            .from('user_profiles')
+            .select('id')
+            .eq('id', currentUser.id)
+            .single()
+          
+          if (profileError || !profile) {
+            console.warn('⚠️ [Auth] User profile not found, user may have been deleted. Clearing session.')
+            await supabase!.auth.signOut()
+            this.updateAuthState({ user: null, session: null, loading: false, initialized: true })
+            return
+          }
+          
+          // User exists and is valid
+          console.log('✅ [Auth] User validated, session is valid')
+          this.updateAuthState({
+            user: currentUser as User,
+            session: session as AuthSession,
+            loading: false,
+            initialized: true
+          })
+        } catch (validationError) {
+          console.error('❌ [Auth] Error validating user:', validationError)
+          // If validation fails, clear session to be safe
+          await supabase!.auth.signOut()
+          this.updateAuthState({ user: null, session: null, loading: false, initialized: true })
+        }
       } else {
         console.log('🔐 [Auth] No existing session found')
         this.updateAuthState({ user: null, session: null, loading: false, initialized: true })
       }
 
       // Listen for auth changes
-      supabase!.auth.onAuthStateChange((event, session) => {
+      supabase!.auth.onAuthStateChange(async (event, session) => {
         console.log('🔐 [Auth] State change:', event, session?.user?.email)
         
         if (session) {
-          this.updateAuthState({
-            user: session.user as User,
-            session: session as AuthSession,
-            loading: false,
-            initialized: true
-          })
+          // Validate user still exists when auth state changes
+          try {
+            const { data: { user: currentUser }, error: userError } = await supabase!.auth.getUser()
+            
+            if (userError || !currentUser) {
+              console.warn('⚠️ [Auth] User no longer exists during state change, signing out')
+              await supabase!.auth.signOut()
+              this.updateAuthState({ user: null, session: null, loading: false, initialized: true })
+              return
+            }
+            
+            this.updateAuthState({
+              user: currentUser as User,
+              session: session as AuthSession,
+              loading: false,
+              initialized: true
+            })
+          } catch (error) {
+            console.error('❌ [Auth] Error validating user during state change:', error)
+            await supabase!.auth.signOut()
+            this.updateAuthState({ user: null, session: null, loading: false, initialized: true })
+          }
         } else {
           this.updateAuthState({ 
             user: null, 
@@ -302,22 +381,35 @@ class AuthService {
       // Profiles will be created on first app use via the fallback mechanism
       // Or you can manually create them in Supabase dashboard
       
-      // If we have a session, user is auto-confirmed (email confirmation disabled)
+      // Check if email confirmation is required
+      // If user has a session, they are auto-confirmed (email confirmation disabled in Supabase)
+      // If no session, email confirmation is required
       if (authData.session) {
-        console.log('✅ [Auth] User has session, auto-signed in')
-        this.setLoading(false)
-        return { success: true, user: authData.user }
+        // Check if email is actually confirmed
+        if (authData.user?.email_confirmed_at) {
+          console.log('✅ [Auth] User has session and email confirmed, auto-signed in')
+          this.setLoading(false)
+          return { success: true, user: authData.user }
+        } else {
+          // Session exists but email not confirmed - sign out and require confirmation
+          console.log('⚠️ [Auth] Session exists but email not confirmed - requiring confirmation')
+          await supabase!.auth.signOut()
+          this.setLoading(false)
+          return { 
+            success: true, 
+            requiresEmailConfirmation: true,
+            message: 'Account created! Please check your email to confirm your account before signing in.'
+          }
+        }
       }
       
       // No session means email confirmation is required
-      // ⚠️ WARNING: Email confirmation is enabled but SMTP is not configured!
-      // To fix: Go to Supabase → Authentication → Providers → Email → Turn OFF "Confirm email"
-      console.log('⚠️ [Auth] No session - email confirmation required but emails may not send!')
+      console.log('📧 [Auth] Email confirmation required - no session created')
       this.setLoading(false)
       return { 
         success: true, 
         requiresEmailConfirmation: true,
-        message: 'Account created! Please check your email to confirm your account.'
+        message: 'Account created! Please check your email to confirm your account. You must confirm your email before you can sign in.'
       }
 
     } catch (error) {
@@ -348,21 +440,72 @@ class AuthService {
         
         // Provide user-friendly error messages
         let userMessage = error.message
+        let suggestSignUp = false
         
-        if (error.message.includes('Invalid login credentials') || error.message.includes('Invalid email or password')) {
-          userMessage = 'Invalid email or password. Please check your credentials and try again.'
-        } else if (error.message.includes('Email not confirmed')) {
-          userMessage = 'Please verify your email address before signing in. Check your inbox for the verification link.'
-        } else if (error.message.includes('User not found')) {
-          userMessage = 'No account found with this email. Please check your email or sign up.'
+        // Handle specific error cases
+        if (error.message.includes('Email not confirmed') || error.message.includes('email_not_confirmed')) {
+          userMessage = 'Your email address has not been confirmed. Please check your inbox and click the confirmation link in the email we sent you. You cannot sign in until your email is confirmed.'
         } else if (error.message.includes('Too many requests')) {
           userMessage = 'Too many login attempts. Please wait a few minutes and try again.'
+        } else if (error.message.includes('Invalid login credentials') || 
+                   error.message.includes('Invalid email or password')) {
+          // Just show generic invalid credentials message
+          // Don't assume account is deleted - could be wrong password
+          userMessage = 'Invalid email or password. Please check your credentials and try again.'
+        } else if (error.message.includes('User not found') || 
+                   error.message.includes('No user found')) {
+          // Only suggest sign up if user explicitly not found (not just wrong password)
+          userMessage = 'No account found with this email. Please sign up to create a new account.'
+          suggestSignUp = true
         }
         
-        return { success: false, error: userMessage }
+        return { success: false, error: userMessage, suggestSignUp }
       }
 
-      console.log('🔐 [Auth] Sign in successful:', authData.user?.email)
+      // Additional check: Verify email is confirmed even if sign-in succeeded
+      // This is a safety check in case Supabase settings allow unconfirmed sign-ins
+      if (authData.user && !authData.user.email_confirmed_at) {
+        console.warn('⚠️ [Auth] Sign in succeeded but email not confirmed - signing out')
+        await supabase!.auth.signOut()
+        this.setLoading(false)
+        return { 
+          success: false, 
+          error: 'Your email address has not been confirmed. Please check your inbox and click the confirmation link before signing in.',
+          requiresEmailConfirmation: true
+        }
+      }
+
+      // Final validation: Check if user profile exists
+      // If profile doesn't exist, try to create it automatically (don't assume deletion)
+      const { data: profile, error: profileError } = await supabase!
+        .from('user_profiles')
+        .select('id')
+        .eq('id', authData.user.id)
+        .maybeSingle() // Use maybeSingle to handle missing profile gracefully
+      
+      if (!profile && !profileError) {
+        // Profile doesn't exist - try to create it automatically
+        console.log('📝 [Auth] Profile missing, attempting to create profile...')
+        try {
+          const { createUserProfile } = await import('@/lib/services/profileService')
+          await createUserProfile(
+            authData.user.id,
+            authData.user.email || '',
+            authData.user.user_metadata?.full_name || authData.user.email?.split('@')[0] || 'User',
+            authData.user.user_metadata?.phone || ''
+          )
+          console.log('✅ [Auth] Profile created successfully')
+        } catch (createError) {
+          console.warn('⚠️ [Auth] Could not create profile, but continuing with sign-in:', createError)
+          // Continue with sign-in anyway - profile can be created later
+        }
+      } else if (profileError) {
+        // Database error - log but don't block sign-in
+        console.warn('⚠️ [Auth] Error checking profile:', profileError)
+        // Continue with sign-in - profile check is not critical
+      }
+
+      console.log('✅ [Auth] Sign in successful:', authData.user?.email)
       this.setLoading(false)
       return { success: true, user: authData.user, session: authData.session }
 

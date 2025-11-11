@@ -97,24 +97,20 @@ module.exports = {
       typedRoutes: true
     },
     extra: {
-      router: {},
-      eas: {
-        projectId: "e3440742-7963-4ec8-ad47-9436b05b5079"
-      },
-      // Inject environment variables here
-      EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
-      EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
-      EXPO_PUBLIC_ADMIN_EMAIL: process.env.EXPO_PUBLIC_ADMIN_EMAIL,
-      EXPO_PUBLIC_DEBUG_AUTH: process.env.EXPO_PUBLIC_DEBUG_AUTH,
-      EXPO_PUBLIC_OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
-      APP_ENV: process.env.APP_ENV
+  router: {},
+  eas: {
+    projectId: "7729f609-98b3-453e-8ce9-ae9803ca45ae"
+  },
+  EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
+  EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+  EXPO_PUBLIC_ADMIN_EMAIL: process.env.EXPO_PUBLIC_ADMIN_EMAIL,
+  EXPO_PUBLIC_DEBUG_AUTH: process.env.EXPO_PUBLIC_DEBUG_AUTH,
+  EXPO_PUBLIC_OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY,
+  APP_ENV: process.env.APP_ENV
     },
     runtimeVersion: {
       policy: "appVersion"
     },
-    updates: {
-      url: "https://u.expo.dev/80e3026e-6bcf-423a-b1eb-fb5a6095dc4e"
-    },
-    owner: "mr_swapnil"
+    owner: "mr-swapnil"
   }
 };

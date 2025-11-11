@@ -46,7 +46,7 @@ export default function AuthCallbackWeb() {
 
             if (error) {
               console.error('❌ [Web Auth Callback] Error setting session:', error);
-              router.push('/auth');
+              router.push('/');
               return;
             }
 
@@ -55,7 +55,7 @@ export default function AuthCallbackWeb() {
               router.replace('/(tabs)');
             } else {
               console.log('⚠️ [Web Auth Callback] No session created');
-              router.push('/auth');
+              router.push('/');
             }
             return;
           }

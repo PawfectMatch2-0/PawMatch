@@ -16,7 +16,7 @@ export default function AuthCallback() {
         
         if (!supabase) {
           console.error('🔍 Auth callback: Supabase not available');
-          router.replace('/auth');
+          router.replace('/');
           return;
         }
         
@@ -31,7 +31,7 @@ export default function AuthCallback() {
         
         if (error) {
           console.error('❌ Auth callback error:', error);
-          router.replace('/auth');
+          router.replace('/');
           return;
         }
 
@@ -46,11 +46,11 @@ export default function AuthCallback() {
         } else {
           // No session found, go back to auth
           console.log('❌ Auth callback: No session found, returning to auth');
-          router.replace('/auth');
+          router.replace('/');
         }
       } catch (error) {
         console.error('❌ Auth callback error:', error);
-        router.replace('/auth');
+        router.replace('/');
       }
     };
 

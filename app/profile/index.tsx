@@ -70,7 +70,7 @@ export default function ProfileScreen() {
 
   const loadProfile = async () => {
     if (!user) {
-      router.replace('/auth');
+      router.replace('/');
       return;
     }
 

@@ -21,7 +21,7 @@ export default function TestOAuthCallback() {
     
     // Wait 3 seconds then redirect back
     setTimeout(() => {
-      router.push('/auth');
+      router.push('/');
     }, 3000);
   }, [params]);
   

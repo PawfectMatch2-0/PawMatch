@@ -27,10 +27,16 @@ export default function SplashScreen() {
 
   // Handle auth state - but don't auto-redirect if we're signing out or already redirected
   useEffect(() => {
-    if (isReady && isSignedIn && !signingOut && !hasRedirected) {
+    // Only redirect if user is actually signed in and we're ready
+    // If user was deleted, isSignedIn will be false, so we stay on welcome page
+    if (isReady && isSignedIn && user && !signingOut && !hasRedirected) {
       console.log('🔍 [Splash] User already signed in:', user?.email);
       setHasRedirected(true);
       router.replace('/(tabs)');
+    } else if (isReady && !isSignedIn && !signingOut) {
+      // User is not signed in (or was deleted), show welcome page
+      console.log('🔍 [Splash] No user signed in, showing welcome page');
+      setHasRedirected(false); // Reset so we can redirect later if user signs in
     }
   }, [isReady, isSignedIn, user, router, signingOut, hasRedirected]);
 
@@ -59,12 +65,19 @@ export default function SplashScreen() {
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.content}>
             <View style={styles.logoContainer}>
-              <View style={styles.logoCircle}>
-                <Heart size={60} color="white" fill="white" />
+              <View style={styles.logoImageWrapper}>
+                <Image 
+                  source={require('../assets/images/icon.png')} 
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
               </View>
-              <Text style={styles.appName}>PawfectMatch</Text>
+              <Text style={styles.appName}>Pawfect Match</Text>
               <Text style={styles.tagline}>Loading...</Text>
             </View>
+          </View>
+          <View style={styles.developedByContainer}>
+            <Text style={styles.developedByText}>Developed by CoreWe5</Text>
           </View>
         </SafeAreaView>
       </LinearGradient>
@@ -115,6 +128,9 @@ export default function SplashScreen() {
               </TouchableOpacity>
             </View>
           )}
+          <View style={styles.developedByContainer}>
+            <Text style={styles.developedByText}>Developed by CoreWe5</Text>
+          </View>
         </View>
       </SafeAreaView>
     </LinearGradient>
@@ -239,5 +255,19 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontFamily: 'Poppins-SemiBold',
+  },
+  developedByContainer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  developedByText: {
+    fontSize: 12,
+    fontFamily: 'Nunito-Regular',
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'center',
   },
 });

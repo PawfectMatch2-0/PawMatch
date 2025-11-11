@@ -32,7 +32,7 @@ export default function AccountSettingsScreen() {
           style: 'destructive',
           onPress: () => {
             // Handle logout logic
-            router.replace('/auth' as any);
+            router.replace('/');
           }
         }
       ]
