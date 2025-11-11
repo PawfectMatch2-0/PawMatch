@@ -35,7 +35,9 @@ module.exports = {
         "android.permission.INTERNET",
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE"
       ],
       intentFilters: [
         {
@@ -83,6 +85,14 @@ module.exports = {
       "expo-router",
       "expo-font",
       "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/images/icon.png",
+          color: "#E67E9C",
+          sounds: [],
+        }
+      ],
       [
         "expo-build-properties",
         {

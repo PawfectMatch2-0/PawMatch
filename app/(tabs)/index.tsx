@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, Dimensions, Image, TouchableOpacity } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Filter, Bell, Heart, X, MapPin, Star, User } from 'lucide-react-native';
+import { Filter, Bell, Heart, X, MapPin, Star, User, CheckCircle, Clock, XCircle } from 'lucide-react-native';
 import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS, SHADOWS } from '@/constants/theme';
 import LoadingState, { CardLoadingState } from '@/components/ui/LoadingState';
 import EmptyState, { NoPetsEmptyState } from '@/components/ui/EmptyState';
@@ -25,7 +25,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const { width, height } = Dimensions.get('window');
 const CARD_WIDTH = width - 30;
-const CARD_HEIGHT = height * 0.7;
+const CARD_HEIGHT = height * 0.62; // Reduced from 0.7 to prevent hiding subtitle
 const SWIPE_THRESHOLD = width * 0.25;
 
 export default function HomeScreen() {
@@ -36,6 +36,7 @@ export default function HomeScreen() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [filters, setFilters] = useState<Filters>({
     breed: 'All Breeds',
     age: 'All Ages',
@@ -74,6 +75,7 @@ export default function HomeScreen() {
   useEffect(() => {
     initializeData();
     checkOnboardingStatus();
+    loadNotificationCount();
   }, []);
 
   // Refresh pets when screen comes into focus
@@ -81,7 +83,8 @@ export default function HomeScreen() {
     useCallback(() => {
       // Refresh data when returning to this screen
       initializeData();
-    }, [])
+      loadNotificationCount();
+    }, [user])
   );
 
   // Check if user needs onboarding
@@ -96,6 +99,31 @@ export default function HomeScreen() {
       }
     } catch (error) {
       console.log('Error checking onboarding status:', error);
+    }
+  };
+
+  // Load unread notification count
+  const loadNotificationCount = async () => {
+    if (!user || !supabase) {
+      setUnreadNotificationCount(0);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact' })
+        .eq('user_id', user.id)
+        .eq('read', false);
+
+      if (error) {
+        console.error('Error loading notification count:', error);
+        return;
+      }
+
+      setUnreadNotificationCount(data?.length || 0);
+    } catch (error) {
+      console.error('Error loading notification count:', error);
     }
   };
 
@@ -498,6 +526,44 @@ export default function HomeScreen() {
       ? pet.images[0] 
       : 'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=400'; // Default fallback image
     
+    // Get adoption status information
+    const adoptionStatus = pet.adoption_status || 'available';
+    const getStatusInfo = (status: string) => {
+      switch (status) {
+        case 'available':
+          return {
+            text: 'Available for Adoption',
+            icon: CheckCircle,
+            bgColor: 'rgba(16, 185, 129, 0.9)', // Green
+            iconColor: '#FFFFFF',
+          };
+        case 'pending':
+          return {
+            text: 'Adoption in Progress',
+            icon: Clock,
+            bgColor: 'rgba(245, 158, 11, 0.9)', // Orange
+            iconColor: '#FFFFFF',
+          };
+        case 'adopted':
+          return {
+            text: 'Not Available for Adoption',
+            icon: XCircle,
+            bgColor: 'rgba(107, 114, 128, 0.9)', // Gray
+            iconColor: '#FFFFFF',
+          };
+        default:
+          return {
+            text: 'Available for Adoption',
+            icon: CheckCircle,
+            bgColor: 'rgba(16, 185, 129, 0.9)',
+            iconColor: '#FFFFFF',
+          };
+      }
+    };
+    
+    const statusInfo = getStatusInfo(adoptionStatus);
+    const StatusIcon = statusInfo.icon;
+    
     return (
       <TouchableOpacity 
         style={[styles.petCard, isNext && styles.nextCard]}
@@ -525,6 +591,12 @@ export default function HomeScreen() {
             <View style={styles.ageContainer}>
               <Text style={styles.petAge}>{pet.age} {pet.age === 1 ? 'year' : 'years'} old</Text>
             </View>
+          </View>
+          
+          {/* Adoption Status Badge - Inside pet info overlay */}
+          <View style={[styles.adoptionStatusBadge, { backgroundColor: statusInfo.bgColor }]}>
+            <StatusIcon size={12} color={statusInfo.iconColor} />
+            <Text style={styles.adoptionStatusText}>{statusInfo.text}</Text>
           </View>
           
           <Text style={styles.petBreed}>{pet.breed}</Text>
@@ -575,8 +647,20 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.headerButton} onPress={() => setShowFilterModal(true)}>
             <Filter size={22} color={COLORS.primary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/notifications')}>
-            <Bell size={22} color={COLORS.secondary} />
+          <TouchableOpacity 
+            style={styles.headerButton} 
+            onPress={() => router.push('/notifications')}
+          >
+            <View style={styles.bellContainer}>
+              <Bell size={22} color={COLORS.secondary} />
+              {unreadNotificationCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerButtonProfile} onPress={() => router.push('/(tabs)/profile')}>
             <User size={20} color="white" />
@@ -786,13 +870,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...SHADOWS.sm,
   },
+  bellContainer: {
+    position: 'relative',
+    width: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: -6,
+    right: -8,
+    backgroundColor: COLORS.primary,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontFamily: 'Nunito-Bold',
+    lineHeight: 12,
+  },
   cardContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,
-    marginTop: 25, // Add margin to prevent overlap with header
+    marginTop: 10, // Reduced margin to show subtitle better
   },
   cardWrapper: {
     position: 'absolute',
@@ -902,6 +1013,28 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.85)',
     lineHeight: 20,
   },
+  adoptionStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginTop: 4,
+    marginBottom: 8,
+    gap: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  adoptionStatusText: {
+    fontSize: 12,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
+  },
   ratingBadge: {
     position: 'absolute',
     top: 20,
@@ -913,6 +1046,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     backdropFilter: 'blur(10px)',
+    zIndex: 5,
   },
   ratingText: {
     fontSize: 12,
@@ -1021,6 +1155,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backdropFilter: 'blur(10px)',
+    zIndex: 5,
   },
   tapText: {
     fontSize: 11,

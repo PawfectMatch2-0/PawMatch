@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
-import { X, ChevronDown } from 'lucide-react-native';
+import { X, ChevronDown, RotateCcw, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../constants/theme';
 
@@ -118,6 +118,7 @@ export default function FilterModal({ visible, onClose, onApplyFilters, currentF
 
           <View style={styles.footer}>
             <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
+              <RotateCcw size={16} color="#666" />
               <Text style={styles.resetButtonText}>Reset</Text>
             </TouchableOpacity>
             
@@ -126,6 +127,7 @@ export default function FilterModal({ visible, onClose, onApplyFilters, currentF
                 colors={COLORS.gradients.primary}
                 style={styles.applyButtonGradient}
               >
+                <Check size={16} color="white" />
                 <Text style={styles.applyButtonText}>Apply Filters</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -144,22 +146,32 @@ const styles = StyleSheet.create({
   },
   container: {
     backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '80%',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '85%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
+    backgroundColor: '#FAFAFA',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
   },
   title: {
-    fontSize: 20,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#333',
+    fontSize: 22,
+    fontFamily: 'Poppins-Bold',
+    color: '#1A1A1A',
+    letterSpacing: -0.5,
   },
   closeButton: {
     padding: 8,
@@ -171,25 +183,32 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   filterLabel: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: 'Poppins-SemiBold',
-    color: '#333',
-    marginBottom: 8,
+    color: '#1A1A1A',
+    marginBottom: 10,
+    letterSpacing: -0.2,
   },
   dropdown: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FAFAFA',
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 0,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#E8E8E8',
   },
   dropdownActive: {
-    backgroundColor: COLORS.primary + '12',
+    backgroundColor: COLORS.primary + '10',
     borderWidth: 2,
     borderColor: COLORS.primary,
-    padding: 16,
+    padding: 14,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   dropdownText: {
     fontSize: 16,
@@ -204,20 +223,21 @@ const styles = StyleSheet.create({
   },
   dropdownOptions: {
     backgroundColor: 'white',
-    borderRadius: 16,
-    marginTop: 8,
-    borderWidth: 0,
+    borderRadius: 14,
+    marginTop: 10,
+    borderWidth: 1.5,
+    borderColor: '#E8E8E8',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 8,
     overflow: 'hidden',
   },
   option: {
-    padding: 18,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F8F8F8',
+    borderBottomColor: '#F5F5F5',
     backgroundColor: 'white',
   },
   optionSelected: {
@@ -236,49 +256,56 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexDirection: 'row',
-    padding: 20,
-    borderTopWidth: 0,
-    gap: 12,
+    padding: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    gap: 10,
+    backgroundColor: '#FAFAFA',
   },
   resetButton: {
     flex: 1,
-    backgroundColor: 'white',
-    borderRadius: 16,
-    paddingVertical: 18,
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#E5E5E5',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    justifyContent: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1.5,
+    borderColor: '#E0E0E0',
+    gap: 6,
+    minHeight: 44,
   },
   resetButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Poppins-SemiBold',
     color: '#666',
   },
   applyButton: {
     flex: 2,
-    borderRadius: 16,
+    borderRadius: 10,
     overflow: 'hidden',
     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+    minHeight: 44,
   },
   applyButtonGradient: {
-    borderRadius: 16,
-    paddingVertical: 18,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 6,
   },
   applyButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Poppins-Bold',
     color: 'white',
-    letterSpacing: 0.5,
+    letterSpacing: 0.2,
   },
 });

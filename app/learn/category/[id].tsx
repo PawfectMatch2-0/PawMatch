@@ -134,13 +134,17 @@ export default function CategoryScreen() {
       </View>
 
       <View style={styles.categoryHeader}>
-        <View style={[styles.categoryIcon, { backgroundColor: category.color + '20' }]}>
-          <BookOpen size={24} color={category.color} />
+        <View style={styles.categoryIconWrapper}>
+          <View style={[styles.categoryIcon, { backgroundColor: category.color + '20' }]}>
+            <BookOpen size={20} color={category.color} />
+          </View>
+          <View style={[styles.articleCountBadge, { backgroundColor: category.color }]}>
+            <Text style={styles.articleCountBadgeText}>
+              {categoryArticles.length}
+            </Text>
+          </View>
         </View>
         <Text style={styles.categoryDescription}>{category.description}</Text>
-        <Text style={styles.articleCount}>
-          {categoryArticles.length} article{categoryArticles.length !== 1 ? 's' : ''}
-        </Text>
       </View>
 
       {isLoading ? (
@@ -202,30 +206,53 @@ const styles = StyleSheet.create({
   },
   categoryHeader: {
     backgroundColor: 'white',
-    padding: 20,
+    padding: 12,
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
+  categoryIconWrapper: {
+    position: 'relative',
+    marginBottom: 8,
+  },
   categoryIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+  },
+  articleCountBadge: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    borderWidth: 2,
+    borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  articleCountBadgeText: {
+    fontSize: 11,
+    fontFamily: 'Poppins-Bold',
+    color: 'white',
+    lineHeight: 12,
   },
   categoryDescription: {
-    fontSize: 16,
+    fontSize: 13,
     fontFamily: 'Nunito-Regular',
     color: '#666',
     textAlign: 'center',
-    marginBottom: 8,
-  },
-  articleCount: {
-    fontSize: 14,
-    fontFamily: 'Nunito-SemiBold',
-    color: '#FF6B6B',
+    lineHeight: 18,
+    paddingHorizontal: 20,
   },
   listContainer: {
     padding: 16,

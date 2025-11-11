@@ -779,6 +779,80 @@ export const databaseService = {
     }
     
     return (data as unknown as LearningArticle[]) || []
+  },
+
+  // Notifications functions
+  async getUserNotifications(userId: string): Promise<any[]> {
+    if (!supabase) {
+      console.warn('⚠️ [DB] Supabase not configured for getUserNotifications')
+      return []
+    }
+    
+    console.log('🔔 [DB] Fetching notifications for user:', userId)
+    
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('❌ [DB] Error fetching notifications:', error)
+      return []
+    }
+    
+    console.log('✅ [DB] Fetched', data?.length || 0, 'notifications')
+    return (data || []) as any[]
+  },
+
+  async markNotificationAsRead(notificationId: string): Promise<boolean> {
+    if (!supabase) {
+      console.warn('⚠️ [DB] Supabase not configured for markNotificationAsRead')
+      return false
+    }
+    
+    console.log('📝 [DB] Marking notification as read:', notificationId)
+    
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', notificationId)
+    
+    if (error) {
+      console.error('❌ [DB] Error marking notification as read:', error)
+      return false
+    }
+    
+    console.log('✅ [DB] Notification marked as read successfully')
+    return true
+  },
+
+  async createNotification(notification: {
+    user_id: string
+    type: string
+    title: string
+    message: string
+    pet_id?: string
+    pet_name?: string
+    pet_image?: string
+    liker_id?: string
+    liker_name?: string
+    liker_avatar?: string
+  }): Promise<any | null> {
+    if (!supabase) return null
+    
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert(notification)
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Error creating notification:', error)
+      return null
+    }
+    
+    return data
   }
 }
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Heart, Bell, CheckCheck, X, MessageCircle, Clock } from 'lucide-react-native';
+import { ArrowLeft, Heart, Bell, CheckCheck, X, MessageCircle, Clock, PawPrint } from 'lucide-react-native';
 import { databaseService, supabase } from '../../lib/supabase';
 import AnimatedLoader from '../../components/AnimatedLoader';
 import { COLORS } from '@/constants/theme';
@@ -17,6 +17,9 @@ interface Notification {
   petId?: string;
   petName?: string;
   petImage?: string;
+  likerId?: string;
+  likerName?: string;
+  likerAvatar?: string;
 }
 
 // Icon components for different notification types
@@ -32,6 +35,10 @@ const NotificationIcon = ({ type, read }: { type: string; read: boolean }) => {
       return <X size={20} color="#EF4444" />;
     case 'message':
       return <MessageCircle size={20} color={color} />;
+    case 'welcome':
+      return <PawPrint size={20} color="#E67E9C" fill="#E67E9C" />;
+    case 'pet_liked':
+      return <PawPrint size={20} color="#E67E9C" fill="#E67E9C" />;
     default:
       return <Bell size={20} color={color} />;
   }
@@ -64,27 +71,39 @@ export default function NotificationsScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔔 [Notifications] Component mounted, loading notifications...');
     loadNotifications();
   }, []);
 
   const loadNotifications = async () => {
     try {
+      console.log('🔔 [Notifications] Loading notifications...');
       setLoading(true);
       
       // Get current user
       if (!supabase) {
-        // If Supabase not configured, show empty state
+        console.warn('⚠️ [Notifications] Supabase not configured');
         setNotifications([]);
         return;
       }
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('❌ [Notifications] Error getting user:', userError);
         setNotifications([]);
         return;
       }
+      
+      if (!user) {
+        console.log('ℹ️ [Notifications] No user signed in');
+        setNotifications([]);
+        return;
+      }
+      
+      console.log('👤 [Notifications] Loading notifications for user:', user.id, user.email);
       
       const userNotifications = await databaseService.getUserNotifications(user.id);
+      console.log('📬 [Notifications] Fetched', userNotifications.length, 'notifications from database');
       
       // Transform database notifications to component format
       const formattedNotifications: Notification[] = userNotifications.map(notif => ({
@@ -96,12 +115,19 @@ export default function NotificationsScreen() {
         read: notif.read,
         petId: notif.pet_id,
         petName: notif.pet_name,
-        petImage: notif.pet_image
+        petImage: notif.pet_image,
+        likerId: notif.liker_id,
+        likerName: notif.liker_name,
+        likerAvatar: notif.liker_avatar
       }));
+      
+      const unreadCount = formattedNotifications.filter(n => !n.read).length;
+      console.log('✅ [Notifications] Loaded', formattedNotifications.length, 'notifications (', unreadCount, 'unread)');
+      console.log('📋 [Notifications] Notification types:', formattedNotifications.map(n => n.type).join(', '));
       
       setNotifications(formattedNotifications);
     } catch (error) {
-      console.error('Error loading notifications:', error);
+      console.error('❌ [Notifications] Error loading notifications:', error);
       // Show empty state on error instead of alert in this case
       setNotifications([]);
     } finally {
@@ -111,14 +137,16 @@ export default function NotificationsScreen() {
 
   const markAsRead = async (id: string) => {
     try {
+      console.log('📝 [Notifications] Marking notification as read:', id);
       await databaseService.markNotificationAsRead(id);
       setNotifications((prev: Notification[]) =>
         prev.map((notif: Notification) =>
           notif.id === id ? { ...notif, read: true } : notif
         )
       );
+      console.log('✅ [Notifications] Notification marked as read');
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      console.error('❌ [Notifications] Error marking notification as read:', error);
     }
   };
 
@@ -147,6 +175,14 @@ export default function NotificationsScreen() {
       });
     } else if (notification.type === 'message') {
       router.push('/chat');
+    } else if (notification.type === 'pet_liked' && notification.petId) {
+      router.push({
+        pathname: '/pet/[id]',
+        params: { id: notification.petId }
+      });
+    } else if (notification.type === 'welcome') {
+      // Welcome notification - could navigate to discover or stay on notifications
+      router.push('/(tabs)');
     }
   };
 
@@ -160,16 +196,30 @@ export default function NotificationsScreen() {
           <View style={styles.iconContainer}>
             <NotificationIcon type={item.type} read={item.read} />
           </View>
-          {item.petImage && (
+          {/* Show app logo for welcome notifications */}
+          {item.type === 'welcome' ? (
+            <Image 
+              source={require('../../assets/images/icon.png')} 
+              style={styles.appLogo} 
+            />
+          ) : item.type === 'pet_liked' && item.likerAvatar ? (
+            <Image source={{ uri: item.likerAvatar }} style={styles.likerAvatar} />
+          ) : item.petImage ? (
             <Image source={{ uri: item.petImage }} style={styles.petImage} />
-          )}
+          ) : null}
         </View>
         
         <View style={styles.textContent}>
           <Text style={[styles.title, !item.read && styles.unreadTitle]}>
             {item.title}
           </Text>
-          <Text style={styles.message} numberOfLines={2}>
+          {/* Show liker name prominently for pet_liked notifications */}
+          {item.type === 'pet_liked' && item.likerName && (
+            <Text style={styles.likerName}>
+              {item.likerName}
+            </Text>
+          )}
+          <Text style={styles.message} numberOfLines={item.type === 'welcome' ? undefined : 2}>
             {item.message}
           </Text>
           <Text style={styles.timestamp}>{item.timestamp}</Text>
@@ -315,8 +365,28 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
   },
+  appLogo: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'white',
+    padding: 4,
+  },
+  likerAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+  },
   textContent: {
     flex: 1,
+  },
+  likerName: {
+    fontSize: 15,
+    fontFamily: 'Nunito-Bold',
+    color: COLORS.primary,
+    marginBottom: 4,
   },
   title: {
     fontSize: 16,

@@ -177,7 +177,7 @@ export default function LearnScreen() {
           <View style={[styles.categoryIconContainer, { backgroundColor: category.color + '20' }]}>
             {IconComponent && (
               <IconComponent 
-                size={24} 
+                size={20} 
                 color={category.color} 
                 strokeWidth={2}
               />
@@ -507,48 +507,49 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   categoriesContainer: {
-    gap: 12,
+    gap: 10,
   },
   categoryCard: {
     backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 10,
+    padding: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
     elevation: 2,
-    borderLeftWidth: 4,
+    borderLeftWidth: 3,
   },
   categoryContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   categoryIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 12,
   },
   categoryInfo: {
     flex: 1,
   },
   categoryName: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Poppins-SemiBold',
     color: '#333',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   categoryDescription: {
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: 'Nunito-Regular',
     color: '#666',
-    marginBottom: 4,
+    marginBottom: 3,
+    lineHeight: 16,
   },
   articleCount: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'Nunito-SemiBold',
     color: COLORS.primary,
   },
